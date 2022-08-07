@@ -14,6 +14,7 @@ class CEMOptimizer:
         self.mean = init_params
         self.cov = np.identity(len(init_params))
         self.best_weight = init_params
+        self.best_reward = 1000
 
         super().__init__()
 
@@ -30,8 +31,8 @@ class CEMOptimizer:
     ) -> list[list[float]]:
         n_iterations=10
         print_every=5
-        pop_size=50
-        elite_frac=0.2
+        pop_size=100
+        elite_frac=0.1
 
         n_elite=int(pop_size*elite_frac)
 
@@ -48,12 +49,13 @@ class CEMOptimizer:
             elite_idxs = rewards.argsort()[:n_elite]
             elite_weights = [points[i] for i in elite_idxs]
 
-            # print(elite_weights)
+            # print(best_weight)
             best_weight = elite_weights[0]
 
             reward = fun(best_weight)
-            if reward < fun(self.best_weight):
+            if reward < self.best_reward:
                 self.best_weight = best_weight
+                self.best_reward = reward
             scores_deque.append(reward)
             scores.append(reward)
             self.mean = np.mean(elite_weights, axis=0)
@@ -64,7 +66,7 @@ class CEMOptimizer:
                 # print(self.cov)
                 print('Episode {}\tAverage Score: {:.2f}'.format(i_iteration, np.mean(scores_deque)))
                 # print(best_weight)
-                print(f'{self.best_weight} with reward: {fun(self.best_weight)}')
+                print(f'{self.best_weight} with reward: {self.best_reward}')
         # calculate(best_weight, True)
         # return scores, best_weight
         # result = OptimizerResult
