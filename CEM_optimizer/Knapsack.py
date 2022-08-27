@@ -132,7 +132,7 @@ class QAOA_Knapsack(Problem):
             if (value:=self._get_value(binary_rep)) == -1:
                 score += 0 #val*5
             else:
-                score -= 2*val*value
+                score -= val*value
         return score
 
     def print_results(self, parameters):
