@@ -52,7 +52,12 @@ class QAOA_Knapsack(Problem):
         knapsack: Knapsack, 
         number_of_layers: int = 6, 
         optimization_steps: int = 70,
-        optimizer: qml.GradientDescentOptimizer = qml.AdagradOptimizer()
+        optimizer: qml.GradientDescentOptimizer = None
+        # optimizer: qml.GradientDescentOptimizer = qml.AdamOptimizer(
+        #     stepsize=0.01,
+        #     beta1=0.9,
+        #     beta2=0.99
+        # )
     ) -> None:
         self.knapsack = knapsack
         self.number_of_layers = number_of_layers
@@ -66,13 +71,19 @@ class QAOA_Knapsack(Problem):
 
     def _create_cost_operator(self, parameters):
         A, B = parameters
-        hamiltonian = qml.Identity(0) #  remove
+        hamiltonian = qml.Hamiltonian([], []) #  remove
         xs = range(0, self.knapsack.all_items)
         ys = list(range(self.knapsack.all_items, self.knapsack.all_items + self.knapsack.max_weight))
         
+        # WEIGHT HAMILTONIAN PART 1
         for y in ys:
             hamiltonian -= A * self._x(y)
-        
+
+        for y1 in range(1, self.knapsack.max_weight+1):
+            for y2 in range(y1 + 1, self.knapsack.max_weight+1):
+                hamiltonian += A * 2 * (self._x(ys[y1-1]) @ self._x(ys[y2-1]))
+            
+        # WEIGHT HAMILTONIAN PART 2        
         for y in range(1, self.knapsack.max_weight+1):
             hamiltonian += A * y**2 * self._x(ys[y-1])
         
@@ -86,7 +97,7 @@ class QAOA_Knapsack(Problem):
         for _x1 in xs:
             for _x2 in range(_x1 + 1, self.knapsack.all_items):
                 hamiltonian += (
-                    A * self.knapsack.items[_x1].weight
+                    A * 2 * self.knapsack.items[_x1].weight
                     * self.knapsack.items[_x2].weight 
                     * (self._x(_x1) @ self._x(_x2))
                 )
@@ -94,7 +105,7 @@ class QAOA_Knapsack(Problem):
         for y1 in range(1, self.knapsack.max_weight+1):
             for _x1 in xs:
                 hamiltonian -= (
-                    A * y1 * self.knapsack.items[_x1].weight *
+                    A * 2 * y1 * self.knapsack.items[_x1].weight *
                     (self._x(ys[y1-1]) @ self._x(_x1))
                 )
             
