@@ -37,29 +37,30 @@ class CEM:
         scores = []
 
         for i_iteration in range(1, self.epochs+1):
-            # points = np.random.multivariate_normal(_mean, _cov, size=self.samples_per_epoch)
-            std_dev = np.full(self.samples_per_epoch, np.sqrt(_cov[1][1]))
-            mean_B = np.full(self.samples_per_epoch, _mean[1])
-            lower_bound_B = np.full(self.samples_per_epoch, 0)
-            upper_bound_B = np.full(self.samples_per_epoch, 100)
-            points_B = scipy.stats.truncnorm.rvs(
-                (lower_bound_B - mean_B) / std_dev, 
-                upper_bound_B, 
-                loc=mean_B, 
-                scale=std_dev
-            )
+            points = np.random.multivariate_normal(_mean, _cov, size=self.samples_per_epoch)
 
-            max_c = 2
-            mean_A = np.full(self.samples_per_epoch, _mean[0])
-            std_dev = np.full(self.samples_per_epoch, np.sqrt(_cov[0][0]))
-            points_A = scipy.stats.truncnorm.rvs(
-                ((points_B*max_c + 0.1)-mean_A)/std_dev, 
-                (points_B*max_c + 10)/std_dev, 
-                loc=mean_A, 
-                scale=std_dev
-            )
+            # std_dev = np.full(self.samples_per_epoch, np.sqrt(_cov[1][1]))
+            # mean_B = np.full(self.samples_per_epoch, _mean[1])
+            # lower_bound_B = np.full(self.samples_per_epoch, 0)
+            # upper_bound_B = np.full(self.samples_per_epoch, 100)
+            # points_B = scipy.stats.truncnorm.rvs(
+            #     (lower_bound_B - mean_B) / std_dev, 
+            #     upper_bound_B, 
+            #     loc=mean_B, 
+            #     scale=std_dev
+            # )
 
-            points = list(zip(points_A, points_B))
+            # max_c = 2
+            # mean_A = np.full(self.samples_per_epoch, _mean[0])
+            # std_dev = np.full(self.samples_per_epoch, np.sqrt(_cov[0][0]))
+            # points_A = scipy.stats.truncnorm.rvs(
+            #     ((points_B*max_c + 0.1)-mean_A)/std_dev, 
+            #     (points_B*max_c + 10)/std_dev, 
+            #     loc=mean_A, 
+            #     scale=std_dev
+            # )
+
+            # points = list(zip(points_A, points_B))
 
             points = np.concatenate((points, [best_weight]), axis=0)
             points = [list(point) for point in points]
