@@ -4,6 +4,7 @@ from pennylane import numpy as np
 import random
 
 from .problem import Problem
+from .parser import parse_hamiltonian
 
 
 @dataclass
@@ -71,48 +72,27 @@ class QAOA_Knapsack(Problem):
 
     def _create_cost_operator(self, parameters):
         A, B = parameters
-        hamiltonian = qml.Hamiltonian([], []) #  remove
-        xs = range(0, self.knapsack.all_items)
-        ys = list(range(self.knapsack.all_items, self.knapsack.all_items + self.knapsack.max_weight))
+        xs = [f"x{i}" for i in range(self.knapsack.all_items)]
+        ys = [f"x{i}" for i in range(
+                self.knapsack.all_items, self.knapsack.all_items + self.knapsack.max_weight)]
         
-        # WEIGHT HAMILTONIAN PART 1
+        equation = f"{A}*(J"
         for y in ys:
-            hamiltonian -= A * self._x(y)
+            equation += f"-{y}"
+        equation += f")**2 + {A}*("
 
-        for y1 in range(1, self.knapsack.max_weight+1):
-            for y2 in range(y1 + 1, self.knapsack.max_weight+1):
-                hamiltonian += A * 2 * (self._x(ys[y1-1]) @ self._x(ys[y2-1]))
-            
-        # WEIGHT HAMILTONIAN PART 2        
-        for y in range(1, self.knapsack.max_weight+1):
-            hamiltonian += A * y**2 * self._x(ys[y-1])
-        
-        for _x in xs:
-            hamiltonian += A * self.knapsack.items[_x].weight**2 * self._x(_x)
-        
-        for y1 in range(1, self.knapsack.max_weight+1):
-            for y2 in range(y1 + 1, self.knapsack.max_weight+1):
-                hamiltonian += A * 2 * y1 * y2 * (self._x(ys[y1-1]) @ self._x(ys[y2-1]))
-        
-        for _x1 in xs:
-            for _x2 in range(_x1 + 1, self.knapsack.all_items):
-                hamiltonian += (
-                    A * 2 * self.knapsack.items[_x1].weight
-                    * self.knapsack.items[_x2].weight 
-                    * (self._x(_x1) @ self._x(_x2))
-                )
+        for i, y in enumerate(ys):
+            equation += f"+{i+1}*{y}"
+        for i, x in enumerate(xs):
+            equation += f"-{self.knapsack.items[i].weight}*{x}"
+        equation += ")**2"
 
-        for y1 in range(1, self.knapsack.max_weight+1):
-            for _x1 in xs:
-                hamiltonian -= (
-                    A * 2 * y1 * self.knapsack.items[_x1].weight *
-                    (self._x(ys[y1-1]) @ self._x(_x1))
-                )
-            
-        for _x in xs:
-            hamiltonian -= B * self.knapsack.items[_x].value * self._x(_x)
+        equation += f"-{B}*("
+        for i, x in enumerate(xs):
+            equation += f"+{self.knapsack.items[i].value}*{x}"
+        equation += f")"
 
-        return hamiltonian
+        return parse_hamiltonian(equation)
 
     def _get_value(self, result):
         sum = 0
@@ -141,7 +121,7 @@ class QAOA_Knapsack(Problem):
         for key, val in result_dict.items():
             binary_rep = get_bin(key)
             if (value:=self._get_value(binary_rep)) == -1:
-                score += 0 #val*5
+                score += 0 # experiments?
             else:
                 score -= val*value
         return score

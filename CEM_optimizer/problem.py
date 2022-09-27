@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 import pennylane as qml
 from pennylane import numpy as np
 
-
 from qiskit.algorithms.optimizers import ESCH
+
 
 class Problem(ABC):
     wires: int
@@ -31,10 +31,9 @@ class Problem(ABC):
         for i in range(self.wires):
             qml.Hadamard(i)
 
-    def _run_learning(self, parameters: list[float]):
-        cost_operator = self._create_cost_operator(parameters)
+    def _run_learning(self, parameters: list[float], cost_operator: qml.Hamiltonian = None):
+        cost_operator = cost_operator if cost_operator else self._create_cost_operator(parameters)
         # esch = ESCH(max_evals=200)
-        
 
         def qaoa_layer(gamma, beta):
             qml.qaoa.cost_layer(gamma, cost_operator)
