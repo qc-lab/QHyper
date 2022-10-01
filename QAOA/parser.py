@@ -49,7 +49,7 @@ class Visitor(ast.NodeVisitor):
         if node.id[0] == "x":
             return self.substitution(int(node.id[1:]))
         if node.id[0] == "J":
-            return qml.Identity("a")
+            return qml.Identity(0)
     
     def visit_Call(self, node: ast.Call) -> Any:
         if node.func.id == "sum":

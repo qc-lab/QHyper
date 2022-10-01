@@ -60,7 +60,7 @@ class QAOA_TSP(Problem):
         wire = self._calc_bit(i, t)
         return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
 
-    def _create_cost_operator(self, parameters: list[float]):
+    def create_cost_operator(self, parameters: list[float]):
         A_1, A_2, B = parameters
         
         cost_of_constraint_each_visited = 0    
@@ -115,7 +115,7 @@ class QAOA_TSP(Problem):
 
         return dist
 
-    def _check_results(self, probs):
+    def check_results(self, probs):
         get_bin = lambda x: format(x, 'b').zfill(self.wires)
         correct_results_3 = ("100010001", "100001010", "010100001", "010001100", "001100010", "001010100")
         correct_results_4 = ("0001100001000010","0010010010000001","0100100000010010","1000000100100100","1000010000100001","0100001000011000","0001001001001000","0010000110000100","0100000110000010","0010100000010100","0001010000101000","0001100000100100","1000000101000010","1000001001000001","0100001010000001", "0100000100101000", "0010010000011000", "0100100000100001", "1000001000010100", "0001001010000100", "0001010010000010","0010000101001000", "1000010000010010", "0010100001000001")
@@ -138,3 +138,6 @@ class QAOA_TSP(Problem):
             else:
                 score += val*self._get_distance(key)
         return score
+    
+    def get_score(self, result):
+        pass

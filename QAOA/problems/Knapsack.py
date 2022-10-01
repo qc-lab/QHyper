@@ -4,7 +4,7 @@ from pennylane import numpy as np
 import random
 
 from .problem import Problem
-from .parser import parse_hamiltonian
+from ..parser import parse_hamiltonian
 
 
 @dataclass
@@ -51,9 +51,9 @@ class QAOA_Knapsack(Problem):
     def __init__(
         self, 
         knapsack: Knapsack, 
-        number_of_layers: int = 6, 
-        optimization_steps: int = 70,
-        optimizer: qml.GradientDescentOptimizer = None
+        # number_of_layers: int = 6, 
+        # optimization_steps: int = 70,
+        # optimizer: qml.GradientDescentOptimizer = None
         # optimizer: qml.GradientDescentOptimizer = qml.AdamOptimizer(
         #     stepsize=0.01,
         #     beta1=0.9,
@@ -61,16 +61,16 @@ class QAOA_Knapsack(Problem):
         # )
     ) -> None:
         self.knapsack = knapsack
-        self.number_of_layers = number_of_layers
-        self.optimization_steps = optimization_steps
-        self.optimizer = optimizer
+        # self.number_of_layers = number_of_layers
+        # self.optimization_steps = optimization_steps
+        # self.optimizer = optimizer
         self.wires = knapsack.all_items + knapsack.max_weight
-        self.dev = qml.device("default.qubit", wires=self.wires)
+        # self.dev = qml.device("default.qubit", wires=self.wires)
 
-    def _x(self, wire):
-        return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
+    # def _x(self, wire):
+    #     return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
 
-    def _create_cost_operator(self, parameters):
+    def create_cost_operator(self, parameters):
         A, B = parameters
         xs = [f"x{i}" for i in range(self.knapsack.all_items)]
         ys = [f"x{i}" for i in range(
@@ -94,7 +94,7 @@ class QAOA_Knapsack(Problem):
 
         return parse_hamiltonian(equation)
 
-    def _get_value(self, result):
+    def get_score(self, result):
         sum = 0
         weight = 0
         for i, item in enumerate(self.knapsack.items):
@@ -112,29 +112,29 @@ class QAOA_Knapsack(Problem):
 
         return sum
 
-    def _check_results(self, probs):
-        get_bin = lambda x: format(x, 'b').zfill(self.wires)
+    # def _check_results(self, probs):
+    #     get_bin = lambda x: format(x, 'b').zfill(self.wires)
         
-        result_dict = {key: float(val) for key, val in enumerate(probs)}
-        result_dict = dict(sorted(result_dict.items(), key=lambda item: item[1], reverse=True))
-        score = 0
-        for key, val in result_dict.items():
-            binary_rep = get_bin(key)
-            if (value:=self._get_value(binary_rep)) == -1:
-                score += 0 # experiments?
-            else:
-                score -= val*value
-        return score
+    #     result_dict = {key: float(val) for key, val in enumerate(probs)}
+    #     result_dict = dict(sorted(result_dict.items(), key=lambda item: item[1], reverse=True))
+    #     score = 0
+    #     for key, val in result_dict.items():
+    #         binary_rep = get_bin(key)
+    #         if (value:=self._get_value(binary_rep)) == -1:
+    #             score += 0 # experiments?
+    #         else:
+    #             score -= val*value
+    #     return score 
 
-    def print_results(self, parameters):
-        get_bin = lambda x: format(x, 'b').zfill(self.wires)
-        probs = self._run_learning(parameters)
-        result_dict = {key: float(val) for key, val in enumerate(probs)}
-        result_dict = dict(sorted(result_dict.items(), key=lambda item: item[1], reverse=True))
-        for key, val in result_dict.items():
-            binary_rep = get_bin(key)
+    # def print_results(self, parameters):
+    #     get_bin = lambda x: format(x, 'b').zfill(self.wires)
+    #     probs = self._run_learning(parameters)
+    #     result_dict = {key: float(val) for key, val in enumerate(probs)}
+    #     result_dict = dict(sorted(result_dict.items(), key=lambda item: item[1], reverse=True))
+    #     for key, val in result_dict.items():
+    #         binary_rep = get_bin(key)
 
-            print(
-                f"Key: {get_bin(key)} with probability {val}   "
-                f"| correct: {'True, value: '+str(self._get_value(binary_rep)) if self._get_value(binary_rep) != -1 else 'False'}"
-            )
+    #         print(
+    #             f"Key: {get_bin(key)} with probability {val}   "
+    #             f"| correct: {'True, value: '+str(self._get_value(binary_rep)) if self._get_value(binary_rep) != -1 else 'False'}"
+    #         )
