@@ -4,7 +4,7 @@ from pennylane import numpy as np
 import random
 
 from .problem import Problem
-from ..parser import parse_hamiltonian
+from .parser import parse_hamiltonian
 
 
 @dataclass
@@ -65,7 +65,7 @@ class QAOA_Knapsack(Problem):
         # self.optimization_steps = optimization_steps
         # self.optimizer = optimizer
         self.wires = knapsack.all_items + knapsack.max_weight
-        # self.dev = qml.device("default.qubit", wires=self.wires)
+        self.dev = qml.device("default.qubit", wires=self.wires)
 
     # def _x(self, wire):
     #     return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])

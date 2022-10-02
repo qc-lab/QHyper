@@ -3,15 +3,18 @@ import numpy as np
 from dataclasses import dataclass, field
 
 import multiprocessing as mp
+from typing import Callable, Any
 
-from ..problems.problem import Problem
-from ..problem_solver import ProblemSolver
+# from ..QAOA_problems.problem import Problem
+# from ..problem_solver import ProblemSolver
+from .optimizer import Optimizer
+from ..QAOA_problems.problem import Problem
 import scipy
 
 
 @dataclass
-class CEM:
-    solver: ProblemSolver
+class CEM(Optimizer):
+    # solver: ProblemSolver
     epochs: int = 10
     samples_per_epoch: int = 100
     elite_frac: float = 0.1
@@ -21,15 +24,24 @@ class CEM:
     def __post_init__(self):
         self.n_elite = int(self.samples_per_epoch * self.elite_frac)
 
+    def set_func_from_problem(self, problem: Problem, hyperparameters: dict[str, Any]):
+        global wrapper
+        def wrapper(params):
+            probs = problem.get_probs_func(**hyperparameters)(params)
+            return problem.check_results(probs)
+        self.func = wrapper
+
     def minimize(
         self, 
-        init_weights: list[float],
-        mean: list[float] | None = None,
-        cov: np.ndarray | None = None
+        # func: Callable,
+        init: np.array,
+        # mean: list[float] | None = None,
+        # cov: np.ndarray | None = None
     ):
-        _mean = [1] * len(init_weights) if mean is None else mean
-        _cov = np.identity(len(init_weights)) if cov is None else cov
-        best_weight = init_weights
+        flatted_init = init.flatten()
+        _mean = [1] * len(flatted_init) # if mean is None else mean
+        _cov = np.identity(len(flatted_init)) # if cov is None else cov
+        best_weight = flatted_init
         best_reward = float('inf')
 
         print_every=1
@@ -63,23 +75,23 @@ class CEM:
 
             # points = list(zip(points_A, points_B))
 
-            points = np.concatenate((points, [best_weight]), axis=0)
-            points = [list(point) for point in points]
+            points = np.concatenate((points, [best_weight.flatten()]), axis=0)
+            points = [np.reshape(np.array(point), init.shape) for point in points]
             rewards = []
             # rewards = np.array(
             #     [self.problem.run_learning_n_get_results(list(point)) for point in points])
 
             with mp.Pool(processes=self.process) as p:
-                results = p.map(self.solver.get_score, points)
+                results = p.map(self.func, points)
             
             rewards = np.array([result for result in results])
 
             elite_idxs = rewards.argsort()[:self.n_elite]
-            elite_weights = [points[i] for i in elite_idxs]
+            elite_weights = [points[i].flatten() for i in elite_idxs]
 
-            best_weight = elite_weights[0]
-
-            reward = self.solver.get_score(best_weight)
+            best_weight = elite_weights[0].reshape(init.shape)
+            print(best_weight)
+            reward = self.func(best_weight)
             if reward < best_reward:
                 best_weight = best_weight
                 best_reward = reward

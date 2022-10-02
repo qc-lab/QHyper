@@ -8,19 +8,23 @@ from qiskit.algorithms.optimizers import ESCH
 
 class Problem(ABC):
     wires: int
-    # dev: qml.QNode
+    dev: qml.QNode
     # optimization_steps: int
     # number_of_layers: int
     # optimizer: qml.GradientDescentOptimizer
 
     @abstractmethod
-    def create_cost_operator(self, parameters) -> qml.Hamiltonian:
+    def create_cost_operator(self, hyperparameters) -> qml.Hamiltonian:
         pass
 
     @abstractmethod
     def get_score(self, result):
         pass
-
+    
+    def _hadamard_layer(self):
+        for i in range(self.wires):
+            qml.Hadamard(i)
+    
     def create_mixing_hamitonian(self, const=1/2):
         hamiltonian = qml.Hamiltonian([], [])
         for i in range(self.wires):
@@ -53,6 +57,33 @@ class Problem(ABC):
                 f"Key: {to_bin(result)} with probability {prob}   "
                 f"| correct: {'True, value: '+str(value) if value != -1 else 'False'}"
             )
+        
+    def circuit(self, params, cost_operator, layers):
+        def qaoa_layer(gamma, beta):
+            qml.qaoa.cost_layer(gamma, cost_operator)
+            qml.qaoa.mixer_layer(beta, self.create_mixing_hamitonian()) 
+
+        self._hadamard_layer()
+        qml.layer(qaoa_layer, layers, params[0], params[1]) 
+
+    def get_expval_func(self, weights, layers):
+        cost_operator = self.create_cost_operator(weights)
+        @qml.qnode(self.dev)
+        def cost_function(params):
+            self.circuit(params, cost_operator, layers)
+            x = qml.expval(cost_operator)
+            return x
+        
+        return cost_function
+
+    def get_probs_func(self, weights, layers):
+        cost_operator = self.create_cost_operator(weights)
+        @qml.qnode(self.dev)
+        def probability_circuit(params):
+            self.circuit(params, cost_operator, layers)
+            return qml.probs(wires=range(self.wires))
+
+        return probability_circuit
 
     
     # def _hadamard_layer(self):
