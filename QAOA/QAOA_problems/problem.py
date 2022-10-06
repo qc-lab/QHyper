@@ -1,89 +1,91 @@
 from abc import ABC, abstractmethod
 
-import pennylane as qml
-from pennylane import numpy as np
+# import pennylane as qml
+# from pennylane import numpy as np
 
 from qiskit.algorithms.optimizers import ESCH
 
 
 class Problem(ABC):
+    objective_function: str
+    constraints: list[str]
     wires: int
-    dev: qml.QNode
+    # dev: qml.QNode
     # optimization_steps: int
     # number_of_layers: int
     # optimizer: qml.GradientDescentOptimizer
 
-    @abstractmethod
-    def create_cost_operator(self, hyperparameters) -> qml.Hamiltonian:
-        pass
+    # @abstractmethod
+    # def create_cost_operator(self, hyperparameters) -> qml.Hamiltonian: # qubo, cost function
+    #     pass
 
-    @abstractmethod
-    def get_score(self, result):
-        pass
+    # @abstractmethod
+    # def get_score(self, result):
+    #     pass
     
-    def _hadamard_layer(self):
-        for i in range(self.wires):
-            qml.Hadamard(i)
+    # def _hadamard_layer(self):
+    #     for i in range(self.wires):
+    #         qml.Hadamard(i)
     
-    def create_mixing_hamitonian(self, const=1/2):
-        hamiltonian = qml.Hamiltonian([], [])
-        for i in range(self.wires):
-            hamiltonian += qml.Hamiltonian([const], [qml.PauliX(i)])
-        return hamiltonian
+    # def create_mixing_hamitonian(self, const=1/2):
+    #     hamiltonian = qml.Hamiltonian([], [])
+    #     for i in range(self.wires):
+    #         hamiltonian += qml.Hamiltonian([const], [qml.PauliX(i)])
+    #     return hamiltonian
     
-    def check_results(self, probs):
-        to_bin = lambda x: format(x, 'b').zfill(self.wires)
+    # def check_results(self, probs):
+    #     to_bin = lambda x: format(x, 'b').zfill(self.wires)
         
-        results_by_probabilites = {result: float(prob) for result, prob in enumerate(probs)}
-        results_by_probabilites = dict(
-            sorted(results_by_probabilites.items(), key=lambda item: item[1], reverse=True))
-        score = 0
-        for result, prob in results_by_probabilites.items():
-            if (value:=self.get_score(to_bin(result))) == -1:
-                score += 0 # experiments?
-            else:
-                score -= prob*value
-        return score 
+    #     results_by_probabilites = {result: float(prob) for result, prob in enumerate(probs)}
+    #     results_by_probabilites = dict(
+    #         sorted(results_by_probabilites.items(), key=lambda item: item[1], reverse=True))
+    #     score = 0
+    #     for result, prob in results_by_probabilites.items():
+    #         if (value:=self.get_score(to_bin(result))) == -1:
+    #             score += 0 # experiments?
+    #         else:
+    #             score -= prob*value
+    #     return score 
     
-    def print_results(self, probs):
-        to_bin = lambda x: format(x, 'b').zfill(self.wires)
-        results_by_probabilites = {result: float(prob) for result, prob in enumerate(probs)}
-        results_by_probabilites = dict(
-            sorted(results_by_probabilites.items(), key=lambda item: item[1], reverse=True))
-        for result, prob in results_by_probabilites.items():
-            # binary_rep = to_bin(key)
-            value = self.get_score(to_bin(result))
-            print(
-                f"Key: {to_bin(result)} with probability {prob}   "
-                f"| correct: {'True, value: '+str(value) if value != -1 else 'False'}"
-            )
+    # def print_results(self, probs):
+    #     to_bin = lambda x: format(x, 'b').zfill(self.wires)
+    #     results_by_probabilites = {result: float(prob) for result, prob in enumerate(probs)}
+    #     results_by_probabilites = dict(
+    #         sorted(results_by_probabilites.items(), key=lambda item: item[1], reverse=True))
+    #     for result, prob in results_by_probabilites.items():
+    #         # binary_rep = to_bin(key)
+    #         value = self.get_score(to_bin(result))
+    #         print(
+    #             f"Key: {to_bin(result)} with probability {prob}   "
+    #             f"| correct: {'True, value: '+str(value) if value != -1 else 'False'}"
+    #         )
         
-    def circuit(self, params, cost_operator, layers):
-        def qaoa_layer(gamma, beta):
-            qml.qaoa.cost_layer(gamma, cost_operator)
-            qml.qaoa.mixer_layer(beta, self.create_mixing_hamitonian()) 
+    # def circuit(self, params, cost_operator, layers):
+    #     def qaoa_layer(gamma, beta):
+    #         qml.qaoa.cost_layer(gamma, cost_operator)
+    #         qml.qaoa.mixer_layer(beta, self.create_mixing_hamitonian()) 
 
-        self._hadamard_layer()
-        qml.layer(qaoa_layer, layers, params[0], params[1]) 
+    #     self._hadamard_layer()
+    #     qml.layer(qaoa_layer, layers, params[0], params[1]) 
 
-    def get_expval_func(self, weights, layers):
-        cost_operator = self.create_cost_operator(weights)
-        @qml.qnode(self.dev)
-        def cost_function(params):
-            self.circuit(params, cost_operator, layers)
-            x = qml.expval(cost_operator)
-            return x
+    # def get_expval_func(self, weights, layers):
+    #     cost_operator = self.create_cost_operator(weights)
+    #     @qml.qnode(self.dev)
+    #     def cost_function(params):
+    #         self.circuit(params, cost_operator, layers)
+    #         x = qml.expval(cost_operator)
+    #         return x
         
-        return cost_function
+    #     return cost_function
 
-    def get_probs_func(self, weights, layers):
-        cost_operator = self.create_cost_operator(weights)
-        @qml.qnode(self.dev)
-        def probability_circuit(params):
-            self.circuit(params, cost_operator, layers)
-            return qml.probs(wires=range(self.wires))
+    # def get_probs_func(self, weights, layers):
+    #     cost_operator = self.create_cost_operator(weights)
+    #     @qml.qnode(self.dev)
+    #     def probability_circuit(params):
+    #         self.circuit(params, cost_operator, layers)
+    #         return qml.probs(wires=range(self.wires))
 
-        return probability_circuit
+    #     return probability_circuit
 
     
     # def _hadamard_layer(self):

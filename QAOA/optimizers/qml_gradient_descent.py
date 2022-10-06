@@ -12,15 +12,12 @@ class QmlGradientDescent(Optimizer):
         self.optimization_steps = optimization_steps
         self.optimizer = optimizer
 
-    def minimize(self, init: list[float]) -> list[float]:
+    def minimize(self, func: Callable, init: list[float]) -> list[float]:
         params = np.array(init, requires_grad=True)
         for _ in range(self.optimization_steps):
-            params = self.optimizer.step(self.func, params)
+            params = self.optimizer.step(func, params)
         
         return params
-    
-    def set_func_from_problem(self, problem: Problem, hyperparameters: dict[str, Any]):
-        self.func = problem.get_expval_func(**hyperparameters)
     
     # def get_function(self, qaoa_problem, init: list[float]):
     #     def wrapper(hyperparameters: list[float], layers: int):

@@ -1,10 +1,7 @@
 from dataclasses import dataclass
-import pennylane as qml
-from pennylane import numpy as np
 import random
 
 from .problem import Problem
-from .parser import parse_hamiltonian
 
 
 @dataclass
@@ -65,34 +62,39 @@ class QAOA_Knapsack(Problem):
         # self.optimization_steps = optimization_steps
         # self.optimizer = optimizer
         self.wires = knapsack.all_items + knapsack.max_weight
-        self.dev = qml.device("default.qubit", wires=self.wires)
+        # self.dev = qml.device("default.qubit", wires=self.wires)
+        self.create_objective_function(knapsack)
+        self.create_constranins(knapsack)
 
     # def _x(self, wire):
     #     return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
 
-    def create_cost_operator(self, parameters):
-        A, B = parameters
-        xs = [f"x{i}" for i in range(self.knapsack.all_items)]
+    def create_objective_function(self, knapsack: Knapsack):
+        xs = [f"x{i}" for i in range(knapsack.all_items)]
+        equation = "-("
+        for i, x in enumerate(xs):
+            equation += f"+{knapsack.items[i].value}*{x}"
+        equation += ")"
+        self.objective_function = equation
+
+    def create_constranins(self, knapsack: Knapsack):
+        xs = [f"x{i}" for i in range(knapsack.all_items)]
         ys = [f"x{i}" for i in range(
-                self.knapsack.all_items, self.knapsack.all_items + self.knapsack.max_weight)]
-        
-        equation = f"{A}*(J"
+                knapsack.all_items, knapsack.all_items + knapsack.max_weight)]
+        constrains = []
+        equation = f"(J"
         for y in ys:
             equation += f"-{y}"
-        equation += f")**2 + {A}*("
-
+        equation += f")**2"
+        constrains.append(equation)
+        equation = "("
         for i, y in enumerate(ys):
             equation += f"+{i+1}*{y}"
         for i, x in enumerate(xs):
-            equation += f"-{self.knapsack.items[i].weight}*{x}"
+            equation += f"-{knapsack.items[i].weight}*{x}"
         equation += ")**2"
-
-        equation += f"-{B}*("
-        for i, x in enumerate(xs):
-            equation += f"+{self.knapsack.items[i].value}*{x}"
-        equation += f")"
-
-        return parse_hamiltonian(equation)
+        constrains.append(equation)
+        self.constraints = constrains
 
     def get_score(self, result):
         sum = 0

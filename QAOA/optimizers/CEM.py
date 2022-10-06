@@ -1,3 +1,4 @@
+from cgitb import reset
 import numpy as np
 
 from dataclasses import dataclass, field
@@ -24,26 +25,30 @@ class CEM(Optimizer):
     def __post_init__(self):
         self.n_elite = int(self.samples_per_epoch * self.elite_frac)
 
-    def set_func_from_problem(self, problem: Problem, hyperparameters: dict[str, Any]):
-        global wrapper
-        def wrapper(params):
-            probs = problem.get_probs_func(**hyperparameters)(params)
-            return problem.check_results(probs)
-        self.func = wrapper
+    # def set_func_from_problem(self, problem: Problem, hyperparameters: dict[str, Any]):
+    #     global wrapper
+    #     def wrapper(params):
+    #         probs = problem.get_probs_func(**hyperparameters)(params)
+    #         return problem.check_results(probs)
+    #     self.func = wrapper
 
     def minimize(
         self, 
         # func: Callable,
-        init: np.array,
+        func_creator, optimizer, init, hyperparams_init
         # mean: list[float] | None = None,
         # cov: np.ndarray | None = None
     ):
-        flatted_init = init.flatten()
-        _mean = [1] * len(flatted_init) # if mean is None else mean
-        _cov = np.identity(len(flatted_init)) # if cov is None else cov
-        best_weight = flatted_init
+        # flatted_init = hyperparams_init.flatten()
+        _mean = [1] * len(hyperparams_init) # if mean is None else mean
+        _cov = np.identity(len(hyperparams_init)) # if cov is None else cov
+        best_weight = hyperparams_init
         best_reward = float('inf')
 
+        def func(points):
+            _func = func_creator(points)
+            params = optimizer.minimize(_func, init)
+            return _func(params)
         print_every=1
 
         # scores_deque = deque(maxlen=100)
@@ -76,22 +81,23 @@ class CEM(Optimizer):
             # points = list(zip(points_A, points_B))
 
             points = np.concatenate((points, [best_weight.flatten()]), axis=0)
-            points = [np.reshape(np.array(point), init.shape) for point in points]
+            points = [np.reshape(np.array(point), hyperparams_init.shape) for point in points]
             rewards = []
             # rewards = np.array(
             #     [self.problem.run_learning_n_get_results(list(point)) for point in points])
 
-            with mp.Pool(processes=self.process) as p:
-                results = p.map(self.func, points)
-            
+            # with mp.Pool(processes=self.process) as p:
+            #     results = p.map(func, points)
+            results = [func(point) for point in points]
+
             rewards = np.array([result for result in results])
 
             elite_idxs = rewards.argsort()[:self.n_elite]
             elite_weights = [points[i].flatten() for i in elite_idxs]
 
-            best_weight = elite_weights[0].reshape(init.shape)
-            print(best_weight)
-            reward = self.func(best_weight)
+            best_weight = elite_weights[0].reshape(hyperparams_init.shape)
+            # print(best_weight)
+            reward = func(best_weight)
             if reward < best_reward:
                 best_weight = best_weight
                 best_reward = reward
