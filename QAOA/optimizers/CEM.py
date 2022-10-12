@@ -8,13 +8,13 @@ from typing import Callable, Any
 
 # from ..QAOA_problems.problem import Problem
 # from ..problem_solver import ProblemSolver
-from .optimizer import Optimizer
-from ..QAOA_problems.problem import Problem
+from .optimizer import HyperparametersOptimizer
+# from ..QAOA_problems.problem import Problem
 import scipy
 
 
 @dataclass
-class CEM(Optimizer):
+class CEM(HyperparametersOptimizer):
     # solver: ProblemSolver
     epochs: int = 10
     samples_per_epoch: int = 100

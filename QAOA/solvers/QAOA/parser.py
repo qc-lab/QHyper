@@ -49,7 +49,7 @@ class Visitor(ast.NodeVisitor):
         if node.id[0] == "x":
             return self.substitution(int(node.id[1:]))
         if node.id[0] == "J":
-            return qml.Identity(0)
+            return qml.Identity(-1)
     
     def visit_Call(self, node: ast.Call) -> Any:
         if node.func.id == "sum":
@@ -72,4 +72,10 @@ def parse_hamiltonian(expresion: str) -> qml.Hamiltonian:
     tree = ast.parse(expresion)
     vis = Visitor()
     vis.visit(tree)
+    for i, op in enumerate(vis.results[0].ops):
+        if op.wires.tolist() == [-1]:
+            return qml.Hamiltonian(
+                vis.results[0].coeffs.tolist()[:i] + vis.results[0].coeffs.tolist()[i+1:],
+                vis.results[0].ops[:i] + vis.results[0].ops[i+1:]
+            )
     return vis.results[0]

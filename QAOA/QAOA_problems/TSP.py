@@ -1,7 +1,7 @@
 import itertools
 
-import pennylane as qml
-from pennylane import numpy as np
+# import pennylane as qml
+import numpy as np
 
 from .problem import Problem
 
@@ -42,63 +42,95 @@ class QAOA_TSP(Problem):
     def __init__(
         self, 
         number_of_cities, 
-        number_of_layers: int = 6, 
-        optimization_steps: int = 70,
-        optimizer: qml.GradientDescentOptimizer = qml.AdagradOptimizer()
+        # number_of_layers: int = 6, 
+        # optimization_steps: int = 70,
+        # optimizer: qml.GradientDescentOptimizer = qml.AdagradOptimizer()
     ):
         self.tsp_instance = TSP(number_of_cities)
-        self.number_of_layers = number_of_layers
+        # self.number_of_layers = number_of_layers
         self.wires = number_of_cities**2
-        self.optimization_steps = optimization_steps
-        self.optimizer = optimizer
-        self.dev = qml.device("default.qubit", wires=self.wires)
-    
+        # self.optimization_steps = optimization_steps
+        # self.optimizer = optimizer
+        # self.dev = qml.device("default.qubit", wires=self.wires)
+        self.create_objective_function()
+        self.create_constranins()
+
     def _calc_bit(self, i, t):
         return i + t * self.tsp_instance.number_of_cities
 
-    def _x(self, i, t):
-        wire = self._calc_bit(i, t)
-        return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
-
-    def create_cost_operator(self, parameters: list[float]):
-        A_1, A_2, B = parameters
-        
-        cost_of_constraint_each_visited = 0    
-        for i in range(self.tsp_instance.number_of_cities):
-            curr = qml.Identity(0)
-            for t in range(self.tsp_instance.number_of_cities):
-                curr -= self._x(i, t)    
-            for t1 in range(self.tsp_instance.number_of_cities):
-                for t2 in range(t1 + 1, self.tsp_instance.number_of_cities):
-                    curr += 2 * self._x(i, t1) @ self._x(i, t2)
-            cost_of_constraint_each_visited += curr
-        cost_of_constraint_each_visited_once = 0
-        for t in range(self.tsp_instance.number_of_cities):
-            curr = qml.Identity(0)
-            for i in range(self.tsp_instance.number_of_cities):
-                curr -= self._x(i, t)
-            for i1 in range(self.tsp_instance.number_of_cities):
-                for i2 in range(i1 + 1, self.tsp_instance.number_of_cities):
-                    curr += 2 * self._x(i1, t) @ self._x(i2, t)
-            cost_of_constraint_each_visited += curr
-        
-        cost_of_visiting_cities = 0
+    # def _x(self, i, t):
+    #     wire = self._calc_bit(i, t)
+    #     return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
+    
+    def create_objective_function(self):
+        print("CREATING...")
+        equation = ""
         for i, j in itertools.permutations(range(0, self.tsp_instance.number_of_cities), 2):
-            curr = qml.Identity(0)
+            equation += f"+{self.tsp_instance.normalized_distance_matrix[i][j]}*("
             for t in range(self.tsp_instance.number_of_cities):
-                inc_t = t + 1
-                if inc_t == self.tsp_instance.number_of_cities:
-                    inc_t = 0
-                curr += self._x(i, t) @ self._x(j, inc_t)
-            cost_of_visiting_cities += float(self.tsp_instance.normalized_distance_matrix[i][j]) * curr 
+                equation += f"+x{self._calc_bit(i, t)}*x{self._calc_bit(j, (t+1)%self.tsp_instance.number_of_cities)}"
+            equation += ")"
         
-        cost_operator = (
-            A_1 * cost_of_constraint_each_visited + 
-            A_2 * cost_of_constraint_each_visited_once +
-            B * cost_of_visiting_cities
-        )
+        self.objective_function = equation
+
+    def create_constranins(self):
+        self.constraints = []
+        equation = ""
+        for i in range(self.tsp_instance.number_of_cities):
+            equation += f"+(J"
+            for t in range(self.tsp_instance.number_of_cities):
+                equation += f"-x{self._calc_bit(i, t)}"
+            equation += f")**2"
+        
+        
+        self.constraints.append(equation)
+        equation = ""
+        for t in range(self.tsp_instance.number_of_cities):
+            equation += f"+(J"
+            for i in range(self.tsp_instance.number_of_cities):
+                equation += f"-x{self._calc_bit(i, t)}"
+            equation += f")**2"
+        self.constraints.append(equation)
+
+    # def create_cost_operator(self, parameters: list[float]):
+    #     A_1, A_2, B = parameters
+        
+    #     cost_of_constraint_each_visited = 0    
+    #     for i in range(self.tsp_instance.number_of_cities):
+    #         curr = qml.Identity(0)
+    #         for t in range(self.tsp_instance.number_of_cities):
+    #             curr -= self._x(i, t)    
+    #         for t1 in range(self.tsp_instance.number_of_cities):
+    #             for t2 in range(t1 + 1, self.tsp_instance.number_of_cities):
+    #                 curr += 2 * self._x(i, t1) @ self._x(i, t2)
+    #         cost_of_constraint_each_visited += curr
+    #     cost_of_constraint_each_visited_once = 0
+    #     for t in range(self.tsp_instance.number_of_cities):
+    #         curr = qml.Identity(0)
+    #         for i in range(self.tsp_instance.number_of_cities):
+    #             curr -= self._x(i, t)
+    #         for i1 in range(self.tsp_instance.number_of_cities):
+    #             for i2 in range(i1 + 1, self.tsp_instance.number_of_cities):
+    #                 curr += 2 * self._x(i1, t) @ self._x(i2, t)
+    #         cost_of_constraint_each_visited += curr
+        
+    #     cost_of_visiting_cities = 0
+    #     for i, j in itertools.permutations(range(0, self.tsp_instance.number_of_cities), 2):
+    #         curr = qml.Identity(0)
+    #         for t in range(self.tsp_instance.number_of_cities):
+    #             inc_t = t + 1
+    #             if inc_t == self.tsp_instance.number_of_cities:
+    #                 inc_t = 0
+    #             curr += self._x(i, t) @ self._x(j, inc_t)
+    #         cost_of_visiting_cities += float(self.tsp_instance.normalized_distance_matrix[i][j]) * curr 
+        
+    #     cost_operator = (
+    #         A_1 * cost_of_constraint_each_visited + 
+    #         A_2 * cost_of_constraint_each_visited_once +
+    #         B * cost_of_visiting_cities
+    #     )
                 
-        return cost_operator
+    #     return cost_operator
     
     def _get_distance(self, key):
         get_bin = lambda x: format(x, 'b').zfill(self.wires)

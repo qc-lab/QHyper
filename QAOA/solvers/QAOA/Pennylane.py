@@ -66,19 +66,19 @@ class PennyLaneQAOA(Solver):
 
         return probability_circuit
 
-    # def check_results(self, probs):
-    #     to_bin = lambda x: format(x, 'b').zfill(self.wires)
+    def check_results(self, probs):
+        to_bin = lambda x: format(x, 'b').zfill(self.problem.wires)
         
-    #     results_by_probabilites = {result: float(prob) for result, prob in enumerate(probs)}
-    #     results_by_probabilites = dict(
-    #         sorted(results_by_probabilites.items(), key=lambda item: item[1], reverse=True))
-    #     score = 0
-    #     for result, prob in results_by_probabilites.items():
-    #         if (value:=self.get_score(to_bin(result))) == -1:
-    #             score += 0 # experiments?
-    #         else:
-    #             score -= prob*value
-    #     return score 
+        results_by_probabilites = {result: float(prob) for result, prob in enumerate(probs)}
+        results_by_probabilites = dict(
+            sorted(results_by_probabilites.items(), key=lambda item: item[1], reverse=True))
+        score = 0
+        for result, prob in results_by_probabilites.items():
+            if (value:=self.problem.get_score(to_bin(result))) == -1:
+                score += 0 # experiments?
+            else:
+                score -= prob*value
+        return score * 100
     
     def print_results(self, probs):
         to_bin = lambda x: format(x, 'b').zfill(self.problem.wires)
