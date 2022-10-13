@@ -4,13 +4,24 @@ import numpy as np
 from .optimizer import HyperparametersOptimizer
 
 class Random(HyperparametersOptimizer):
+    epochs: int = 10
+    samples_per_epoch: int = 100
+    elite_frac: float = 0.1
+    process: int = mp.cpu_count()
+
     def minimize(
         self, 
-        init_weights: list[float],
+        func_creator, optimizer,
+        init: list[float],
         bounds: list[float] = [-10, 10],
     ):
-        best_weight = init_weights
+        best_weight = init
         best_reward = float('inf')
+
+        def func(points):
+            _func = func_creator(points)
+            params = optimizer.minimize(_func, init)
+            return _func(params)
 
         print_every=1
 
@@ -26,8 +37,10 @@ class Random(HyperparametersOptimizer):
             # rewards = np.array(
             #     [self.problem.run_learning_n_get_results(list(point)) for point in points])
 
-            with mp.Pool(processes=self.process) as p:
-                results = p.map(self.problem.run_learning_n_get_results, points)
+            # with mp.Pool(processes=self.process) as p:
+            #     results = p.map(func, points)
+            
+            results = [func(point) for point in points]
             
             rewards = np.array([result for result in results])
 
@@ -36,7 +49,7 @@ class Random(HyperparametersOptimizer):
 
             best_weight = elite_weights[0]
 
-            reward = self.problem.run_learning_n_get_results(best_weight)
+            reward = func(best_weight)
             if reward < best_reward:
                 best_weight = best_weight
                 best_reward = reward
