@@ -1,6 +1,5 @@
 import itertools
 
-# import pennylane as qml
 import numpy as np
 
 from .problem import Problem
@@ -41,29 +40,17 @@ class TSP:
 class QAOA_TSP(Problem):
     def __init__(
         self, 
-        number_of_cities, 
-        # number_of_layers: int = 6, 
-        # optimization_steps: int = 70,
-        # optimizer: qml.GradientDescentOptimizer = qml.AdagradOptimizer()
+        number_of_cities
     ):
         self.tsp_instance = TSP(number_of_cities)
-        # self.number_of_layers = number_of_layers
         self.wires = number_of_cities**2
-        # self.optimization_steps = optimization_steps
-        # self.optimizer = optimizer
-        # self.dev = qml.device("default.qubit", wires=self.wires)
         self.create_objective_function()
         self.create_constranins()
 
     def _calc_bit(self, i, t):
         return i + t * self.tsp_instance.number_of_cities
-
-    # def _x(self, i, t):
-    #     wire = self._calc_bit(i, t)
-    #     return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
     
     def create_objective_function(self):
-        print("CREATING...")
         equation = ""
         for i, j in itertools.permutations(range(0, self.tsp_instance.number_of_cities), 2):
             equation += f"+{self.tsp_instance.normalized_distance_matrix[i][j]}*("
@@ -91,46 +78,6 @@ class QAOA_TSP(Problem):
                 equation += f"-x{self._calc_bit(i, t)}"
             equation += f")**2"
         self.constraints.append(equation)
-
-    # def create_cost_operator(self, parameters: list[float]):
-    #     A_1, A_2, B = parameters
-        
-    #     cost_of_constraint_each_visited = 0    
-    #     for i in range(self.tsp_instance.number_of_cities):
-    #         curr = qml.Identity(0)
-    #         for t in range(self.tsp_instance.number_of_cities):
-    #             curr -= self._x(i, t)    
-    #         for t1 in range(self.tsp_instance.number_of_cities):
-    #             for t2 in range(t1 + 1, self.tsp_instance.number_of_cities):
-    #                 curr += 2 * self._x(i, t1) @ self._x(i, t2)
-    #         cost_of_constraint_each_visited += curr
-    #     cost_of_constraint_each_visited_once = 0
-    #     for t in range(self.tsp_instance.number_of_cities):
-    #         curr = qml.Identity(0)
-    #         for i in range(self.tsp_instance.number_of_cities):
-    #             curr -= self._x(i, t)
-    #         for i1 in range(self.tsp_instance.number_of_cities):
-    #             for i2 in range(i1 + 1, self.tsp_instance.number_of_cities):
-    #                 curr += 2 * self._x(i1, t) @ self._x(i2, t)
-    #         cost_of_constraint_each_visited += curr
-        
-    #     cost_of_visiting_cities = 0
-    #     for i, j in itertools.permutations(range(0, self.tsp_instance.number_of_cities), 2):
-    #         curr = qml.Identity(0)
-    #         for t in range(self.tsp_instance.number_of_cities):
-    #             inc_t = t + 1
-    #             if inc_t == self.tsp_instance.number_of_cities:
-    #                 inc_t = 0
-    #             curr += self._x(i, t) @ self._x(j, inc_t)
-    #         cost_of_visiting_cities += float(self.tsp_instance.normalized_distance_matrix[i][j]) * curr 
-        
-    #     cost_operator = (
-    #         A_1 * cost_of_constraint_each_visited + 
-    #         A_2 * cost_of_constraint_each_visited_once +
-    #         B * cost_of_visiting_cities
-    #     )
-                
-    #     return cost_operator
     
     def _get_distance(self, key):
         get_bin = lambda x: format(x, 'b').zfill(self.wires)
@@ -147,25 +94,17 @@ class QAOA_TSP(Problem):
 
         return dist
 
+    def valid(self, result):
+        result = np.reshape(list(result), (-1, self.tsp_instance.number_of_cities)).astype(np.bool8)
+        return (result.sum(0) == 1).all() and (result.sum(1) == 1).all()
+
     def check_results(self, probs):
         get_bin = lambda x: format(x, 'b').zfill(self.wires)
-        correct_results_3 = ("100010001", "100001010", "010100001", "010001100", "001100010", "001010100")
-        correct_results_4 = ("0001100001000010","0010010010000001","0100100000010010","1000000100100100","1000010000100001","0100001000011000","0001001001001000","0010000110000100","0100000110000010","0010100000010100","0001010000101000","0001100000100100","1000000101000010","1000001001000001","0100001010000001", "0100000100101000", "0010010000011000", "0100100000100001", "1000001000010100", "0001001010000100", "0001010010000010","0010000101001000", "1000010000010010", "0010100001000001")
-        
-        if self.tsp_instance.number_of_cities == 2:
-            correct_results = ("1001", "0110")
-        elif self.tsp_instance.number_of_cities == 3:
-            correct_results = correct_results_3
-        elif self.tsp_instance.number_of_cities == 4:
-            correct_results = correct_results_4
-        else:
-            raise Exception(f"Provide correct results for {self.tsp_instance.number_of_cities} cites")
-
         result_dict = {key: float(val) for key, val in enumerate(probs)}
         result_dict = dict(sorted(result_dict.items(), key=lambda item: item[1], reverse=True))
         score = 0
         for key, val in result_dict.items():
-            if get_bin(key) not in correct_results:
+            if self.valid(get_bin(key)):
                 score += val*20
             else:
                 score += val*self._get_distance(key)
