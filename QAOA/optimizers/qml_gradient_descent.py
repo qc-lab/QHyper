@@ -14,6 +14,8 @@ class QmlGradientDescent(Optimizer):
 
     def minimize(self, func: Callable, init: list[float]) -> list[float]:
         params = np.array(init, requires_grad=True)
+        if "reset" in dir(self.optimizer):
+            self.optimizer.reset()
         for _ in range(self.optimization_steps):
             params = self.optimizer.step(func, params)
         
