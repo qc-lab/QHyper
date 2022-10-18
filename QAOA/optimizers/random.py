@@ -1,66 +1,38 @@
 import multiprocessing as mp
 import numpy as np
+import tqdm
 
-from .optimizer import HyperparametersOptimizer
+from dataclasses import dataclass
+from typing import Callable
 
+from .optimizer import HyperparametersOptimizer, Worker, ArgsType, Optimizer
+
+
+@dataclass
 class Random(HyperparametersOptimizer):
-    epochs: int = 10
-    samples_per_epoch: int = 100
-    elite_frac: float = 0.1
+    number_of_samples: int = 100
     process: int = mp.cpu_count()
 
     def minimize(
         self, 
-        func_creator, optimizer,
-        init: list[float],
-        bounds: list[float] = [-10, 10],
-    ):
-        best_weight = init
-        best_reward = float('inf')
+        func_creator: Callable[[ArgsType], Callable[[ArgsType], float]], 
+        optimizer: Optimizer,
+        init: ArgsType, 
+        hyperparams_init: ArgsType = None, 
+        bounds: list[float] = [0, 10],
+    ) -> ArgsType:
+        hyperparams_init = np.array(hyperparams_init)
 
-        def func(points):
-            _func = func_creator(points)
-            params = optimizer.minimize(_func, init)
-            return _func(params)
+        hyperparams = (
+            (bounds[1] - bounds[0]) 
+            * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
+            + bounds[0])
 
-        print_every=1
+        worker = Worker(func_creator, optimizer, init)
 
-        for i_iteration in range(1, self.epochs+1):
-            points_A = (bounds[1] - bounds[0]) * np.random.random(self.samples_per_epoch) + bounds[0]
-            points_B = (bounds[1] - bounds[0]) * np.random.random(self.samples_per_epoch) + bounds[0]
-
-            points = list(zip(points_A, points_B))
-
-            points = np.concatenate((points, [best_weight]), axis=0)
-            points = [list(point) for point in points]
-            rewards = []
-            # rewards = np.array(
-            #     [self.problem.run_learning_n_get_results(list(point)) for point in points])
-
-            # with mp.Pool(processes=self.process) as p:
-            #     results = p.map(func, points)
+        with mp.Pool(processes=self.process) as p:
+            results = list(tqdm.tqdm(p.imap(worker.func, hyperparams), total=self.number_of_samples))
             
-            results = [func(point) for point in points]
-            
-            rewards = np.array([result for result in results])
+        min_idx = np.argmin([result for result in results])
 
-            elite_idxs = rewards.argsort()[:self.n_elite]
-            elite_weights = [points[i] for i in elite_idxs]
-
-            best_weight = elite_weights[0]
-
-            reward = func(best_weight)
-            if reward < best_reward:
-                best_weight = best_weight
-                best_reward = reward
-
-            if i_iteration % print_every == 0:
-                # print(self.mean)
-                # print(self.cov)
-                print(f'Epoch {i_iteration}\t'
-                      f'Average Elite Score: {np.average([rewards[i] for i in elite_idxs])}\t'
-                      f'Average Score: {np.average(rewards)}'
-                )
-                # print(best_weight)
-                print(f'{best_weight} with reward: {best_reward}')
-        return best_weight
+        return hyperparams[min_idx]
