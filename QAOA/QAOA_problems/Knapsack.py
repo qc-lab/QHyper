@@ -96,7 +96,7 @@ class QAOA_Knapsack(Problem):
         constrains.append(equation)
         self.constraints = constrains
 
-    def get_score(self, result):
+    def get_score(self, result) -> float | None:
         sum = 0
         weight = 0
         for i, item in enumerate(self.knapsack.items):
@@ -104,39 +104,12 @@ class QAOA_Knapsack(Problem):
                 sum += item.value
                 weight += item.weight
         if weight > self.knapsack.max_weight:
-            return -1
+            return None
 
         for i in range(self.knapsack.max_weight):
             if result[i + self.knapsack.all_items] == '1' and i+1 != weight:
-                return -1
+                return None
         if weight != 0 and result[weight + self.knapsack.all_items - 1] != '1':
-            return -1
+            return None
 
         return sum
-
-    # def _check_results(self, probs):
-    #     get_bin = lambda x: format(x, 'b').zfill(self.wires)
-        
-    #     result_dict = {key: float(val) for key, val in enumerate(probs)}
-    #     result_dict = dict(sorted(result_dict.items(), key=lambda item: item[1], reverse=True))
-    #     score = 0
-    #     for key, val in result_dict.items():
-    #         binary_rep = get_bin(key)
-    #         if (value:=self._get_value(binary_rep)) == -1:
-    #             score += 0 # experiments?
-    #         else:
-    #             score -= val*value
-    #     return score 
-
-    # def print_results(self, parameters):
-    #     get_bin = lambda x: format(x, 'b').zfill(self.wires)
-    #     probs = self._run_learning(parameters)
-    #     result_dict = {key: float(val) for key, val in enumerate(probs)}
-    #     result_dict = dict(sorted(result_dict.items(), key=lambda item: item[1], reverse=True))
-    #     for key, val in result_dict.items():
-    #         binary_rep = get_bin(key)
-
-    #         print(
-    #             f"Key: {get_bin(key)} with probability {val}   "
-    #             f"| correct: {'True, value: '+str(self._get_value(binary_rep)) if self._get_value(binary_rep) != -1 else 'False'}"
-    #         )

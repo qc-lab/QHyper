@@ -1,7 +1,5 @@
 from abc import ABC
 
-from qiskit.algorithms.optimizers import ESCH
-
 
 class Problem(ABC):
     """Base class for different problems
@@ -20,4 +18,15 @@ class Problem(ABC):
     objective_function: str
     constraints: list[str]
     wires: int
+
+    def get_score(self, result: str) -> float | None:
+        """Method should return score of the provided outcome in bits. 
+        Necessary only for specific function. Not needed for minimizing function.
+        
+        Args:
+            - result - outcome as a string of zeros and ones
+
+        Returns float if outcome is correct and meets all criteria, else returns None
+        """
+        raise Exception("Unimplemented")
  

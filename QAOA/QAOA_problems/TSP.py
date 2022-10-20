@@ -80,8 +80,7 @@ class QAOA_TSP(Problem):
         self.constraints.append(equation)
     
     def _get_distance(self, key):
-        get_bin = lambda x: format(x, 'b').zfill(self.wires)
-        results = np.array_split(list(get_bin(key)), self.tsp_instance.number_of_cities)
+        results = np.array_split(list(key), self.tsp_instance.number_of_cities)
         dist = 0
         tab = []
         for result in results:
@@ -89,26 +88,15 @@ class QAOA_TSP(Problem):
 
         for i in range(len(tab)):
             j = i - 1
-            # print(tsp_instance.normalized_distance_matrix[i][j])
             dist += self.tsp_instance.normalized_distance_matrix[tab[i]][tab[j]]
 
         return dist
 
-    def valid(self, result):
+    def _valid(self, result):
         result = np.reshape(list(result), (-1, self.tsp_instance.number_of_cities)).astype(np.bool8)
         return (result.sum(0) == 1).all() and (result.sum(1) == 1).all()
 
-    def check_results(self, probs):
-        get_bin = lambda x: format(x, 'b').zfill(self.wires)
-        result_dict = {key: float(val) for key, val in enumerate(probs)}
-        result_dict = dict(sorted(result_dict.items(), key=lambda item: item[1], reverse=True))
-        score = 0
-        for key, val in result_dict.items():
-            if self.valid(get_bin(key)):
-                score += val*20
-            else:
-                score += val*self._get_distance(key)
-        return score
-    
-    def get_score(self, result):
-        pass
+    def get_score(self, result) -> float | None:
+        if not self._valid(result):
+            return None # Bigger value that possible distance 
+        return self._get_distance(result)
