@@ -1,118 +1,100 @@
-from cgitb import reset
 import numpy as np
 
 from dataclasses import dataclass, field
 
 import multiprocessing as mp
+import tqdm 
 from typing import Callable, Any
 
-# from ..QAOA_problems.problem import Problem
-# from ..problem_solver import ProblemSolver
-from .optimizer import HyperparametersOptimizer
-# from ..QAOA_problems.problem import Problem
-import scipy
+from .optimizer import HyperparametersOptimizer, Worker, ArgsType, Optimizer
 
 
 @dataclass
 class CEM(HyperparametersOptimizer):
-    # solver: ProblemSolver
+    """Cross Entropy Method
+    
+    Args:
+        - epochs - an integer indicating number of epochs (default 10)
+        - samples_per_epoch - an integer indicating how many samples in each epoch (default 100)
+        - elite_frac - a float indicating how many top samples will be used to calculate 
+            mean and cov for next epoch (default 0.1)
+        - processes - an integer indicating how many processors will be used (default cpu count)
+    """
+
     epochs: int = 10
     samples_per_epoch: int = 100
     elite_frac: float = 0.1
+    processes: int = mp.cpu_count()
+
     n_elite: int = field(init=False)
-    process: int = mp.cpu_count()
 
     def __post_init__(self):
         self.n_elite = int(self.samples_per_epoch * self.elite_frac)
 
-    # def set_func_from_problem(self, problem: Problem, hyperparameters: dict[str, Any]):
-    #     global wrapper
-    #     def wrapper(params):
-    #         probs = problem.get_probs_func(**hyperparameters)(params)
-    #         return problem.check_results(probs)
-    #     self.func = wrapper
-
     def minimize(
         self, 
-        # func: Callable,
-        func_creator, optimizer, init, hyperparams_init
-        # mean: list[float] | None = None,
-        # cov: np.ndarray | None = None
-    ):
-        # flatted_init = hyperparams_init.flatten()
-        _mean = [1] * len(hyperparams_init) # if mean is None else mean
-        _cov = np.identity(len(hyperparams_init)) # if cov is None else cov
-        best_weight = hyperparams_init
-        best_reward = float('inf')
+        func_creator: Callable[[ArgsType], Callable[[ArgsType], float]], 
+        optimizer: Optimizer,
+        init: ArgsType, 
+        hyperparams_init: ArgsType = None, 
+        bounds: list[float] = None,
+        **kwargs: Any
+    ) -> ArgsType:
+        """This method receives:
+            - func_creator - function, which receives hyperparameters, and returns 
+                function which will be optimized using optimizer
+            - optimizer - object of class Optimizer
+            - init - initial args for optimizer
+            - hyperparams_init - initial hyperparameters
+            - bounds - bounds for hyperparameters
+            - kwargs - allow additional arguments, available args:
+                - print_freq - recevives int, prints additional score information every x epochs
 
-        def func(points):
-            _func = func_creator(points)
-            params = optimizer.minimize(_func, init)
-            return _func(params)
-        print_every=1
 
-        # scores_deque = deque(maxlen=100)
+        Returns hyperparameters which leads to the lowest values returned by optimizer
+        """
+        mean = [1] * len(hyperparams_init) 
+        cov = np.identity(len(hyperparams_init))
+        best_hyperparams = hyperparams_init
+        best_score = float('inf')
+
+        print_freq = kwargs.get("print_freq", self.epochs+1)
+
         scores = []
-
+        worker = Worker(func_creator, optimizer, init)
         for i_iteration in range(1, self.epochs+1):
-            points = np.random.multivariate_normal(_mean, _cov, size=self.samples_per_epoch)
+            hyperparams = np.random.multivariate_normal(mean, cov, size=self.samples_per_epoch)
+            hyperparams[hyperparams < bounds[0]] = bounds[0]
+            hyperparams[hyperparams > bounds[1]] = bounds[1]
 
-            # std_dev = np.full(self.samples_per_epoch, np.sqrt(_cov[1][1]))
-            # mean_B = np.full(self.samples_per_epoch, _mean[1])
-            # lower_bound_B = np.full(self.samples_per_epoch, 0)
-            # upper_bound_B = np.full(self.samples_per_epoch, 100)
-            # points_B = scipy.stats.truncnorm.rvs(
-            #     (lower_bound_B - mean_B) / std_dev, 
-            #     upper_bound_B, 
-            #     loc=mean_B, 
-            #     scale=std_dev
-            # )
-
-            # max_c = 2
-            # mean_A = np.full(self.samples_per_epoch, _mean[0])
-            # std_dev = np.full(self.samples_per_epoch, np.sqrt(_cov[0][0]))
-            # points_A = scipy.stats.truncnorm.rvs(
-            #     ((points_B*max_c + 0.1)-mean_A)/std_dev, 
-            #     (points_B*max_c + 10)/std_dev, 
-            #     loc=mean_A, 
-            #     scale=std_dev
-            # )
-
-            # points = list(zip(points_A, points_B))
-
-            points = np.concatenate((points, [best_weight.flatten()]), axis=0)
-            points = [np.reshape(np.array(point), hyperparams_init.shape) for point in points]
+            hyperparams = np.concatenate((hyperparams, [best_hyperparams.flatten()]), axis=0)
+            hyperparams = [
+                np.reshape(np.array(hyperparam), hyperparams_init.shape) for hyperparam in hyperparams]
             rewards = []
-            # rewards = np.array(
-            #     [self.problem.run_learning_n_get_results(list(point)) for point in points])
 
-            # with mp.Pool(processes=self.process) as p:
-            #     results = p.map(func, points)
-            results = [func(point) for point in points]
+            with mp.Pool(processes=self.processes) as p:
+                results = list(tqdm.tqdm(p.imap(worker.func, hyperparams), total=len(hyperparams)))
 
             rewards = np.array([result for result in results])
 
             elite_idxs = rewards.argsort()[:self.n_elite]
-            elite_weights = [points[i].flatten() for i in elite_idxs]
+            elite_weights = [hyperparams[i].flatten() for i in elite_idxs]
 
-            best_weight = elite_weights[0].reshape(hyperparams_init.shape)
-            # print(best_weight)
-            reward = func(best_weight)
-            if reward < best_reward:
-                best_weight = best_weight
-                best_reward = reward
-            # scores_deque.append(reward)
+            best_hyperparams = elite_weights[0].reshape(hyperparams_init.shape)
+
+            reward = worker.func(best_hyperparams)
+            if reward < best_score:
+                best_hyperparams = best_hyperparams
+                best_score = reward
+
             scores.append(reward)
-            _mean = np.mean(elite_weights, axis=0)
-            _cov = np.cov(np.stack((elite_weights), axis = 1), bias=True)
+            mean = np.mean(elite_weights, axis=0)
+            cov = np.cov(np.stack((elite_weights), axis = 1), bias=True)
 
-            if i_iteration % print_every == 0:
-                # print(self.mean)
-                # print(self.cov)
+            if i_iteration % print_freq == 0:
                 print(f'Epoch {i_iteration}\t'
                       f'Average Elite Score: {np.average([rewards[i] for i in elite_idxs])}\t'
                       f'Average Score: {np.average(rewards)}'
                 )
-                # print(best_weight)
-                print(f'{best_weight} with reward: {best_reward}')
-        return best_weight
+                print(f'{best_hyperparams} with score: {best_score}')
+        return best_hyperparams

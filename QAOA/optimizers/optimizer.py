@@ -27,7 +27,8 @@ class HyperparametersOptimizer(ABC):
         optimizer: Optimizer, 
         init: ArgsType, 
         hyperparams_init: ArgsType, 
-        bounds: list[float]
+        bounds: list[float],
+        **kwargs: Any
     ) -> ArgsType:
         """Find best hyperparameters
 
@@ -38,6 +39,7 @@ class HyperparametersOptimizer(ABC):
             - init - initial args for optimizer
             - hyperparams_init - initial hyperparameters
             - bounds - bounds for hyperparameters
+            - kwargs - allow additional arguments
 
         Returns hyperparameters which leads to the lowest values returned by optimizer
         """
