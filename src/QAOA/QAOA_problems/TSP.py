@@ -45,7 +45,7 @@ class QAOA_TSP(Problem):
         self.tsp_instance = TSP(number_of_cities)
         self.wires = number_of_cities**2
         self.create_objective_function()
-        self.create_constranins()
+        self.create_constraints()
 
     def _calc_bit(self, i, t):
         return i + t * self.tsp_instance.number_of_cities
@@ -60,7 +60,7 @@ class QAOA_TSP(Problem):
         
         self.objective_function = equation
 
-    def create_constranins(self):
+    def create_constraints(self):
         self.constraints = []
         equation = ""
         for i in range(self.tsp_instance.number_of_cities):

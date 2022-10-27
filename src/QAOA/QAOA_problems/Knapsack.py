@@ -64,7 +64,7 @@ class QAOA_Knapsack(Problem):
         self.wires = knapsack.all_items + knapsack.max_weight
         # self.dev = qml.device("default.qubit", wires=self.wires)
         self.create_objective_function(knapsack)
-        self.create_constranins(knapsack)
+        self.create_constraints(knapsack)
 
     # def _x(self, wire):
     #     return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
@@ -77,7 +77,7 @@ class QAOA_Knapsack(Problem):
         equation += ")"
         self.objective_function = equation
 
-    def create_constranins(self, knapsack: Knapsack):
+    def create_constraints(self, knapsack: Knapsack):
         xs = [f"x{i}" for i in range(knapsack.all_items)]
         ys = [f"x{i}" for i in range(
                 knapsack.all_items, knapsack.all_items + knapsack.max_weight)]
