@@ -6,4 +6,9 @@ API
    :members:
    :undoc-members:
 
+.. automodule:: QAOA.optimizers.CEM
+   :autosummary:
+   :members:
+   :undoc-members:
+
    
