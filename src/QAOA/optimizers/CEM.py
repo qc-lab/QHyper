@@ -23,11 +23,6 @@ class CEM(HyperparametersOptimizer):
         number of processors that will be used (default cpu count)
     n_elite : int
         calulated by multiplying samples_per_epoch by elite_frac
-
-    Methods
-    -------
-    minimize(func_creator, optimizer, init, hyperparams_init, bounds, **kwargs):
-        Returns hyperparameters which leads to the lowest values returned by optimizer 
     """
    
     def __init__(
@@ -65,7 +60,7 @@ class CEM(HyperparametersOptimizer):
         bounds: list[float] = None,
         **kwargs: Any
     ) -> ArgsType:
-        """Returns hyperparameters which leads to the lowest values returned by optimizer 
+        """Returns hyperparameters which leads to the lowest values returned by optimizer 1
         
         Parameters
         ----------

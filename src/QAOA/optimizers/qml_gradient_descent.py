@@ -6,7 +6,7 @@ import pennylane as qml
 from .optimizer import Optimizer, ArgsType
 
 
-class QmlGradientDescent():
+class QmlGradientDescent(Optimizer):
     """Gradient Descent Optimizer
 
     Using GradientDescentOptimizer from library pennylane. 
@@ -17,11 +17,6 @@ class QmlGradientDescent():
         number of optimization steps
     optimizer : qml.GradientDescentOptimizer
         object of class GradientDescentOptimizer or inheriting from this class
-
-    Methods
-    -------
-    minimize(func, init):
-        Returns params which leads to the lowest value of the provided function
     """
 
     def __init__(self, optimization_steps: int, optimizer: qml.GradientDescentOptimizer) -> None:

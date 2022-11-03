@@ -11,6 +11,7 @@ class Item:
 
 
 class Knapsack:
+    """A class defining a __call__ method"""
     def __init__(self, max_weight, N=0, max_item_value=10):
         self.items: list[Item] = []
         self.all_items = N

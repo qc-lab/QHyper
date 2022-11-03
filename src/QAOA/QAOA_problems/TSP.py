@@ -69,7 +69,6 @@ class QAOA_TSP(Problem):
                 equation += f"-x{self._calc_bit(i, t)}"
             equation += f")**2"
         
-        
         self.constraints.append(equation)
         equation = ""
         for t in range(self.tsp_instance.number_of_cities):
