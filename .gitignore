@@ -3,3 +3,6 @@ __pycache__/
 .ipynb_checkpoints/
 checkpoint.pth
 .vscode
+
+docs/build
+docs/source/generated/

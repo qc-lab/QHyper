@@ -7,11 +7,12 @@ Welcome to tmp's documentation!
 ===============================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
-   api
-
+   optimizers
+   QAOA_problems
+   solvers
 
 Indices and tables
 ==================

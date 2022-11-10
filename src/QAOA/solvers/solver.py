@@ -1,7 +1,10 @@
-from abc import ABC
+from abc import ABC, abstractmethod
+from typing import Any
 
 
 class Solver(ABC):
-    @staticmethod
-    def solve():
+    """Interface for solvers"""
+
+    @abstractmethod
+    def solve() -> Any:
         pass

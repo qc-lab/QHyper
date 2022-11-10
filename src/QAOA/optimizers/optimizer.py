@@ -6,13 +6,7 @@ ArgsType = float | list[float]
 
 
 class Optimizer(ABC):
-    """Abstract class for optimizers
-    
-    Methods
-    -------
-    minimize(func, init):
-        Returns params which leads to the lowest value of the provided function
-    """
+    """Interface for optimizers"""
 
     @abstractmethod
     def minimize(
@@ -38,13 +32,7 @@ class Optimizer(ABC):
 
 
 class HyperparametersOptimizer(ABC):
-    """Abstract class for hyperoptimizers
-    
-    Methods
-    -------
-    minimize(func_creator, optimizer, init, hyperparams_init, bounds, **kwargs):
-        Returns hyperparameters which leads to the lowest values returned by optimizer
-    """
+    """Interface for hyperoptimizers"""
 
 
     def minimize(

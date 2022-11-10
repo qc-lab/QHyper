@@ -12,9 +12,12 @@ from .optimizer import HyperparametersOptimizer, Worker, ArgsType, Optimizer
 class Random(HyperparametersOptimizer):
     """Simple random search
     
-    Args:
-        - number_of_samples - an integer indicating amount of random samples as hyperparameters (default 100)
-        - processes - an integer indicating how many processors will be used (default cpu count)
+    Attributes
+    ----------
+    number_of_samples : int
+        number of random samples (default 100)
+    processes : int
+         number of processors that will be used (default cpu count)
     """
     number_of_samples: int = 100
     processes: int = mp.cpu_count()
@@ -25,20 +28,28 @@ class Random(HyperparametersOptimizer):
         optimizer: Optimizer,
         init: ArgsType, 
         hyperparams_init: ArgsType = None, 
-        bounds: list[float] = [0, 10],
-        **kwargs: Any
+        bounds: list[float] = [0, 10]
     ) -> ArgsType:
-        """This method receives:
-            - func_creator - function, which receives hyperparameters, and returns 
-                function which will be optimized using optimizer
-            - optimizer - object of class Optimizer
-            - init - initial args for optimizer
-            - hyperparams_init - initial hyperparameters, only needed to get shape of args
-            - bounds - bounds for hyperparameters
-            - kwargs - allow additional arguments, although these method doesn't use any
+        """Returns hyperparameters which leads to the lowest values returned by optimizer
+    
+        Parameters
+        ----------
+        func_creator : Callable[[ArgsType], Callable[[ArgsType], float]]
+            function, which receives hyperparameters, and returns  
+            function which will be optimized using optimizer
+        optimizer : Optimizer
+            object of class Optimizer
+        init : ArgsType
+            initial args for optimizer
+        hyperparams_init : ArgsType
+            initial hyperparameters
+        bounds : list[float]
+            bounds for hyperparameters (default None)
 
-
-        Returns hyperparameters which leads to the lowest values returned by optimizer
+        Returns
+        -------
+        ArgsType
+            Returns hyperparameters which leads to the lowest values returned by optimizer       
         """
         hyperparams_init = np.array(hyperparams_init)
 

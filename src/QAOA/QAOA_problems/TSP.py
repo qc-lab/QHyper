@@ -6,26 +6,29 @@ from .problem import Problem
 
 
 class TSP:
-    def __init__(self, number_of_cities, coords_range=(0, 10000)):
+    """TSP class"""
+
+    def __init__(self, number_of_cities: int, coords_range: tuple[float, float]=(0, 10000)) -> None:
         self.number_of_cities = number_of_cities
         self.coords_range = coords_range
         self.cities_coords = self.get_cities()
         self.distance_matrix = self.calculate_distance_matrix()
         self.normalized_distance_matrix = self.normalize_distance_matrix()
     
-    def get_cities(self):
+    def get_cities(self) -> list[tuple[float, float]]:
         cities_coords = np.random.randint(self.coords_range[0], self.coords_range[1], size = (self.number_of_cities, 2))
         return cities_coords
            
-    def normalize_cities(self):
+    def normalize_cities(self) -> list[tuple[float, float]]:
         max_coords = np.amax(self.cities_coords, axis=0)
         normalized_cities_coords = np.divide(self.cities_coords, max_coords)
         return normalized_cities_coords
 
-    def calculate_distance_between_points(self, point_A, point_B):
+    def calculate_distance_between_points(
+        self, point_A: tuple[float, float], point_B: tuple[float, float]) -> float:
         return np.sqrt((point_A[0] - point_B[0])**2 + (point_A[1] - point_B[1])**2)
     
-    def calculate_distance_matrix(self):
+    def calculate_distance_matrix(self) -> list[list[float]]:
         distance_matrix = np.zeros((self.number_of_cities, self.number_of_cities))
         for i in range(self.number_of_cities):
             for j in range(i, self.number_of_cities):
@@ -33,24 +36,43 @@ class TSP:
                 distance_matrix[j][i] = distance_matrix[i][j]
         return distance_matrix 
     
-    def normalize_distance_matrix(self):
+    def normalize_distance_matrix(self) -> list[list[float]]:
         return np.divide(self.distance_matrix, np.max(self.distance_matrix))
 
 
 class QAOA_TSP(Problem):
+    """Class defining objective function and constraints for TSP problem
+    
+    Attributes
+    ----------
+    objective_function : str
+        objective function in SymPy syntax
+    constraints : list[str]
+        list of constraints in SymPy syntax
+    wires : int
+        number of qubits in the circuit, equals to number of cities to the power of 2
+    """
+
     def __init__(
         self, 
         number_of_cities
-    ):
+    ) -> None:
+        """
+        Parameters
+        ----------
+        number_of_cities : int
+            number of cities
+        """
+
         self.tsp_instance = TSP(number_of_cities)
         self.wires = number_of_cities**2
-        self.create_objective_function()
-        self.create_constraints()
+        self._create_objective_function()
+        self._create_constraints()
 
-    def _calc_bit(self, i, t):
+    def _calc_bit(self, i: int, t: int) -> int:
         return i + t * self.tsp_instance.number_of_cities
     
-    def create_objective_function(self):
+    def _create_objective_function(self) -> None:
         equation = ""
         for i, j in itertools.permutations(range(0, self.tsp_instance.number_of_cities), 2):
             equation += f"+{self.tsp_instance.normalized_distance_matrix[i][j]}*("
@@ -60,7 +82,7 @@ class QAOA_TSP(Problem):
         
         self.objective_function = equation
 
-    def create_constraints(self):
+    def _create_constraints(self) -> None:
         self.constraints = []
         equation = ""
         for i in range(self.tsp_instance.number_of_cities):
@@ -78,7 +100,7 @@ class QAOA_TSP(Problem):
             equation += f")**2"
         self.constraints.append(equation)
     
-    def _get_distance(self, key):
+    def _get_distance(self, key) -> float:
         results = np.array_split(list(key), self.tsp_instance.number_of_cities)
         dist = 0
         tab = []
@@ -96,6 +118,18 @@ class QAOA_TSP(Problem):
         return (result.sum(0) == 1).all() and (result.sum(1) == 1).all()
 
     def get_score(self, result) -> float | None:
+        """Returns length of the route based on provided outcome in bits. 
+        
+        Parameters
+        ----------
+        result : str
+            route as a string of zeros and ones
+
+        Returns
+        -------
+        float | None
+            Returns length of the route, or None if route wasn't correct
+        """
         if not self._valid(result):
             return None # Bigger value that possible distance 
         return self._get_distance(result)

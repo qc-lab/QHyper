@@ -1,25 +1,23 @@
-from dataclasses import dataclass
 import random
+from collections import namedtuple
 
 from .problem import Problem
 
-
-@dataclass
-class Item:
-    weight: int
-    value: int
+ 
+Item = namedtuple('Item', "weight value")
 
 
 class Knapsack:
-    """A class defining a __call__ method"""
-    def __init__(self, max_weight, N=0, max_item_value=10):
+    """Knapsack class"""
+
+    def __init__(self, max_weight: int, N: int=0, max_item_value: int=10) -> None:
         self.items: list[Item] = []
-        self.all_items = N
-        self.max_weight = max_weight
-        self.max_item_value = max_item_value
+        self.all_items: int = N
+        self.max_weight: int = max_weight
+        self.max_item_value: int = max_item_value
         self.generate_knapsack(N)
 
-    def generate_knapsack(self, N):
+    def generate_knapsack(self, N: int) -> None:
         for _ in range(N):
             self.items.append(Item(
                     random.randint(1, self.max_weight), 
@@ -27,25 +25,24 @@ class Knapsack:
                 )
             )
 
-    def set_knapsack(self, items: list[tuple[int, int]]):
+    def set_knapsack(self, items: list[tuple[int, int]]) -> None:
         self.items = [Item(weight, value) for weight, value in items]
         self.all_items = len(items)
 
-    def calculate_value(self, items):
-        weight = 0
-        value = 0
-
-        for i, is_taken in enumerate(items):
-            if is_taken:
-                weight += self.items[i].weight
-                value += self.items[i].value
-        return value if weight <= self.max_weight else -1
-
-    def size(self):
-        return len(self.items)
-
 
 class QAOA_Knapsack(Problem):
+    """Class defining objective function and constraints for knapsack problem
+    
+    Attributes
+    ----------
+    objective_function : str
+        objective function in SymPy syntax
+    constraints : list[str]
+        list of constraints in SymPy syntax
+    wires : int
+        number of qubits in the circuit, equals to number of items in knapsack + max weight of knapsack
+    """
+
     def __init__(
         self, 
         knapsack: Knapsack, 
@@ -58,19 +55,24 @@ class QAOA_Knapsack(Problem):
         #     beta2=0.99
         # )
     ) -> None:
-        self.knapsack = knapsack
+        """
+        Parameters
+        ----------
+        knapsack : Knapsack
+            knapsack object with available items and max weight
+        """
         # self.number_of_layers = number_of_layers
         # self.optimization_steps = optimization_steps
         # self.optimizer = optimizer
         self.wires = knapsack.all_items + knapsack.max_weight
         # self.dev = qml.device("default.qubit", wires=self.wires)
-        self.create_objective_function(knapsack)
-        self.create_constraints(knapsack)
+        self._create_objective_function(knapsack)
+        self._create_constraints(knapsack)
 
     # def _x(self, wire):
     #     return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
 
-    def create_objective_function(self, knapsack: Knapsack):
+    def _create_objective_function(self, knapsack: Knapsack) -> None:
         xs = [f"x{i}" for i in range(knapsack.all_items)]
         equation = "-("
         for i, x in enumerate(xs):
@@ -78,7 +80,7 @@ class QAOA_Knapsack(Problem):
         equation += ")"
         self.objective_function = equation
 
-    def create_constraints(self, knapsack: Knapsack):
+    def _create_constraints(self, knapsack: Knapsack) -> None:
         xs = [f"x{i}" for i in range(knapsack.all_items)]
         ys = [f"x{i}" for i in range(
                 knapsack.all_items, knapsack.all_items + knapsack.max_weight)]
@@ -97,7 +99,19 @@ class QAOA_Knapsack(Problem):
         constrains.append(equation)
         self.constraints = constrains
 
-    def get_score(self, result) -> float | None:
+    def get_score(self, result: str) -> float | None:
+        """Method should return score of the provided outcome in bits. 
+        
+        Parameters
+        ----------
+        result : str
+            outcome as a string of zeros and ones
+
+        Returns
+        -------
+        float | None
+            Returns sum of value of picked items if were picked correctly, else returns None
+        """
         sum = 0
         weight = 0
         for i, item in enumerate(self.knapsack.items):
