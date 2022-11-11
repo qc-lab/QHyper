@@ -4,6 +4,20 @@ from ..solver import Solver
 
 
 def QAOA(**kwargs) -> Solver:
+    """
+    Parameters
+    ----------
+    kwargs : dict[str, Any]
+        argumets that will be passed to Solver contructor. 
+        Requires `platform` argument (currently only "pennylane" is supported)
+
+    Returns
+    -------
+    Solver
+        Returns solver object of class chose by `platform` argument
+    
+    """
+
     platform = kwargs.pop('platform')
 
     if platform == "pennylane":

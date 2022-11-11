@@ -20,20 +20,14 @@ class Visitor(ast.NodeVisitor):
         left = self.visit(node.left)
         right = self.visit(node.right)
         if isinstance(node.op, ast.Add):
-            # if isinstance(right, qml.Hamiltonian) and left == 1:
-            #     left = qml.Identity(right.wires)
             return left + right
         if isinstance(node.op, ast.Sub):
-            # if isinstance(right, qml.Hamiltonian) and left == 1:
-            #     left = qml.Identity(right.wires)
             return left - right
         if isinstance(node.op, ast.Mult):
             if isinstance(left, qml.Hamiltonian) and isinstance(right, qml.Hamiltonian):
                 return left @ right
             else:
                 return left * right
-        # if isinstance(node.op, ast.Pow):
-        #     return self.multiply_hamiltonians(left, left)
     
     def visit_UnaryOp(self, node: ast.UnaryOp) -> Any:
         operand = self.visit(node.operand)
@@ -67,7 +61,10 @@ class Visitor(ast.NodeVisitor):
 
  
 def parse_hamiltonian(expresion: str) -> qml.Hamiltonian:
+    """Function parsing string to PennyLane Hamiltonian"""
+
     expresion = str(sympy.expand(expresion))
+    # All variables are binary, so power can be removed
     expresion = str(sympy.simplify(re.sub(r'\*\*\d*', '', expresion)))
     tree = ast.parse(expresion)
     vis = Visitor()
