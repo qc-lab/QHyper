@@ -100,7 +100,7 @@ class QAOA_Knapsack(Problem):
         self.constraints = constrains
 
     def get_score(self, result: str) -> float | None:
-        """Method should return score of the provided outcome in bits. 
+        """Returns score of the provided outcome in bits. 
         
         Parameters
         ----------
