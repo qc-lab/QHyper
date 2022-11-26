@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to QHyper's documentation!
-===============================
+==================================
 
 .. toctree::
    :maxdepth: 1
