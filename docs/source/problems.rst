@@ -1,7 +1,7 @@
 Problems
 ========
 
-.. currentmodule:: QAOA.problems
+.. currentmodule:: QHyper.problems
 
 Interfaces
 ----------
