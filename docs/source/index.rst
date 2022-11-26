@@ -11,7 +11,7 @@ Welcome to QHyper's documentation!
    :caption: Contents:
 
    optimizers
-   QAOA_problems
+   problems
    solvers
 
 Indices and tables

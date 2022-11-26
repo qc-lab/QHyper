@@ -1,7 +1,7 @@
 Solvers
 =======
 
-.. currentmodule:: QAOA.solvers
+.. currentmodule:: QHyper.solvers
 
 Interfaces
 ----------

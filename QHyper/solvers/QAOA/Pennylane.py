@@ -3,7 +3,7 @@ import numpy as np
 
 from .parser import parse_hamiltonian
 from ..solver import Solver
-from ...QAOA_problems.problem import Problem
+from ...problems.problem import Problem
 from ...optimizers.optimizer import Optimizer, HyperparametersOptimizer
 
 

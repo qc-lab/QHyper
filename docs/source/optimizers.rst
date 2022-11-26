@@ -1,7 +1,7 @@
 Optimizers
 ==========
 
-.. currentmodule:: QAOA.optimizers
+.. currentmodule:: QHyper.optimizers
 
 Interfaces
 ----------

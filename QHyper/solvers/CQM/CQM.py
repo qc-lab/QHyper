@@ -1,5 +1,5 @@
 from ..solver import Solver
-from ...QAOA_problems.problem import Problem
+from ...problems.problem import Problem
 
 
 class CQM(Solver):

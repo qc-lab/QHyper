@@ -1,7 +1,7 @@
 Problems
 ========
 
-.. currentmodule:: QAOA.QAOA_problems
+.. currentmodule:: QAOA.problems
 
 Interfaces
 ----------

@@ -30,7 +30,7 @@ class Knapsack:
         self.all_items = len(items)
 
 
-class QAOA_Knapsack(Problem):
+class KnapsackProblem(Problem):
     """Class defining objective function and constraints for knapsack problem
     
     Attributes
@@ -65,6 +65,7 @@ class QAOA_Knapsack(Problem):
         # self.optimization_steps = optimization_steps
         # self.optimizer = optimizer
         self.wires = knapsack.all_items + knapsack.max_weight
+        self.knapsack = knapsack
         # self.dev = qml.device("default.qubit", wires=self.wires)
         self._create_objective_function(knapsack)
         self._create_constraints(knapsack)

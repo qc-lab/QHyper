@@ -40,7 +40,7 @@ class TSP:
         return np.divide(self.distance_matrix, np.max(self.distance_matrix))
 
 
-class QAOA_TSP(Problem):
+class TSPProblem(Problem):
     """Class defining objective function and constraints for TSP problem
     
     Attributes
