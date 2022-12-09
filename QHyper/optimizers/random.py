@@ -1,11 +1,11 @@
 import multiprocessing as mp
+from dataclasses import dataclass
+from typing import Any, Callable
+
 import numpy as np
 import tqdm
 
-from dataclasses import dataclass
-from typing import Callable, Any
-
-from .optimizer import HyperparametersOptimizer, Worker, ArgsType, Optimizer
+from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer, Worker
 
 
 @dataclass
@@ -23,24 +23,24 @@ class Random(HyperparametersOptimizer):
     processes: int = mp.cpu_count()
 
     def minimize(
-        self, 
-        func_creator: Callable[[ArgsType], Callable[[ArgsType], float]], 
-        optimizer: Optimizer,
-        init: ArgsType, 
-        hyperparams_init: ArgsType = None, 
-        bounds: list[float] = [0, 10]
+            self,
+            func_creator: Callable[[ArgsType], Callable[[ArgsType], float]],
+            optimizer: Optimizer,
+            init: ArgsType,
+            hyperparams_init: ArgsType = None,
+            bounds: list[float] = [0, 10]
     ) -> ArgsType:
-        """Returns hyperparameters which leads to the lowest values returned by optimizer
+        """Returns hyperparameters which lead to the lowest values returned by the optimizer
     
         Parameters
         ----------
         func_creator : Callable[[ArgsType], Callable[[ArgsType], float]]
-            function, which receives hyperparameters, and returns  
-            function which will be optimized using optimizer
+            function which receives hyperparameters and returns
+            a function which will be optimized using the optimizer
         optimizer : Optimizer
-            object of class Optimizer
+            object of the Optimizer class
         init : ArgsType
-            initial args for optimizer
+            initial args for the optimizer
         hyperparams_init : ArgsType
             initial hyperparameters
         bounds : list[float]
@@ -49,20 +49,20 @@ class Random(HyperparametersOptimizer):
         Returns
         -------
         ArgsType
-            Returns hyperparameters which leads to the lowest values returned by optimizer       
+            Returns hyperparameters which lead to the lowest values returned by the optimizer
         """
         hyperparams_init = np.array(hyperparams_init)
 
         hyperparams = (
-            (bounds[1] - bounds[0]) 
-            * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
-            + bounds[0])
+                (bounds[1] - bounds[0])
+                * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
+                + bounds[0])
 
         worker = Worker(func_creator, optimizer, init)
 
         with mp.Pool(processes=self.processes) as p:
             results = list(tqdm.tqdm(p.imap(worker.func, hyperparams), total=self.number_of_samples))
-            
+
         min_idx = np.argmin([result for result in results])
 
         return hyperparams[min_idx]
