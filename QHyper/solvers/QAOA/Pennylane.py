@@ -234,3 +234,6 @@ class PennyLaneQAOA(Solver):
         
         [params,costhistory] = self.optimizer.minimize(self.get_expval_func(weights), self.angles)
         return value_function(weights)(params), params, weights,costhistory
+    
+    def solve_single(self, weights)->float:
+        return self.get_expval_func(weights)(self.angles)
