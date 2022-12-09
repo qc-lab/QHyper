@@ -47,11 +47,12 @@ class QmlGradientDescent(Optimizer):
         params : ArgsType
             Returns args which gave the lowest value.
         """
-        
+        costhistory=[]
         params = np.array(init, requires_grad=True)
         if "reset" in dir(self.optimizer):
             self.optimizer.reset()
         for _ in range(self.optimization_steps):
-            params = self.optimizer.step(func, params)
-        
-        return params
+#            params = self.optimizer.step(func, params)
+            [params,cost] = self.optimizer.step_and_cost(func, params)
+            costhistory.append(cost)     
+        return [params, costhistory]
