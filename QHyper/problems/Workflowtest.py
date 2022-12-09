@@ -86,7 +86,7 @@ class WorkflowtestProblem(Problem):
             (1 - sum([x[task_index * 3 + machine_index] for machine_index in range(3)])) ** 2
             for task_index 
             in range(3)
-        )
+        )-3
 
     def _get_deadline_model(self,x):
         time_sum = sum(
@@ -99,7 +99,7 @@ class WorkflowtestProblem(Problem):
             in range(3)
         )
         slack_sum = 8 * x[9] + 4 * x[10] + 2 * x[11] + x[12]
-        time_constraint = (self.d - time_sum - slack_sum) ** 2
+        time_constraint = ((self.d - time_sum - slack_sum) ** 2)-361
         
         return time_constraint
     
