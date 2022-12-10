@@ -144,6 +144,26 @@ class PennyLaneQAOA(Solver):
             return self.check_results(probs)
 
         return probability_value
+    
+    def evaluate(self, weights, params):
+        """Returns evaluation of given parameters 
+
+        Parameters
+        ----------
+        weights : list[float]
+            weights for converting Problem to QUBO
+        params : list[float]
+            angles for QAQA Problem
+        
+        Returns
+        -------
+        float
+            Returns evaluation of given parameters
+        """
+
+        probs = self.get_probs_func(weights)(params)
+        return self.check_results(probs)
+
 
     def get_probs_func(self, weights):
         """Returns function that takes angles and returns probabilities 
@@ -227,10 +247,14 @@ class PennyLaneQAOA(Solver):
         tuple[float, list[float], list[float]]
             Returns tuple of score, angles, weights
         """
-        value_function = self.get_probs_val_func
         weights = self.hyperoptimizer.minimize(
-            value_function, self.optimizer, self.angles, np.array(self.weights), [0, 100]
+            func_creator=self.get_expval_func, 
+            optimizer=self.optimizer, 
+            init=self.angles, 
+            hyperparams_init=np.array(self.weights), 
+            evaluation_func=self.evaluate,
+            bounds=[0, 100]
             ) if self.hyperoptimizer else self.weights
         
         params = self.optimizer.minimize(self.get_expval_func(weights), self.angles)
-        return value_function(weights)(params), params, weights
+        return self.evaluate(weights, params), params, weights

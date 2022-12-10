@@ -41,6 +41,7 @@ class HyperparametersOptimizer(ABC):
         optimizer: Optimizer, 
         init: ArgsType, 
         hyperparams_init: ArgsType, 
+        evaluation_func: Callable[[ArgsType], Callable[[ArgsType], float]],
         bounds: list[float],
         **kwargs: Any
     ) -> ArgsType:
@@ -57,6 +58,9 @@ class HyperparametersOptimizer(ABC):
             initial args for optimizer
         hyperparams_init : ArgsType
             initial hyperparameters
+        evaluation_func : Callable[[ArgsType], Callable[[ArgsType], float]]
+            function, which receives hyperparameters, and returns 
+            function which receives params and return evaluation
         bounds : list[float]
             bounds for hyperparameters
         kwargs : Any
@@ -81,13 +85,15 @@ class Worker: #change name
         self, 
         func_creator: Callable[[ArgsType], Callable[[ArgsType], float]],  
         optimizer: Optimizer, 
+        evaluation_func: Callable[[ArgsType, ArgsType], float],
         init: ArgsType
     ) -> None:
         self.func_creator = func_creator
         self.optimizer = optimizer
+        self.evaluation_func = evaluation_func
         self.init = init
     
     def func(self, hyperparams: Any) -> float:
         _func = self.func_creator(hyperparams)
         params = self.optimizer.minimize(_func, self.init)
-        return _func(params)
+        return self.evaluation_func(hyperparams, params)

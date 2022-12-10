@@ -57,6 +57,7 @@ class CEM(HyperparametersOptimizer):
         optimizer: Optimizer,
         init: ArgsType, 
         hyperparams_init: ArgsType, 
+        evaluation_func: Callable[[ArgsType], Callable[[ArgsType], float]] = None,
         bounds: list[float] = None,
         **kwargs: Any
     ) -> ArgsType:
@@ -73,6 +74,9 @@ class CEM(HyperparametersOptimizer):
             initial args for optimizer
         hyperparams_init : ArgsType
             initial hyperparameters
+        evaluation_func : Callable[[ArgsType], Callable[[ArgsType], float]]
+            function, which receives hyperparameters, and returns 
+            function which receives params and return evaluation
         bounds : list[float]
             bounds for hyperparameters (default None)
         kwargs : Any
@@ -93,7 +97,7 @@ class CEM(HyperparametersOptimizer):
         print_freq = kwargs.get("print_freq", self.epochs+1)
 
         scores = []
-        worker = Worker(func_creator, optimizer, init)
+        worker = Worker(func_creator, optimizer, evaluation_func, init)
         for i_iteration in range(1, self.epochs+1):
             hyperparams = np.random.multivariate_normal(mean, cov, size=self.samples_per_epoch)
             if bounds:

@@ -28,6 +28,7 @@ class Random(HyperparametersOptimizer):
         optimizer: Optimizer,
         init: ArgsType, 
         hyperparams_init: ArgsType = None, 
+        evaluation_func: Callable[[ArgsType], Callable[[ArgsType], float]] = None,
         bounds: list[float] = [0, 10]
     ) -> ArgsType:
         """Returns hyperparameters which leads to the lowest values returned by optimizer
@@ -43,6 +44,9 @@ class Random(HyperparametersOptimizer):
             initial args for optimizer
         hyperparams_init : ArgsType
             initial hyperparameters
+        evaluation_func : Callable[[ArgsType], Callable[[ArgsType], float]]
+            function, which receives hyperparameters, and returns 
+            function which receives params and return evaluation
         bounds : list[float]
             bounds for hyperparameters (default None)
 
@@ -58,7 +62,7 @@ class Random(HyperparametersOptimizer):
             * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
             + bounds[0])
 
-        worker = Worker(func_creator, optimizer, init)
+        worker = Worker(func_creator, optimizer, evaluation_func, init)
 
         with mp.Pool(processes=self.processes) as p:
             results = list(tqdm.tqdm(p.imap(worker.func, hyperparams), total=self.number_of_samples))
