@@ -1,6 +1,5 @@
-
-from .Pennylane import PennyLaneQAOA
 from ..solver import Solver
+from .Pennylane import PennyLaneQAOA
 
 
 def QAOA(**kwargs) -> Solver:

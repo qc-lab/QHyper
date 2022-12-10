@@ -1,15 +1,15 @@
-from typing import Callable, Any
+from typing import Any, Callable
 
-from pennylane import numpy as np
 import pennylane as qml
+from pennylane import numpy as np
 
-from .optimizer import Optimizer, ArgsType
+from .optimizer import ArgsType, Optimizer
 
 
 class QmlGradientDescent(Optimizer):
     """Gradient Descent Optimizer
 
-    Using GradientDescentOptimizer from library pennylane. 
+    Using GradientDescentOptimizer from library PennyLane.
 
     Attributes
     ----------
@@ -33,25 +33,25 @@ class QmlGradientDescent(Optimizer):
         self.optimizer = optimizer
 
     def minimize(self, func: Callable[[ArgsType], float], init: ArgsType) -> ArgsType:
-        """Returns params which leads to the lowest value of the provided function 
+        """Returns params which lead to the lowest value of the provided function
 
         Parameters
         ----------
         func : Callable[[ArgsType], float]
-            function, which will be minimize
+            function which will be minimized
         init : ArgsType
             initial args for optimizer
 
         Returns
         -------
         params : ArgsType
-            Returns args which gave the lowest value.
+            Returns args which yielded the lowest value
         """
-        
+
         params = np.array(init, requires_grad=True)
         if "reset" in dir(self.optimizer):
             self.optimizer.reset()
         for _ in range(self.optimization_steps):
             params = self.optimizer.step(func, params)
-        
+
         return params

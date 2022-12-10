@@ -3,14 +3,25 @@ from collections import namedtuple
 
 from .problem import Problem
 
- 
 Item = namedtuple('Item', "weight value")
 
 
 class Knapsack:
-    """Knapsack class"""
+    """Knapsack class
 
-    def __init__(self, max_weight: int, N: int=0, max_item_value: int=10) -> None:
+    Attributes
+    ----------
+    items: list[Item]
+        list of items
+    all_items: int
+        items amount
+    max_weight: int
+        maximum weight of an item
+    max_item_value: int
+        maximum value of an item
+    """
+
+    def __init__(self, max_weight: int, N: int = 0, max_item_value: int = 10) -> None:
         self.items: list[Item] = []
         self.all_items: int = N
         self.max_weight: int = max_weight
@@ -20,9 +31,9 @@ class Knapsack:
     def generate_knapsack(self, N: int) -> None:
         for _ in range(N):
             self.items.append(Item(
-                    random.randint(1, self.max_weight), 
-                    random.randint(1, self.max_item_value)
-                )
+                random.randint(1, self.max_weight),
+                random.randint(1, self.max_item_value)
+            )
             )
 
     def set_knapsack(self, items: list[tuple[int, int]]) -> None:
@@ -31,7 +42,7 @@ class Knapsack:
 
 
 class KnapsackProblem(Problem):
-    """Class defining objective function and constraints for knapsack problem
+    """Objective function and constraints for the knapsack problem
     
     Attributes
     ----------
@@ -40,20 +51,20 @@ class KnapsackProblem(Problem):
     constraints : list[str]
         list of constraints in SymPy syntax
     wires : int
-        number of qubits in the circuit, equals to number of items in knapsack + max weight of knapsack
+        number of qubits in the circuit, equals to sum of the number of items in the knapsack the max weight of a knapsack
     """
 
     def __init__(
-        self, 
-        knapsack: Knapsack, 
-        # number_of_layers: int = 6, 
-        # optimization_steps: int = 70,
-        # optimizer: qml.GradientDescentOptimizer = None
-        # optimizer: qml.GradientDescentOptimizer = qml.AdamOptimizer(
-        #     stepsize=0.01,
-        #     beta1=0.9,
-        #     beta2=0.99
-        # )
+            self,
+            knapsack: Knapsack,
+            # number_of_layers: int = 6,
+            # optimization_steps: int = 70,
+            # optimizer: qml.GradientDescentOptimizer = None
+            # optimizer: qml.GradientDescentOptimizer = qml.AdamOptimizer(
+            #     stepsize=0.01,
+            #     beta1=0.9,
+            #     beta2=0.99
+            # )
     ) -> None:
         """
         Parameters
@@ -74,6 +85,14 @@ class KnapsackProblem(Problem):
     #     return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
 
     def _create_objective_function(self, knapsack: Knapsack) -> None:
+        """
+        Create the objective function defined in SymPy syntax
+
+        Parameters
+        ----------
+        knapsack : Knapsack
+            knapsack object with available items and max weight
+        """
         xs = [f"x{i}" for i in range(knapsack.all_items)]
         equation = "-("
         for i, x in enumerate(xs):
@@ -82,9 +101,17 @@ class KnapsackProblem(Problem):
         self.objective_function = equation
 
     def _create_constraints(self, knapsack: Knapsack) -> None:
+        """
+        Create constraints defined in SymPy syntax
+
+        Parameters
+        ----------
+        knapsack : Knapsack
+               knapsack object with available items and max weight
+        """
         xs = [f"x{i}" for i in range(knapsack.all_items)]
         ys = [f"x{i}" for i in range(
-                knapsack.all_items, knapsack.all_items + knapsack.max_weight)]
+            knapsack.all_items, knapsack.all_items + knapsack.max_weight)]
         constrains = []
         equation = f"(J"
         for y in ys:
@@ -93,7 +120,7 @@ class KnapsackProblem(Problem):
         constrains.append(equation)
         equation = "("
         for i, y in enumerate(ys):
-            equation += f"+{i+1}*{y}"
+            equation += f"+{i + 1}*{y}"
         for i, x in enumerate(xs):
             equation += f"-{knapsack.items[i].weight}*{x}"
         equation += ")**2"
@@ -101,7 +128,7 @@ class KnapsackProblem(Problem):
         self.constraints = constrains
 
     def get_score(self, result: str) -> float | None:
-        """Returns score of the provided outcome in bits. 
+        """Returns score of the provided outcome in bits
         
         Parameters
         ----------
@@ -123,7 +150,7 @@ class KnapsackProblem(Problem):
             return None
 
         for i in range(self.knapsack.max_weight):
-            if result[i + self.knapsack.all_items] == '1' and i+1 != weight:
+            if result[i + self.knapsack.all_items] == '1' and i + 1 != weight:
                 return None
         if weight != 0 and result[weight + self.knapsack.all_items - 1] != '1':
             return None

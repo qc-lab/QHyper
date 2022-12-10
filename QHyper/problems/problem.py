@@ -2,12 +2,13 @@ from abc import ABC
 
 
 class Problem(ABC):
-    """Interface for different problems
+    """Interface for different combinatorial optimization problems
     
-    Objective function and constrians are main components, which should be written in SymPy syntax.
-    Depending on solver, which will be used, these parts can be used separately or e.g. as a QUBO.
+    Objective function and constrians are main the components and should be written in the SymPy syntax.
+    Depending on the selcted solver, these parts can be used separately or, e.g., as a Quadratic Unconstrained
+    Binary Optimization (QUBO) formularion.
     
-    If QUBO is provided, should be pass to objective_function, and leave constrains empty.
+    If the QUBO is provided, it should be passed to the objective_function and the constraints should be empty.
 
     Attributes
     ----------
@@ -24,9 +25,9 @@ class Problem(ABC):
     wires: int
 
     def get_score(self, result: str) -> float | None:
-        """Method should return score of the provided outcome in bits. 
+        """Returns score of the outcome provided as a binary string
 
-        Necessary only for specific function. Not needed for minimizing function.
+        Necessary only for specific functions. Not needed for minimizing the function.
         
         Parameters
         ----------
@@ -36,7 +37,6 @@ class Problem(ABC):
         Returns
         -------
         float | None
-            Returns float if outcome is correct and meets all criteria, else returns None
+            Returns float if outcome is correct and meets all criteria, otherwise returns None
         """
         raise Exception("Unimplemented")
- 
