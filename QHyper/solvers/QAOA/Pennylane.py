@@ -229,9 +229,10 @@ class PennyLaneQAOA(Solver):
         tuple[float, list[float], list[float]]
             Returns tuple of score, angles, weights
         """
+        value_function = self.get_probs_val_func
         weights = self.hyperoptimizer.minimize(
             self.get_expval_func, self.optimizer, self.angles, np.array(self.weights), [0, 100]
         ) if self.hyperoptimizer else self.weights
 
         params = self.optimizer.minimize(self.get_expval_func(weights), self.angles)
-        return self.get_expval_func(weights)(params), params, weights
+        return value_function(weights)(params), params, weights
