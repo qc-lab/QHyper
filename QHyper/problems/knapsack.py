@@ -13,32 +13,40 @@ class Knapsack:
     ----------
     items: list[Item]
         list of items
-    all_items: int
-        items amount
     max_weight: int
         maximum weight of an item
     max_item_value: int
         maximum value of an item
     """
 
-    def __init__(self, max_weight: int, N: int = 0, max_item_value: int = 10) -> None:
+    def __init__(self, max_weight: int, max_item_value: int = 10, items_amount: int = 0) -> None:
+        """
+        Parameters
+        ----------
+        max_weight: int
+            maximum weight of an item
+        max_item_value: int
+            maximum value of an item (default 10)
+        items_amount: int
+            items amount, used only for random knapsack (default 0)
+        """
         self.items: list[Item] = []
-        self.all_items: int = N
         self.max_weight: int = max_weight
         self.max_item_value: int = max_item_value
-        self.generate_knapsack(N)
+        self.generate_knapsack(items_amount)
 
-    def generate_knapsack(self, N: int) -> None:
-        for _ in range(N):
+    def generate_knapsack(self, items_amount: int) -> None:
+        for _ in range(items_amount):
             self.items.append(Item(
                 random.randint(1, self.max_weight),
                 random.randint(1, self.max_item_value)
-            )
-            )
+            ))
 
     def set_knapsack(self, items: list[tuple[int, int]]) -> None:
         self.items = [Item(weight, value) for weight, value in items]
-        self.all_items = len(items)
+    
+    def __len__(self):
+        return len(self.items)
 
 
 class KnapsackProblem(Problem):
@@ -56,15 +64,7 @@ class KnapsackProblem(Problem):
 
     def __init__(
             self,
-            knapsack: Knapsack,
-            # number_of_layers: int = 6,
-            # optimization_steps: int = 70,
-            # optimizer: qml.GradientDescentOptimizer = None
-            # optimizer: qml.GradientDescentOptimizer = qml.AdamOptimizer(
-            #     stepsize=0.01,
-            #     beta1=0.9,
-            #     beta2=0.99
-            # )
+            knapsack: Knapsack
     ) -> None:
         """
         Parameters
@@ -72,17 +72,10 @@ class KnapsackProblem(Problem):
         knapsack : Knapsack
             knapsack object with available items and max weight
         """
-        # self.number_of_layers = number_of_layers
-        # self.optimization_steps = optimization_steps
-        # self.optimizer = optimizer
-        self.wires = knapsack.all_items + knapsack.max_weight
+        self.wires = len(knapsack) + knapsack.max_weight
         self.knapsack = knapsack
-        # self.dev = qml.device("default.qubit", wires=self.wires)
         self._create_objective_function(knapsack)
         self._create_constraints(knapsack)
-
-    # def _x(self, wire):
-    #     return qml.Hamiltonian([0.5, -0.5], [qml.Identity(wire), qml.PauliZ(wire)])
 
     def _create_objective_function(self, knapsack: Knapsack) -> None:
         """
@@ -93,7 +86,7 @@ class KnapsackProblem(Problem):
         knapsack : Knapsack
             knapsack object with available items and max weight
         """
-        xs = [f"x{i}" for i in range(knapsack.all_items)]
+        xs = [f"x{i}" for i in range(len(knapsack))]
         equation = "-("
         for i, x in enumerate(xs):
             equation += f"+{knapsack.items[i].value}*{x}"
@@ -109,9 +102,9 @@ class KnapsackProblem(Problem):
         knapsack : Knapsack
                knapsack object with available items and max weight
         """
-        xs = [f"x{i}" for i in range(knapsack.all_items)]
+        xs = [f"x{i}" for i in range(len(knapsack))]
         ys = [f"x{i}" for i in range(
-            knapsack.all_items, knapsack.all_items + knapsack.max_weight)]
+            len(knapsack), len(knapsack) + knapsack.max_weight)]
         constrains = []
         equation = f"(J"
         for y in ys:
@@ -150,9 +143,9 @@ class KnapsackProblem(Problem):
             return None
 
         for i in range(self.knapsack.max_weight):
-            if result[i + self.knapsack.all_items] == '1' and i + 1 != weight:
+            if result[i + len(self.knapsack)] == '1' and i + 1 != weight:
                 return None
-        if weight != 0 and result[weight + self.knapsack.all_items - 1] != '1':
+        if weight != 0 and result[weight + len(self.knapsack) - 1] != '1':
             return None
 
         return sum
