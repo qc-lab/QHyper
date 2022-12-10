@@ -61,7 +61,7 @@ class CEM(HyperparametersOptimizer):
         bounds: list[float] = None,
         **kwargs: Any
     ) -> ArgsType:
-        """Returns hyperparameters which lead to the lowest values returned by optimizer 1
+        """Returns hyperparameters which lead to the lowest values returned by optimizer
         
         Parameters
         ----------
@@ -107,7 +107,6 @@ class CEM(HyperparametersOptimizer):
             hyperparams = np.concatenate((hyperparams, [best_hyperparams.flatten()]), axis=0)
             hyperparams = [
                 np.reshape(np.array(hyperparam), hyperparams_init.shape) for hyperparam in hyperparams]
-            rewards = []
 
             with mp.Pool(processes=self.processes) as p:
                 results = list(tqdm.tqdm(p.imap(worker.func, hyperparams), total=len(hyperparams)))

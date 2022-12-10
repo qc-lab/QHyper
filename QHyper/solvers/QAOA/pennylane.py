@@ -82,17 +82,17 @@ class PennyLaneQAOA(Solver):
         for i in range(self.problem.wires):
             qml.Hadamard(i)
 
-    def _create_mixing_hamitonian(self) -> qml.Hamiltonian:
+    def _create_mixing_hamiltonian(self) -> qml.Hamiltonian:
         hamiltonian = qml.Hamiltonian([], [])
         if self.mixer == "X":
             for i in range(self.problem.wires):
                 hamiltonian += qml.Hamiltonian([1 / 2], [qml.PauliX(i)])
         return hamiltonian
 
-    def _circuit(self, params, cost_operator: qml.Hamiltonian):
+    def _circuit(self, params: tuple[list[float], list[float]], cost_operator: qml.Hamiltonian):
         def qaoa_layer(gamma, beta):
             qml.qaoa.cost_layer(gamma, cost_operator)
-            qml.qaoa.mixer_layer(beta, self._create_mixing_hamitonian())
+            qml.qaoa.mixer_layer(beta, self._create_mixing_hamiltonian())
 
         self._hadamard_layer()
         qml.layer(qaoa_layer, self.layers, params[0], params[1])

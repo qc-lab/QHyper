@@ -6,5 +6,5 @@ class Solver(ABC):
     """Interface for solvers"""
 
     @abstractmethod
-    def solve() -> Any:
+    def solve(self) -> Any:
         pass

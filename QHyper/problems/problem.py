@@ -4,7 +4,7 @@ from abc import ABC
 class Problem(ABC):
     """Interface for different combinatorial optimization problems
     
-    Objective function and constrians are main the components and should be written in the SymPy syntax.
+    Objective function and constrians are the main components and should be written in the SymPy syntax.
     Depending on the selcted solver, these parts can be used separately or, e.g., as a Quadratic Unconstrained
     Binary Optimization (QUBO) formularion.
     

@@ -1,6 +1,6 @@
 import multiprocessing as mp
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Callable
 
 import numpy as np
 import tqdm
