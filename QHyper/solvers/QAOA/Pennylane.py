@@ -239,4 +239,4 @@ class PennyLaneQAOA(Solver):
         return self.get_expval_func(self.weights)(self.angles)
     
     def get_cost_operator(self)->qml.Hamiltonian:
-        return self._create_cost_operator(self, self.weights) 
+        return self._create_cost_operator(self.weights) 
