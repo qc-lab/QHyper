@@ -237,3 +237,6 @@ class PennyLaneQAOA(Solver):
     
     def solve_single(self)->float:
         return self.get_expval_func(self.weights)(self.angles)
+    
+    def get_cost_operator(self)->qml.Hamiltonian:
+        return self._create_cost_operator(self.weights) 
