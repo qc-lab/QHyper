@@ -103,6 +103,8 @@ class WorkflowtestProblem(Problem):
         
         return time_constraint
     
+    
+    
     def get_score(self, result) -> float | None:
         """Returns length of the route based on provided outcome in bits. 
         
