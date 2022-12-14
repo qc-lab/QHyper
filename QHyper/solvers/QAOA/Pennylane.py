@@ -85,8 +85,9 @@ class PennyLaneQAOA(Solver):
     def _create_mixing_hamitonian(self) -> qml.Hamiltonian:
         hamiltonian = qml.Hamiltonian([], [])
         if self.mixer == "X":
-            for i in range(self.problem.wires):
-                hamiltonian += qml.Hamiltonian([1/2], [qml.PauliX(i)])
+            hamiltonian= x_mixer(range(0,self.problem.wires))
+        #    for i in range(self.problem.wires):
+            #   hamiltonian += qml.Hamiltonian([1/2], [qml.PauliX(i)])
         return hamiltonian
 
     def _circuit(self, params, cost_operator: qml.Hamiltonian):
@@ -233,7 +234,7 @@ class PennyLaneQAOA(Solver):
             ) if self.hyperoptimizer else self.weights
         
         [params,costhistory] = self.optimizer.minimize(self.get_expval_func(weights), self.angles)
-        return value_function(weights)(params), params, weights,costhistory
+        return value_function(weights)(params), params, weights, costhistory
     
     def solve_single(self)->float:
         return self.get_expval_func(self.weights)(self.angles)

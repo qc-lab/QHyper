@@ -54,5 +54,6 @@ class QmlGradientDescent(Optimizer):
         for _ in range(self.optimization_steps):
 #            params = self.optimizer.step(func, params)
             [params,cost] = self.optimizer.step_and_cost(func, params)
+            print(params,cost)
             costhistory.append(cost)     
         return [params, costhistory]
