@@ -1,6 +1,7 @@
 import pennylane as qml
 import numpy as np
-
+import pennylane.qaoa
+from pennylane.qaoa import x_mixer
 from .parser import parse_hamiltonian
 from ..solver import Solver
 from ...problems.problem import Problem
@@ -86,7 +87,8 @@ class PennyLaneQAOA(Solver):
         hamiltonian = qml.Hamiltonian([], [])
         if self.mixer == "X":
             hamiltonian= x_mixer(range(0,self.problem.wires))
-        #    for i in range(self.problem.wires):
+        #   
+        # for i in range(self.problem.wires):
             #   hamiltonian += qml.Hamiltonian([1/2], [qml.PauliX(i)])
         return hamiltonian
 
