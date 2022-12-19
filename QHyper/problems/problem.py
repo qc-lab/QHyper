@@ -21,7 +21,7 @@ class Problem(ABC):
 
     """
     objective_function: str
-    constraints: list[str]
+    constraints: list[str] = []
     wires: int
 
     def get_score(self, result: str) -> float | None:
