@@ -11,9 +11,9 @@ class Optimizer(ABC):
     def minimize(
             self,
             func: Callable[[ArgsType], float],
-            init: ArgsType
-    ) -> ArgsType:
-        """Returns params which lead to the lowest value of the provided function
+            init: ArgsType,
+    ) -> tuple[ArgsType, Any]:
+        """Returns params which lead to the lowest value of the provided function and cost history
 
         Parameters
         ----------
@@ -24,8 +24,9 @@ class Optimizer(ABC):
 
         Returns
         -------
-        ArgsType
-            Returns args which gave the lowest value
+        tuple[ArgsType, Any]
+            Returns tuple which contains params taht lead to the lowest value
+            of the provided function and cost history
         """
         pass
 
@@ -94,5 +95,5 @@ class Worker:  # change name
 
     def func(self, hyperparams: Any) -> float:
         _func = self.func_creator(hyperparams)
-        params = self.optimizer.minimize(_func, self.init)
+        params, _ = self.optimizer.minimize(_func, self.init)
         return self.evaluation_func(hyperparams, params)

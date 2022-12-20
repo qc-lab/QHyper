@@ -259,5 +259,5 @@ class PennyLaneQAOA(Solver):
             bounds=[0, 100]
             ) if self.hyperoptimizer else self.weights
         
-        params = self.optimizer.minimize(self.get_expval_func(weights), self.angles)
+        params, _ = self.optimizer.minimize(self.get_expval_func(weights), self.angles)
         return self.evaluate(weights, params), params, weights
