@@ -1,0 +1,10 @@
+.. _reference:
+
+Reference
+=========
+
+.. autosummary::
+   :toctree: reference/
+   :recursive:
+
+    QHyper
