@@ -58,13 +58,13 @@ class KnapsackProblem(Problem):
         objective function in SymPy syntax
     constraints : list[str]
         list of constraints in SymPy syntax
-    wires : int
+    variables : int
         number of qubits in the circuit, equals to sum of the number of items in the knapsack the max weight of a knapsack
     """
 
     def __init__(
-            self,
-            knapsack: Knapsack
+        self,
+        knapsack: Knapsack
     ) -> None:
         """
         Parameters
@@ -72,12 +72,12 @@ class KnapsackProblem(Problem):
         knapsack : Knapsack
             knapsack object with available items and max weight
         """
-        self.wires = len(knapsack) + knapsack.max_weight
+        self.variables = len(knapsack) + knapsack.max_weight
         self.knapsack = knapsack
-        self._create_objective_function(knapsack)
-        self._create_constraints(knapsack)
+        self._set_objective_function(knapsack)
+        self._set_constraints(knapsack)
 
-    def _create_objective_function(self, knapsack: Knapsack) -> None:
+    def _set_objective_function(self, knapsack: Knapsack) -> None:
         """
         Create the objective function defined in SymPy syntax
 
@@ -93,7 +93,7 @@ class KnapsackProblem(Problem):
         equation += ")"
         self.objective_function = equation
 
-    def _create_constraints(self, knapsack: Knapsack) -> None:
+    def _set_constraints(self, knapsack: Knapsack) -> None:
         """
         Create constraints defined in SymPy syntax
 

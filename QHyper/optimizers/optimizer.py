@@ -9,9 +9,9 @@ class Optimizer(ABC):
 
     @abstractmethod
     def minimize(
-            self,
-            func: Callable[[ArgsType], float],
-            init: ArgsType,
+        self,
+        func: Callable[[ArgsType], float],
+        init: ArgsType
     ) -> tuple[ArgsType, Any]:
         """Returns params which lead to the lowest value of the provided function and cost history
 
@@ -25,7 +25,7 @@ class Optimizer(ABC):
         Returns
         -------
         tuple[ArgsType, Any]
-            Returns tuple which contains params taht lead to the lowest value
+            Returns tuple which contains params that lead to the lowest value
             of the provided function and cost history
         """
         pass
@@ -73,7 +73,7 @@ class HyperparametersOptimizer(ABC):
         pass
 
 
-class Worker:  # change name
+class Wrapper:
     """Use hyperparameters to create a function using func_creator,
     run optimizer on this function, and return its lowest value
 

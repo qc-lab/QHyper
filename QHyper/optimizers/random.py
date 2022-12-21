@@ -5,7 +5,7 @@ from typing import Callable
 import numpy as np
 import tqdm
 
-from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer, Worker
+from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer, Wrapper
 
 
 @dataclass
@@ -58,14 +58,14 @@ class Random(HyperparametersOptimizer):
         hyperparams_init = np.array(hyperparams_init)
 
         hyperparams = (
-                (bounds[1] - bounds[0])
-                * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
-                + bounds[0])
+            (bounds[1] - bounds[0])
+            * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
+            + bounds[0])
 
-        worker = Worker(func_creator, optimizer, evaluation_func, init)
+        wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
 
         with mp.Pool(processes=self.processes) as p:
-            results = list(tqdm.tqdm(p.imap(worker.func, hyperparams), total=self.number_of_samples))
+            results = list(tqdm.tqdm(p.imap(wrapper.func, hyperparams), total=self.number_of_samples))
 
         min_idx = np.argmin([result for result in results])
 

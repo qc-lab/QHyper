@@ -16,18 +16,18 @@ class Problem(ABC):
         objective function in SymPy syntax
     constraints : list[str]
         list of constraints in SymPy syntax
-    wires : int
-        number of qubits in the circuit
+    variables : int
+        number of variables in the problem
 
     """
     objective_function: str
     constraints: list[str] = []
-    wires: int
+    variables: int
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the outcome provided as a binary string
 
-        Necessary only for specific functions. Not needed for minimizing the function.
+        Necessary only for hyperoptimizers. Not needed for minimizing functions with constant weights.
         
         Parameters
         ----------

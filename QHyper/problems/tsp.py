@@ -49,8 +49,8 @@ class TSP:
         distance_matrix = np.zeros((self.number_of_cities, self.number_of_cities))
         for i in range(self.number_of_cities):
             for j in range(i, self.number_of_cities):
-                distance_matrix[i][j] = self.calculate_distance_between_points(self.cities_coords[i],
-                                                                               self.cities_coords[j])
+                distance_matrix[i][j] = self.calculate_distance_between_points(
+                    self.cities_coords[i], self.cities_coords[j])
                 distance_matrix[j][i] = distance_matrix[i][j]
         return distance_matrix
 
@@ -67,13 +67,13 @@ class TSPProblem(Problem):
         objective function in SymPy syntax
     constraints : list[str]
         list of constraints in SymPy syntax
-    wires : int
+    variables : int
         number of qubits in the circuit, equals to number of cities to the power of 2
     """
 
     def __init__(
-            self,
-            number_of_cities
+        self,
+        number_of_cities
     ) -> None:
         """
         Parameters
@@ -83,14 +83,14 @@ class TSPProblem(Problem):
         """
 
         self.tsp_instance = TSP(number_of_cities)
-        self.wires = number_of_cities ** 2
-        self._create_objective_function()
-        self._create_constraints()
+        self.variables = number_of_cities ** 2
+        self._set_objective_function()
+        self._set_constraints()
 
     def _calc_bit(self, i: int, t: int) -> int:
         return i + t * self.tsp_instance.number_of_cities
 
-    def _create_objective_function(self) -> None:
+    def _set_objective_function(self) -> None:
         equation = ""
         for i, j in itertools.permutations(range(0, self.tsp_instance.number_of_cities), 2):
             equation += f"+{self.tsp_instance.normalized_distance_matrix[i][j]}*("
@@ -100,7 +100,7 @@ class TSPProblem(Problem):
 
         self.objective_function = equation
 
-    def _create_constraints(self) -> None:
+    def _set_constraints(self) -> None:
         self.constraints = []
         equation = ""
         for i in range(self.tsp_instance.number_of_cities):

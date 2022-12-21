@@ -13,24 +13,24 @@ class QmlGradientDescent(Optimizer):
 
     Attributes
     ----------
-    optimization_steps : int
-        number of optimization steps
     optimizer : qml.GradientDescentOptimizer
         object of class GradientDescentOptimizer or inheriting from this class
+    optimization_steps : int
+        number of optimization steps
     """
 
-    def __init__(self, optimization_steps: int, optimizer: qml.GradientDescentOptimizer) -> None:
+    def __init__(self, optimizer: qml.GradientDescentOptimizer, optimization_steps: int) -> None:
         """
         Parameters
         ----------
-        optimization_steps : int
-            number of optimization steps
         optimizer : qml.GradientDescentOptimizer
             object of class GradientDescentOptimizer or inheriting from this class
+        optimization_steps : int
+            number of optimization steps
         """
 
-        self.optimization_steps = optimization_steps
         self.optimizer = optimizer
+        self.optimization_steps = optimization_steps
 
     def minimize(self, func: Callable[[ArgsType], float], init: ArgsType) -> tuple[ArgsType, Any]:
         """Returns params which lead to the lowest value of the provided function and cost history
