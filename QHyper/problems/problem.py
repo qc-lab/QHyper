@@ -47,4 +47,4 @@ class Problem(ABC):
     def __repr__(self) -> str:
         if self.name == "":
             return super().__repr__()
-        return f"{self.__class__.__name__} {self.name}"
+        return f"{self.__class__.__name__}_{self.name}"
