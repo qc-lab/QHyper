@@ -1,5 +1,4 @@
 import multiprocessing as mp
-from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
@@ -8,7 +7,6 @@ import tqdm
 from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer, Wrapper
 
 
-@dataclass
 class Random(HyperparametersOptimizer):
     """Simple random search
     
@@ -19,9 +17,25 @@ class Random(HyperparametersOptimizer):
     processes : int
          number of processors that will be used (default cpu count)
     """
-    number_of_samples: int = 100
-    processes: int = mp.cpu_count()
 
+    def __init__(
+        self,
+        number_of_samples: int = 100,
+        processes: int = mp.cpu_count()
+    ) -> None:
+        """
+        Parameters
+        ----------
+        number_of_samples : int
+            number of random samples (default 100)
+        processes : int
+            number of processors that will be used (default cpu count)
+        """
+
+        self.number_of_samples: int = number_of_samples
+        self.processes: int = processes
+    
+    
     def minimize(
         self, 
         func_creator: Callable[[ArgsType], Callable[[ArgsType], float]], 
