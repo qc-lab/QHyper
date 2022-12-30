@@ -1,0 +1,34 @@
+problems:
+  knapsack_1:
+    items:
+      - [2, 3]
+      - [2, 1]
+    max_weight: 2
+  knapsack_2:
+    items:
+      - [1, 2]
+      - [1, 1]
+    max_weight: 1
+  # tsp_1:
+  #   number_of_cities: 3
+  # tsp_2:
+  #   number_of_cities: 4
+hyperoptimizers:
+  None: ~ 
+  CEM_1:
+    epochs: 10
+    samples_per_epoch: 100
+  CEM_2:
+    epochs: 10
+    samples_per_epoch: 20 
+  CEM_3:
+    epochs: 10
+    samples_per_epoch: 50
+  Random_1:
+    number_of_samples: 100
+  Random_2:
+    number_of_samples: 500
+  Random_3:
+    number_of_samples: 1000
+angles_alpha: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+angles_beta:  [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
