@@ -23,13 +23,16 @@ class CEM(HyperparametersOptimizer):
         number of processors that will be used (default cpu count)
     n_elite : int
         calulated by multiplying samples_per_epoch by elite_frac
+    print_on_epochs: list[int]
+        list indicating after which epochs print best results
     """
 
     def __init__(
         self, epochs: int = 10,
         samples_per_epoch: int = 100,
         elite_frac: float = 0.1,
-        processes: int = mp.cpu_count()
+        processes: int = mp.cpu_count(),
+        print_on_epochs: list[int] = []
     ) -> None:
         """
         Parameters
@@ -43,6 +46,8 @@ class CEM(HyperparametersOptimizer):
             the mean and cov for the next epoch (default 0.1)
         processes : int
             number of processors that will be used (default cpu count)
+        print_on_epochs: list[int]
+            list indicating after which epochs print best results
         """
 
         self.epochs: int = epochs
@@ -50,6 +55,7 @@ class CEM(HyperparametersOptimizer):
         self.elite_frac: float = elite_frac
         self.processes: int = processes
         self.n_elite: int = int(self.samples_per_epoch * self.elite_frac)
+        self.print_on_epochs: list[int] = print_on_epochs
 
     def minimize(
         self, 
@@ -58,8 +64,7 @@ class CEM(HyperparametersOptimizer):
         init: ArgsType, 
         hyperparams_init: ArgsType, 
         evaluation_func: Callable[[ArgsType], Callable[[ArgsType], float]] = None,
-        bounds: list[float] = None,
-        **kwargs: Any
+        bounds: list[float] = None
     ) -> ArgsType:
         """Returns hyperparameters which lead to the lowest values returned by optimizer
         
@@ -79,10 +84,6 @@ class CEM(HyperparametersOptimizer):
             function which receives params and return evaluation
         bounds : list[float]
             bounds for hyperparameters (default None)
-        kwargs : Any
-            allow additional arguments, available args:
-                print_freq : int
-                    prints additional score information every x epochs
 
         Returns
         -------
@@ -94,8 +95,6 @@ class CEM(HyperparametersOptimizer):
         cov = np.identity(len(hyperparams_init))
         best_hyperparams = hyperparams_init
         best_score = float('inf')
-
-        print_freq = kwargs.get("print_freq", self.epochs + 1)
 
         scores = []
         wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
@@ -128,10 +127,11 @@ class CEM(HyperparametersOptimizer):
             mean = np.mean(elite_weights, axis=0)
             cov = np.cov(np.stack((elite_weights), axis=1), bias=True)
 
-            if i_iteration % print_freq == 0:
-                print(f'Epoch {i_iteration}\t'
-                      f'Average Elite Score: {np.average([rewards[i] for i in elite_idxs])}\t'
-                      f'Average Score: {np.average(rewards)}'
-                      )
-                print(f'{best_hyperparams} with score: {best_score}')
+            if i_iteration in self.print_on_epochs:
+                # print(f'Epoch {i_iteration}\t'
+                #       f'Average Elite Score: {np.average([rewards[i] for i in elite_idxs])}\t'
+                #       f'Average Score: {np.average(rewards)}'
+                #       )
+                # print(f'{best_hyperparams} with score: {best_score}')
+                print(f'{best_score}')
         return best_hyperparams
