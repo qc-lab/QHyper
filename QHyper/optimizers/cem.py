@@ -25,6 +25,8 @@ class CEM(HyperparametersOptimizer):
         calulated by multiplying samples_per_epoch by elite_frac
     print_on_epochs: list[int]
         list indicating after which epochs print best results
+    disable_tqdm: bool
+        if set to True, tdqm will be disabled
     """
 
     def __init__(
@@ -32,7 +34,8 @@ class CEM(HyperparametersOptimizer):
         samples_per_epoch: int = 100,
         elite_frac: float = 0.1,
         processes: int = mp.cpu_count(),
-        print_on_epochs: list[int] = []
+        print_on_epochs: list[int] = [],
+        disable_tqdm: bool = False
     ) -> None:
         """
         Parameters
@@ -47,7 +50,9 @@ class CEM(HyperparametersOptimizer):
         processes : int
             number of processors that will be used (default cpu count)
         print_on_epochs: list[int]
-            list indicating after which epochs print best results
+            list indicating after which epochs print best results (default [])
+        disable_tqdm: bool
+            if set to True, tdqm will be disabled (default False)
         """
 
         self.epochs: int = epochs
@@ -56,6 +61,7 @@ class CEM(HyperparametersOptimizer):
         self.processes: int = processes
         self.n_elite: int = int(self.samples_per_epoch * self.elite_frac)
         self.print_on_epochs: list[int] = print_on_epochs
+        self.disable_tqdm = disable_tqdm
 
     def minimize(
         self, 
@@ -109,7 +115,8 @@ class CEM(HyperparametersOptimizer):
                 np.reshape(np.array(hyperparam), hyperparams_init.shape) for hyperparam in hyperparams]
 
             with mp.Pool(processes=self.processes) as p:
-                results = list(tqdm.tqdm(p.imap(wrapper.func, hyperparams), total=len(hyperparams)))
+                results = list(tqdm.tqdm(
+                    p.imap(wrapper.func, hyperparams), total=len(hyperparams), disable=self.disable_tqdm))
 
             rewards = np.array([result for result in results])
 

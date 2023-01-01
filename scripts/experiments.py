@@ -16,7 +16,7 @@ def run_experiments(problems, hyperoptimizers, angles_alpha, angles_beta):
         for angle_beta in angles_beta:
             for problem in problems:
                 for hyperopt in hyperoptimizers:    
-                    print(f"{problem} {hyperopt} {angle_alpha} {angle_beta}")
+                    print(f"{problem} {hyperopt} {angle_alpha} {angle_beta} ")
                     solver = QAOA(
                         problem=problem,
                         platform="pennylane",
