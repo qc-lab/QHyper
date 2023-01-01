@@ -20,16 +20,19 @@ hyperoptimizers:
     samples_per_epoch: 100
     processes: 32
     disable_tqdm: True
+    print_on_epochs: [1, 5]
   CEM_2:
     epochs: 10
     samples_per_epoch: 20 
     processes: 32
     disable_tqdm: True
+    print_on_epochs: [1, 5]
   CEM_3:
     epochs: 10
     samples_per_epoch: 50
     processes: 32
     disable_tqdm: True
+    print_on_epochs: [1, 5]
   Random_1:
     number_of_samples: 100
     processes: 32
