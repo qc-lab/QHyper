@@ -1,108 +1,124 @@
+from dataclasses import dataclass
+
 import networkx as nx
 import pandas as pd
 import sympy
 from wfcommons import Instance
 from wfcommons.utils import read_json
 
-from QHyper.problems.integrate_wfcommons import TargetMachine
+from QHyper.hyperparameter_gen.parser import Polynomial
+from QHyper.problems.problem import Problem
+
+
+@dataclass
+class TargetMachine:
+    name: str
+    memory: int
+    cpu: dict[str, float]
+    price: float
+    memory_cost_multiplier: float
 
 
 class Workflow:
-    def __init__(self):
+    def __init__(self, tasks_file, machines_file, deadline):
+        self.wf_instance = Instance(tasks_file)
+        self.tasks = self._get_tasks(tasks_file)
+        self.machines = self._get_machines(machines_file)
+        self.deadline = deadline
+        self._set_paths()
+        self.time_matrix, self.cost_matrix = self._calc_dataframes()
+        # self.task_names = self.time_matrix.index
+        # self.machine_names = self.time_matrix.columns
 
-        instance = Instance(
-            "./workflows_data/workflows/msc_sample_workflow.json")
+    def _get_tasks(self, tasks_file):
+        return self.wf_instance.workflow.nodes(data=True)
 
-        workflow = instance.workflow
-        tasks = workflow.nodes(data=True)
+    def _get_machines(self, machines_file):
+        target_machines = read_json(machines_file)
+        return {machine['name']: TargetMachine(**machine) for machine in target_machines["machines"]}
 
+    def _set_paths(self):
         all_paths = []
-        for root in instance.roots():
-            for leaf in instance.leaves():
-                paths = nx.all_simple_paths(instance.workflow, root, leaf)
+        for root in self.wf_instance.roots():
+            for leaf in self.wf_instance.leaves():
+                paths = nx.all_simple_paths(self.wf_instance.workflow, root, leaf)
                 all_paths.extend(paths)
 
         self.paths = all_paths
 
-        new_machines = read_json(
-            "./workflows_data/machines/msc_sample_machines.json")
-
-        target_machines = {
-            machine['name']: TargetMachine(**machine)
-            for machine in new_machines["machines"]
-        }
-
-        # calc dataframe
+    def _calc_dataframes(self):
         costs, runtimes = {}, {}
-        for machine_name, machine_details in target_machines.items():
-            machine_cost = []
-            machine_runtime = []
-            for name, task in tasks:
-                task_machine = task["task"].machine
-                number_of_operations = task["task"].runtime * task_machine.cpu_speed * task_machine.cpu_cores * 10 ** 6
-                real_runtime = number_of_operations / (
+        for machine_name, machine_details in self.machines.items():
+            machine_cost, machine_runtime = [], []
+            for task_name, task in self.tasks:
+                old_machine = task["task"].machine
+                number_of_operations = task["task"].runtime * old_machine.cpu_speed * old_machine.cpu_cores * 10 ** 6
+                real_runtime = number_of_operations / (  # todo can this overflow?
                         machine_details.cpu["speed"] * machine_details.cpu["count"] * 10 ** 6)
                 machine_runtime.append(real_runtime)
                 machine_cost.append(real_runtime * machine_details.price)
             costs[machine_name] = machine_cost
             runtimes[machine_name] = machine_runtime
-        #
 
-        self.time_matrix = pd.DataFrame(data=costs, index=instance.workflow.nodes)
-        self.cost_matrix = pd.DataFrame(data=runtimes, index=instance.workflow.nodes)
+        time_df = pd.DataFrame(data=runtimes, index=self.wf_instance.workflow.nodes)
+        cost_df = pd.DataFrame(data=costs, index=self.wf_instance.workflow.nodes)
 
-        # todo check if it is safe to use index-columns from dataframe <- make sure of this when you create the dataframe
-        self.tasks = self.time_matrix.index
-        self.machines = self.time_matrix.columns
-        self.deadline = 32
-        self.x = sympy.symbols(
-            ' '.join([f'x{i}' for i in range(len(self.tasks) * len(self.machines))]))  # num of bin variables
+        return time_df, cost_df
 
 
-class WorkflowSchedulingProblem:
+class WorkflowSchedulingProblem(Problem):
     def __init__(self, workflow: Workflow):
         self.workflow = workflow
-        self._create_objective_function()
-        self._create_constraints()
+        self.variables = sympy.symbols(
+            ' '.join([f'x{i}' for i in range(len(self.workflow.tasks) * len(self.workflow.machines))]))
+        self._set_objective_function()
+        self._set_constraints()
 
-    def _create_objective_function(self) -> None:
-        equation = 0
-
-        for task_id, task_name in enumerate(self.workflow.tasks):
-            for machine_id, machine_name in enumerate(self.workflow.machines):
+    def _set_objective_function(self) -> None:
+        expression = 0
+        for task_id, task_name in enumerate(self.workflow.time_matrix.index):
+            for machine_id, machine_name in enumerate(self.workflow.time_matrix.columns):
                 cost = self.workflow.cost_matrix[machine_name][task_name]
-                equation += cost * self.workflow.x[machine_id + task_id * len(self.workflow.machines)]
+                expression += cost * self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
 
-        self.objective_function = equation
+        self.objective_function = Polynomial(expression)
 
-    def _create_constraints(self) -> None:  # one w sumie nie musza byc kwadratowe
-        constraints = []
+    def _set_constraints(self) -> None:
+        constraints = {"==": [],
+                       "<=": [],
+                       ">=": []}
 
-        # constraint one_machine
-        for task_id in range(len(self.workflow.tasks)):
-            equation = 0
-            for machine_id in range(len(self.workflow.machines)):
-                equation += self.workflow.x[machine_id + task_id * len(self.workflow.machines)]
-            equation -= 1
-            constraints.append(sympy.Rel(equation, 0, "=="))
+        # machine assignment constraint
+        for task_id in range(len(self.workflow.time_matrix.index)):
+            expression = 0
+            for machine_id in range(len(self.workflow.time_matrix.columns)):
+                expression += self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
+            expression -= 1
 
-        # constraint deadline #todo ok
+            constraints["=="].append(Polynomial(expression))
+
+        # deadline constraint
         for path in self.workflow.paths:
-            equation = 0
-            for task_id, task_name in enumerate(self.workflow.tasks):
-                for machine_id, machine_name in enumerate(self.workflow.machines):
+            expression = 0
+            for task_id, task_name in enumerate(self.workflow.time_matrix.index):
+                for machine_id, machine_name in enumerate(self.workflow.time_matrix.columns):
                     if task_name in path:
                         time = self.workflow.time_matrix[machine_name][task_name]
-                        equation += time * self.workflow.x[machine_id + task_id * len(self.workflow.machines)]
+                        expression += time * self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
 
-            equation -= self.workflow.deadline
-            constraints.append(sympy.Rel(equation, 0, "<="))
+            expression -= self.workflow.deadline
+            constraints["<="].append(Polynomial(expression))
 
         self.constraints = constraints
 
+    def decode_solution(self, solution):
+        decoded_solution = {}
+        for variable, value in solution.items():
+            name, id = variable[0], int(variable[1:])  # todo add validation
+            if value == 1.0:
+                machine_id = id % len(self.workflow.machines)
+                task_id = id // len(self.workflow.machines)
+                decoded_solution[self.workflow.time_matrix.index[task_id]] = self.workflow.time_matrix.columns[
+                    machine_id]
 
-if __name__ == "__main__":
-    workflow = Workflow()
-    wsp = WorkflowSchedulingProblem(workflow)
-    print(wsp.objective_function)
-    print(wsp.constraints)
+        return decoded_solution
