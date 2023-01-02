@@ -1,5 +1,9 @@
 from abc import ABC
 
+import dimod
+
+from QHyper.hyperparameter_gen.parser import Polynomial, dict_to_list
+
 
 class Problem(ABC):
     """Interface for different combinatorial optimization problems
@@ -20,9 +24,27 @@ class Problem(ABC):
         number of qubits in the circuit
 
     """
-    objective_function: str
-    constraints: list[str]
+    objective_function: Polynomial
+    constraints: dict[Polynomial]
     wires: int
+    variables: list[str]  # todo when you have that, you don't need wires --> (len(variables))
+
+    def to_cqm(self):
+        binary_polynomial = dimod.BinaryPolynomial(self.objective_function.as_dict(), dimod.BINARY)
+        cqm = dimod.make_quadratic_cqm(binary_polynomial)
+
+        for sense, constraints in self.constraints.items():
+            for constraint in constraints:
+                constraint = constraint.as_dict()
+                constraint = dict_to_list(constraint)  # todo check what is wrong with adding dicts
+                cqm.add_constraint(constraint, sense)
+
+        return cqm
+
+    def to_qubo(self, method="dimod"):  # method = cem
+        cqm = self.to_cqm()
+        bqm, invert = dimod.cqm_to_bqm(cqm, lagrange_multiplier=10)
+        return bqm.to_qubo()  # (qubo, offset)
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the outcome provided as a binary string
