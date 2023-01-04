@@ -28,7 +28,8 @@ class Problem(ABC):
     objective_function: Polynomial
     constraints: dict[Polynomial]
     wires: int
-    variables: list  # todo when you have that, you don't need wires --> (len(variables))
+    variables: list
+    #todo : list[str]  # todo when you have that, you don't need wires --> (len(variables))
 
     def to_cqm(self):
         binary_polynomial = dimod.BinaryPolynomial(self.objective_function.as_dict(), dimod.BINARY)
