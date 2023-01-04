@@ -32,7 +32,15 @@ class Optimizer(ABC):
 
 
 class HyperparametersOptimizer(ABC):
-    """Interface for hyperoptimizers"""
+    """Interface for hyperoptimizers
+    
+    Attributes
+    ----------
+    name: str
+        helps to differentiate various hyperoptimizers (default "")
+    """
+
+    name: str = ""
 
     def minimize(
         self, 
@@ -71,6 +79,11 @@ class HyperparametersOptimizer(ABC):
             hyperparameters which lead to the lowest values returned by the optimizer
         """
         pass
+
+    def __repr__(self) -> str:
+        if self.name == "":
+            return super().__repr__()
+        return f"{self.__class__.__name__}_{self.name}"
 
 
 class Wrapper:

@@ -18,11 +18,14 @@ class Problem(ABC):
         list of constraints in SymPy syntax
     variables : int
         number of variables in the problem
-
+    name: str
+        helps to differentiate various problems (default "")
     """
+
     objective_function: str
     constraints: list[str] = []
     variables: int
+    name: str = ""
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the outcome provided as a binary string
@@ -40,3 +43,8 @@ class Problem(ABC):
             Returns float if outcome is correct and meets all criteria, otherwise returns None
         """
         raise Exception("Unimplemented")
+    
+    def __repr__(self) -> str:
+        if self.name == "":
+            return super().__repr__()
+        return f"{self.__class__.__name__}_{self.name}"

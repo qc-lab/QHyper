@@ -1,5 +1,4 @@
 import multiprocessing as mp
-from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
@@ -8,7 +7,6 @@ import tqdm
 from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer, Wrapper
 
 
-@dataclass
 class Random(HyperparametersOptimizer):
     """Simple random search
     
@@ -18,10 +16,31 @@ class Random(HyperparametersOptimizer):
         number of random samples (default 100)
     processes : int
          number of processors that will be used (default cpu count)
+    disable_tqdm: bool
+        if set to True, tdqm will be disabled (default False)
     """
-    number_of_samples: int = 100
-    processes: int = mp.cpu_count()
 
+    def __init__(
+        self,
+        number_of_samples: int = 100,
+        processes: int = mp.cpu_count(),
+        disable_tqdm: bool = False
+    ) -> None:
+        """
+        Parameters
+        ----------
+        number_of_samples : int
+            number of random samples (default 100)
+        processes : int
+            number of processors that will be used (default cpu count)
+        disable_tqdm: bool
+            if set to True, tdqm will be disabled (default False)
+        """
+
+        self.number_of_samples: int = number_of_samples
+        self.processes: int = processes
+        self.disable_tqdm: bool = disable_tqdm
+    
     def minimize(
         self, 
         func_creator: Callable[[ArgsType], Callable[[ArgsType], float]], 
@@ -65,7 +84,8 @@ class Random(HyperparametersOptimizer):
         wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
 
         with mp.Pool(processes=self.processes) as p:
-            results = list(tqdm.tqdm(p.imap(wrapper.func, hyperparams), total=self.number_of_samples))
+            results = list(tqdm.tqdm(
+                p.imap(wrapper.func, hyperparams), total=self.number_of_samples, disable=self.disable_tqdm))
 
         min_idx = np.argmin([result for result in results])
 
