@@ -6,7 +6,7 @@ import sympy
 from wfcommons import Instance
 from wfcommons.utils import read_json
 
-from QHyper.hyperparameter_gen.parser import Polynomial
+from QHyper.hyperparameter_gen.parser import Expression
 from QHyper.problems.problem import Problem
 
 

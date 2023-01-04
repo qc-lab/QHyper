@@ -4,7 +4,8 @@ import pennylane as qml
 from ...optimizers.optimizer import HyperparametersOptimizer, Optimizer
 from ...problems.problem import Problem
 from ..solver import Solver
-from .parser import parse_hamiltonian
+from ..converter import QUBO, Converter
+# from .parser import parse_hamiltonian
 
 
 class PennyLaneQAOA(Solver):
@@ -65,26 +66,37 @@ class PennyLaneQAOA(Solver):
         self.weights: list[float] = kwargs.get("weights", [1])
         self.hyperoptimizer: HyperparametersOptimizer = kwargs.get("hyperoptimizer", None)
         self.backend: str = kwargs.get("backend", "default.qubit")
-
+        self.problem.variables = [str(x) for x in self.problem.variables] #TODO
         self.dev = qml.device(self.backend, wires=self.problem.variables)
 
-    def _create_cost_operator(self, weights: list[float]) -> qml.Hamiltonian:
-        elements = [self.problem.objective_function] + self.problem.constraints
-        cost_operator = ""
-        if len(weights) != len(elements):
-            raise Exception(
-                f"Number of provided weights ({len(weights)}) is different from number of elements ({len(elements)})")
-        for weight, ingredient in zip(weights, elements):
-            cost_operator += f"+{weight}*({ingredient})"
-        return parse_hamiltonian(cost_operator)
+    # def _create_cost_operator(self, weights: list[float]) -> qml.Hamiltonian:
+    #     elements = [self.problem.objective_function] + self.problem.constraints
+    #     cost_operator = ""
+    #     if len(weights) != len(elements):
+    #         raise Exception(
+    #             f"Number of provided weights ({len(weights)}) is different from number of elements ({len(elements)})")
+    #     for weight, ingredient in zip(weights, elements):
+    #         cost_operator += f"+{weight}*({ingredient})"
+    #     return parse_hamiltonian(cost_operator)
+    def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
+        result = qml.Identity(0)
+        for variables, coeff in qubo.items():
+            if not variables:
+                continue
+            tmp = coeff * (0.5 * qml.Identity(variables[0]) - 0.5 * qml.PauliZ(variables[0]))
+            if len(variables) == 2 and variables[0] != variables[1]:
+                tmp = tmp @ (0.5 * qml.Identity(variables[1]) - 0.5 * qml.PauliZ(variables[1]))
+            result += tmp
+        print(result)
+        return result
 
     def _hadamard_layer(self):
-        for i in range(self.problem.variables):
+        for i in self.problem.variables:
             qml.Hadamard(i)
 
     def _create_mixing_hamiltonian(self) -> qml.Hamiltonian:
         if self.mixer == "X":
-            return qml.qaoa.x_mixer(range(self.problem.variables))
+            return qml.qaoa.x_mixer(self.problem.variables)
         # REQUIRES GRAPH https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.xy_mixer.html
         # if self.mixer == "XY": 
         #     return qml.qaoa.xy_mixer(...)
@@ -98,7 +110,7 @@ class PennyLaneQAOA(Solver):
         self._hadamard_layer()
         qml.layer(qaoa_layer, self.layers, params[0], params[1])
 
-    def get_expval_func(self, weights: list[float]):
+    def get_expval_func(self, qubo: QUBO):
         """Take angles and return the expectation value
 
         Parameters
@@ -112,7 +124,7 @@ class PennyLaneQAOA(Solver):
             Returns function that takes angles and returns expectation value
         """
 
-        cost_operator = self._create_cost_operator(weights)
+        cost_operator = self._create_cost_operator(qubo)
 
         @qml.qnode(self.dev)
         def cost_function(params):
@@ -122,7 +134,7 @@ class PennyLaneQAOA(Solver):
 
         return cost_function
 
-    def get_probs_val_func(self, weights):
+    def get_probs_val_func(self, qubo: QUBO):
         """Returns function that takes angles and returns score
 
         Parameters
@@ -138,12 +150,12 @@ class PennyLaneQAOA(Solver):
         """
 
         def probability_value(params):
-            probs = self.get_probs_func(weights)(params)
+            probs = self.get_probs_func(qubo)(params)
             return self.check_results(probs)
 
         return probability_value
     
-    def evaluate(self, weights, params):
+    def evaluate(self, qubo: QUBO, params):
         """Returns evaluation of given parameters 
 
         Parameters
@@ -159,11 +171,11 @@ class PennyLaneQAOA(Solver):
             Returns evaluation of given parameters
         """
 
-        probs = self.get_probs_func(weights)(params)
+        probs = self.get_probs_func(qubo)(params)
         return self.check_results(probs)
 
 
-    def get_probs_func(self, weights):
+    def get_probs_func(self, qubo: QUBO):
         """Returns function that takes angles and returns probabilities 
 
         Parameters
@@ -177,12 +189,12 @@ class PennyLaneQAOA(Solver):
             Returns function that takes angles and returns probabilities
         """
 
-        cost_operator = self._create_cost_operator(weights)
+        cost_operator = self._create_cost_operator(qubo)
 
         @qml.qnode(self.dev)
         def probability_circuit(params):
             self._circuit(params, cost_operator)
-            return qml.probs(wires=range(self.problem.variables))
+            return qml.probs(wires=self.problem.variables)
 
         return probability_circuit
 
@@ -203,7 +215,7 @@ class PennyLaneQAOA(Solver):
             The smaller the returned value, the better the probabilities.
         """
 
-        to_bin = lambda x: format(x, 'b').zfill(self.problem.variables)
+        to_bin = lambda x: format(x, 'b').zfill(len(self.problem.variables))
 
         results_by_probabilites = {result: float(prob) for result, prob in enumerate(probs)}
         results_by_probabilites = dict(
@@ -226,7 +238,7 @@ class PennyLaneQAOA(Solver):
             probabilities of each state
         """
 
-        to_bin = lambda x: format(x, 'b').zfill(self.problem.variables)
+        to_bin = lambda x: format(x, 'b').zfill(len(self.problem.variables))
         results_by_probabilites = {result: float(prob) for result, prob in enumerate(probs)}
         results_by_probabilites = dict(
             sorted(results_by_probabilites.items(), key=lambda item: item[1], reverse=True))
@@ -257,6 +269,7 @@ class PennyLaneQAOA(Solver):
             evaluation_func=self.evaluate,
             bounds=[0.00001, 100] #TODO
         ) if self.hyperoptimizer else self.weights
-        
-        params, _ = self.optimizer.minimize(self.get_expval_func(weights), self.angles)
-        return self.evaluate(weights, params), params, weights
+        print(self.problem.variables)
+        qubo = Converter.create_qubo(self.problem, weights)
+        params, _ = self.optimizer.minimize(self.get_expval_func(qubo), self.angles)
+        return self.evaluate(qubo, params), params, weights
