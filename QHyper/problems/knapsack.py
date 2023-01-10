@@ -117,8 +117,8 @@ class KnapsackProblem(Problem):
         for y in ys:
             equation += f"-{y}"
         equation += f")**2"
-        constrains.append(equation)
-        equation = "("
+        # constrains.append(equation)
+        equation = "+("
         for i, y in enumerate(ys):
             equation += f"+{i + 1}*{y}"
         for i, x in enumerate(xs):
