@@ -1,7 +1,9 @@
 import random
+import sympy
 from collections import namedtuple
 
 from .problem import Problem
+from QHyper.hyperparameter_gen.parser import Expression
 
 Item = namedtuple('Item', "weight value")
 
@@ -19,7 +21,13 @@ class Knapsack:
         maximum value of an item
     """
 
-    def __init__(self, max_weight: int, max_item_value: int = 10, items_amount: int = 0) -> None:
+    def __init__(
+        self, 
+        max_weight: int, 
+        max_item_value: int = 10, 
+        items_amount: int = 0,
+        items: list[tuple[int, int]] = []
+    ) -> None:
         """
         Parameters
         ----------
@@ -29,11 +37,13 @@ class Knapsack:
             maximum value of an item (default 10)
         items_amount: int
             items amount, used only for random knapsack (default 0)
+        items: list[tuple[int, int]]
+            set items in knapsack (default [])
         """
         self.items: list[Item] = []
         self.max_weight: int = max_weight
         self.max_item_value: int = max_item_value
-        self.generate_knapsack(items_amount)
+        self.set_knapsack(items) if items else self.generate_knapsack(items_amount)
 
     def generate_knapsack(self, items_amount: int) -> None:
         for _ in range(items_amount):
@@ -58,66 +68,68 @@ class KnapsackProblem(Problem):
         objective function in SymPy syntax
     constraints : list[str]
         list of constraints in SymPy syntax
-    wires : int
+    variables : int
         number of qubits in the circuit, equals to sum of the number of items in the knapsack the max weight of a knapsack
     """
 
     def __init__(
-            self,
-            knapsack: Knapsack
+        self,
+        max_weight: int, 
+        max_item_value: int = 10, 
+        items_amount: int = 0,
+        items: list[tuple[int, int]] = []
     ) -> None:
         """
         Parameters
         ----------
-        knapsack : Knapsack
-            knapsack object with available items and max weight
+        max_weight: int
+            maximum weight of an item
+        max_item_value: int
+            maximum value of an item (default 10)
+        items_amount: int
+            items amount, used only for random knapsack (default 0)
+        items: list[tuple[int, int]]
+            set items in knapsack (default [])
         """
-        self.wires = len(knapsack) + knapsack.max_weight
-        self.knapsack = knapsack
-        self._create_objective_function(knapsack)
-        self._create_constraints(knapsack)
+        self.knapsack = Knapsack(max_weight, max_item_value, items_amount, items)
+        # self.variables = len(self.knapsack) + self.knapsack.max_weight
+        self.variables = sympy.symbols(
+            ' '.join([f'x{i}' for i in range(len(self.knapsack) + self.knapsack.max_weight)]))
+        self._set_objective_function()
+        self._set_constraints()
 
-    def _create_objective_function(self, knapsack: Knapsack) -> None:
+    def _set_objective_function(self) -> None:
         """
         Create the objective function defined in SymPy syntax
-
-        Parameters
-        ----------
-        knapsack : Knapsack
-            knapsack object with available items and max weight
         """
-        xs = [f"x{i}" for i in range(len(knapsack))]
-        equation = "-("
-        for i, x in enumerate(xs):
-            equation += f"+{knapsack.items[i].value}*{x}"
-        equation += ")"
-        self.objective_function = equation
+        # xs = [f"x{i}" for i in range(len(self.knapsack))]
+        equation = 0
+        for i, x in enumerate(self.variables[:len(self.knapsack)]):
+            equation += self.knapsack.items[i].value*x
+        equation *= -1
+        # equation += 
+        self.objective_function = Expression(equation)
 
-    def _create_constraints(self, knapsack: Knapsack) -> None:
+    def _set_constraints(self) -> None:
         """
         Create constraints defined in SymPy syntax
-
-        Parameters
-        ----------
-        knapsack : Knapsack
-               knapsack object with available items and max weight
         """
-        xs = [f"x{i}" for i in range(len(knapsack))]
-        ys = [f"x{i}" for i in range(
-            len(knapsack), len(knapsack) + knapsack.max_weight)]
+        xs = [self.variables[i] for i in range(len(self.knapsack))]
+        ys = [self.variables[i] for i in range(
+            len(self.knapsack), len(self.knapsack) + self.knapsack.max_weight)]
         constrains = []
-        equation = f"(J"
+        equation = 1
         for y in ys:
-            equation += f"-{y}"
-        equation += f")**2"
-        constrains.append(equation)
-        equation = "("
+            equation -= y
+        equation = equation**2
+        constrains.append(Expression(equation))
+        equation = 0
         for i, y in enumerate(ys):
-            equation += f"+{i + 1}*{y}"
+            equation += (i + 1)*y
         for i, x in enumerate(xs):
-            equation += f"-{knapsack.items[i].weight}*{x}"
-        equation += ")**2"
-        constrains.append(equation)
+            equation += -(self.knapsack.items[i].weight)*x
+        equation = equation**2
+        constrains.append(Expression(equation))
         self.constraints = constrains
 
     def get_score(self, result: str) -> float | None:

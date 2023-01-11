@@ -9,11 +9,11 @@ class Optimizer(ABC):
 
     @abstractmethod
     def minimize(
-            self,
-            func: Callable[[ArgsType], float],
-            init: ArgsType
-    ) -> ArgsType:
-        """Returns params which lead to the lowest value of the provided function
+        self,
+        func: Callable[[ArgsType], float],
+        init: ArgsType
+    ) -> tuple[ArgsType, Any]:
+        """Returns params which lead to the lowest value of the provided function and cost history
 
         Parameters
         ----------
@@ -24,14 +24,23 @@ class Optimizer(ABC):
 
         Returns
         -------
-        ArgsType
-            Returns args which gave the lowest value
+        tuple[ArgsType, Any]
+            Returns tuple which contains params that lead to the lowest value
+            of the provided function and cost history
         """
         pass
 
 
 class HyperparametersOptimizer(ABC):
-    """Interface for hyperoptimizers"""
+    """Interface for hyperoptimizers
+    
+    Attributes
+    ----------
+    name: str
+        helps to differentiate various hyperoptimizers (default "")
+    """
+
+    name: str = ""
 
     def minimize(
         self, 
@@ -71,8 +80,13 @@ class HyperparametersOptimizer(ABC):
         """
         pass
 
+    def __repr__(self) -> str:
+        if self.name == "":
+            return super().__repr__()
+        return f"{self.__class__.__name__}_{self.name}"
 
-class Worker:  # change name
+
+class Wrapper:
     """Use hyperparameters to create a function using func_creator,
     run optimizer on this function, and return its lowest value
 
@@ -94,5 +108,5 @@ class Worker:  # change name
 
     def func(self, hyperparams: Any) -> float:
         _func = self.func_creator(hyperparams)
-        params = self.optimizer.minimize(_func, self.init)
+        params, _ = self.optimizer.minimize(_func, self.init)
         return self.evaluation_func(hyperparams, params)

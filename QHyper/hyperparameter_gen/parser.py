@@ -1,20 +1,45 @@
 import ast
+import numpy as np
 from typing import Any
 
 import sympy
 
 
-class Polynomial:
+def calc_slack_coefficients(constant: int) -> dict[str, int]:
+    num_slack = int(np.floor(np.log2(constant)))
+    slack_coefficients = {f's{j}': 2 ** j for j in range(num_slack)}
+    if constant - 2 ** num_slack >= 0:
+        slack_coefficients[num_slack] = constant - 2 ** num_slack + 1
+    return slack_coefficients
 
-    def __init__(self, polynomial):
-        self.polynomial: sympy = polynomial
+
+class Expression:
+    def __init__(self, polynomial: str):
+        self.polynomial: str = polynomial
 
     def as_dict(self):
         parser = Parser()
-        objective_function = sympy.expand(self.polynomial)
-        ast_tree = ast.parse(str(objective_function))
+        ast_tree = ast.parse(str(sympy.expand(self.polynomial)))
         parser.visit(ast_tree)
         return parser.polynomial_as_dict
+
+    # def as_dict_with_slacks(self):
+    #     parser = Parser()
+    #     objective_function = sympy.expand(self.polynomial)
+    #     ast_tree = ast.parse(str(objective_function))
+    #     parser.visit(ast_tree)
+
+    #     result = parser.polynomial_as_dict
+    #     if self.op == '==':
+    #         return result
+
+    #     if self.op == '<=':
+    #         if tuple() in result:
+    #             value = result[tuple()]
+    #             return result | calc_slack_coefficients(value)
+    #         return result
+    #     else:
+    #         raise Exception("Unimplemented")
 
     def as_string(self):
         return str(self.polynomial)
@@ -118,11 +143,3 @@ class Parser(ast.NodeVisitor):
             if isinstance(left, (int, float)):
                 return [[[], left]] + [[[right], multiplier]]
         raise Exception
-
-
-def dict_to_list(my_dict):
-    result = []
-    for key, val in my_dict.items():
-        tmp = list(key)
-        result.append(tuple(tmp + [val]))
-    return result

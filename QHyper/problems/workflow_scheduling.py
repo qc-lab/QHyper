@@ -6,7 +6,7 @@ import sympy
 from wfcommons import Instance
 from wfcommons.utils import read_json
 
-from QHyper.hyperparameter_gen.parser import Polynomial
+from QHyper.hyperparameter_gen.parser import Expression
 from QHyper.problems.problem import Problem
 
 
@@ -81,7 +81,7 @@ class WorkflowSchedulingProblem(Problem):
                 cost = self.workflow.cost_matrix[machine_name][task_name]
                 expression += cost * self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
 
-        self.objective_function = Polynomial(expression)
+        self.objective_function = Expression(expression)
 
     def _set_constraints(self) -> None:
         constraints = {"==": [],
@@ -95,7 +95,7 @@ class WorkflowSchedulingProblem(Problem):
                 expression += self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
             expression -= 1
 
-            constraints["=="].append(Polynomial(expression))
+            constraints["=="].append(Expression(expression))
 
         # deadline constraint
         for path in self.workflow.paths:
@@ -104,10 +104,11 @@ class WorkflowSchedulingProblem(Problem):
                 for machine_id, machine_name in enumerate(self.workflow.time_matrix.columns):
                     if task_name in path:
                         time = self.workflow.time_matrix[machine_name][task_name]
-                        expression += time * self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
+                        expression += time * self.variables[
+                            machine_id + task_id * len(self.workflow.time_matrix.columns)]
 
             expression -= self.workflow.deadline
-            constraints["<="].append(Polynomial(expression))
+            constraints["<="].append(Expression(expression))
 
         self.constraints = constraints
 
