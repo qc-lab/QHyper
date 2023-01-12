@@ -118,7 +118,7 @@ class CEM(HyperparametersOptimizer):
                 results = list(tqdm.tqdm(
                     p.imap(wrapper.func, hyperparams), total=len(hyperparams), disable=self.disable_tqdm))
 
-            rewards = np.array([result for result in results])
+            rewards = np.array([result[0] for result in results])
 
             elite_idxs = rewards.argsort()[:self.n_elite]
             elite_weights = [hyperparams[i].flatten() for i in elite_idxs]
@@ -141,4 +141,5 @@ class CEM(HyperparametersOptimizer):
                 #       )
                 # print(f'{best_hyperparams} with score: {best_score}')
                 print(f'{best_score}')
-        return best_hyperparams
+
+        return *wrapper.func(best_hyperparams), best_hyperparams

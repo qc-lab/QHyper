@@ -67,6 +67,7 @@ class PennyLaneQAOA(Solver):
         self.backend: str = kwargs.get("backend", "default.qubit")
 
         self.dev = qml.device(self.backend, wires=self.problem.variables)
+        self.counter = 0
 
     def _create_cost_operator(self, weights: list[float]) -> qml.Hamiltonian:
         elements = [self.problem.objective_function] + self.problem.constraints
@@ -158,7 +159,7 @@ class PennyLaneQAOA(Solver):
         float
             Returns evaluation of given parameters
         """
-
+        self.counter += 1
         probs = self.get_probs_func(weights)(params)
         return self.check_results(probs)
 
@@ -249,14 +250,15 @@ class PennyLaneQAOA(Solver):
             Returns tuple of score, angles, weights
         """
 
-        weights = self.hyperoptimizer.minimize(
+        if self.hyperoptimizer:
+            return self.hyperoptimizer.minimize(
             func_creator=self.get_expval_func, 
             optimizer=self.optimizer, 
-            init=self.angles, 
+            init=np.array(self.angles), 
             hyperparams_init=np.array(self.weights), 
             evaluation_func=self.evaluate,
             bounds=[2, 10] #TODO
-        ) if self.hyperoptimizer else self.weights
+        )
         
-        params, _ = self.optimizer.minimize(self.get_expval_func(weights), self.angles)
-        return self.evaluate(weights, params), params, weights
+        params, _ = self.optimizer.minimize(self.get_expval_func(self.weights), self.angles)
+        return self.evaluate(self.weights, params), params, self.weights
