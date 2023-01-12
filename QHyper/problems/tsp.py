@@ -1,8 +1,10 @@
 import itertools
 
 import numpy as np
+import sympy
 
 from .problem import Problem
+from ..hyperparameter_gen.parser import Expression
 
 
 class TSP:
@@ -72,8 +74,8 @@ class TSPProblem(Problem):
     """
 
     def __init__(
-        self,
-        number_of_cities
+            self,
+            number_of_cities
     ) -> None:
         """
         Parameters
@@ -83,7 +85,7 @@ class TSPProblem(Problem):
         """
 
         self.tsp_instance = TSP(number_of_cities)
-        self.variables = number_of_cities ** 2
+        self.variables = sympy.symbols(' '.join([f'x{i}' for i in range(number_of_cities ** 2)]))
         self._set_objective_function()
         self._set_constraints()
 
@@ -91,32 +93,31 @@ class TSPProblem(Problem):
         return i + t * self.tsp_instance.number_of_cities
 
     def _set_objective_function(self) -> None:
-        equation = ""
+        equation = 0
         for i, j in itertools.permutations(range(0, self.tsp_instance.number_of_cities), 2):
-            equation += f"+{self.tsp_instance.normalized_distance_matrix[i][j]}*("
+            curr = 0
             for t in range(self.tsp_instance.number_of_cities):
-                equation += f"+x{self._calc_bit(i, t)}*x{self._calc_bit(j, (t + 1) % self.tsp_instance.number_of_cities)}"
-            equation += ")"
+                inc_t = t + 1
+                if inc_t == self.tsp_instance.number_of_cities:
+                    inc_t = 0
+                curr += self.variables[self._calc_bit(i, t)] * self.variables[self._calc_bit(j, inc_t)]
+            equation += self.tsp_instance.normalized_distance_matrix[i][j] * curr
 
-        self.objective_function = equation
+        self.objective_function = Expression(equation)
 
     def _set_constraints(self) -> None:
         self.constraints = []
-        equation = ""
         for i in range(self.tsp_instance.number_of_cities):
-            equation += f"+(J"
+            equation = 1
             for t in range(self.tsp_instance.number_of_cities):
-                equation += f"-x{self._calc_bit(i, t)}"
-            equation += f")**2"
+                equation -= self.variables[self._calc_bit(i, t)]
+            self.constraints.append(Expression(equation))
 
-        self.constraints.append(equation)
-        equation = ""
         for t in range(self.tsp_instance.number_of_cities):
-            equation += f"+(J"
+            equation = 1
             for i in range(self.tsp_instance.number_of_cities):
-                equation += f"-x{self._calc_bit(i, t)}"
-            equation += f")**2"
-        self.constraints.append(equation)
+                equation -= self.variables[self._calc_bit(i, t)]
+        self.constraints.append(Expression(equation))
 
     def _get_distance(self, key) -> float:
         results = np.array_split(list(key), self.tsp_instance.number_of_cities)
@@ -151,3 +152,6 @@ class TSPProblem(Problem):
         if not self._valid(result):
             return None  # Bigger value that possible distance
         return self._get_distance(result)
+
+    def decode_solution(self):
+        ...

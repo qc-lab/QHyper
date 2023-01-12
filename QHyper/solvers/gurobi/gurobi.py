@@ -1,4 +1,5 @@
 import gurobipy as gp
+from gurobipy import GRB
 
 from QHyper.problems.problem import Problem
 from QHyper.solvers.solver import Solver
@@ -18,22 +19,40 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
         objective_function = calc(vars, self.problem.objective_function.as_dict())
         gpm.setObjective(objective_function, gp.GRB.MINIMIZE)
 
-        eq_constraints = self.problem.constraints["=="]
-        for i, constraint in enumerate(eq_constraints):
+        for i, constraint in enumerate(self.problem.constraints):
             tmp_constraint = calc(vars, constraint.as_dict())
-            gpm.addConstr(tmp_constraint == 0, f"eq_constr_{i}")
+            gpm.addConstr(tmp_constraint == 0, f"constr_{i}")
+            gpm.update()
+            print(tmp_constraint)
 
-        ltq_constraints = self.problem.constraints["<="]
-        for i, constraint in enumerate(ltq_constraints):
-            tmp_constraint = calc(vars, constraint.as_dict())
-            gpm.addConstr(tmp_constraint <= 0, f"leq_constr_{i}")
 
-        gtq_constraints = self.problem.constraints["<="]
-        for i, constraint in enumerate(gtq_constraints):
-            tmp_constraint = calc(vars, constraint.as_dict())
-            gpm.addConstr(tmp_constraint >= 0, f"gtq_constr_{i}")
+        # eq_constraints = self.problem.constraints["=="]
+        # for i, constraint in enumerate(eq_constraints):
+        #     tmp_constraint = calc(vars, constraint.as_dict())
+        #     gpm.addConstr(tmp_constraint == 0, f"eq_constr_{i}")
+        #
+        # ltq_constraints = self.problem.constraints["<="]
+        # for i, constraint in enumerate(ltq_constraints):
+        #     tmp_constraint = calc(vars, constraint.as_dict())
+        #     gpm.addConstr(tmp_constraint <= 0, f"leq_constr_{i}")
+        #
+        # gtq_constraints = self.problem.constraints["<="]
+        # for i, constraint in enumerate(gtq_constraints):
+        #     tmp_constraint = calc(vars, constraint.as_dict())
+        #     gpm.addConstr(tmp_constraint >= 0, f"gtq_constr_{i}")
 
         gpm.optimize()
+
+        # print(dir(gpm))
+        # print("status ", gpm.Status)
+        # print("is optimal? ", GRB.OPTIMAL)
+        #
+        # allvars = gpm.getVars()
+        # for v in allvars[-1:]:
+        #     print(v.VarName)
+        #     print(v.X)
+        #     print(dir(v))
+
 
         allvars = gpm.getVars()
         solution = {}

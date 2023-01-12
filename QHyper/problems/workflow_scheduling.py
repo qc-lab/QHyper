@@ -1,6 +1,9 @@
+import math
+from collections import defaultdict
 from dataclasses import dataclass
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 import sympy
 from wfcommons import Instance
@@ -22,15 +25,15 @@ class TargetMachine:
 class Workflow:
     def __init__(self, tasks_file, machines_file, deadline):
         self.wf_instance = Instance(tasks_file)
-        self.tasks = self._get_tasks(tasks_file)
+        self.tasks = self._get_tasks()
         self.machines = self._get_machines(machines_file)
         self.deadline = deadline
         self._set_paths()
         self.time_matrix, self.cost_matrix = self._calc_dataframes()
-        # self.task_names = self.time_matrix.index
-        # self.machine_names = self.time_matrix.columns
+        self.task_names = self.time_matrix.index
+        self.machine_names = self.time_matrix.columns
 
-    def _get_tasks(self, tasks_file):
+    def _get_tasks(self):
         return self.wf_instance.workflow.nodes(data=True)
 
     def _get_machines(self, machines_file):
@@ -69,10 +72,17 @@ class Workflow:
 class WorkflowSchedulingProblem(Problem):
     def __init__(self, workflow: Workflow):
         self.workflow = workflow
+        self.slack_coefficients = self._set_slacks()
         self.variables = sympy.symbols(
-            ' '.join([f'x{i}' for i in range(len(self.workflow.tasks) * len(self.workflow.machines))]))
+            ' '.join([f'x{i}' for i in range(len(self.workflow.tasks) * len(self.workflow.machines))])
+            + ' ' + ' '.join([f's{i}' for i in range(len(self.slack_coefficients))]))
         self._set_objective_function()
         self._set_constraints()
+
+    def _set_slacks(self):
+        min_path_runtime, _ = self.get_deadlines()
+        deadline_diff = int(self.workflow.deadline - min_path_runtime)
+        return calc_slack_coefficients(deadline_diff)
 
     def _set_objective_function(self) -> None:
         expression = 0
@@ -84,9 +94,7 @@ class WorkflowSchedulingProblem(Problem):
         self.objective_function = Expression(expression)
 
     def _set_constraints(self) -> None:
-        constraints = {"==": [],
-                       "<=": [],
-                       ">=": []}
+        constraints = []
 
         # machine assignment constraint
         for task_id in range(len(self.workflow.time_matrix.index)):
@@ -95,11 +103,16 @@ class WorkflowSchedulingProblem(Problem):
                 expression += self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
             expression -= 1
 
-            constraints["=="].append(Expression(expression))
+            constraints.append(Expression(expression))
 
         # deadline constraint
+
+        min_deadline, _ = self.get_deadlines()
+        deadline_for_slacks = int(self.workflow.deadline - min_deadline)
+        slack_coefficients = calc_slack_coefficients(deadline_for_slacks)
+
         for path in self.workflow.paths:
-            expression = 0
+            expression = - self.workflow.deadline
             for task_id, task_name in enumerate(self.workflow.time_matrix.index):
                 for machine_id, machine_name in enumerate(self.workflow.time_matrix.columns):
                     if task_name in path:
@@ -107,10 +120,16 @@ class WorkflowSchedulingProblem(Problem):
                         expression += time * self.variables[
                             machine_id + task_id * len(self.workflow.time_matrix.columns)]
 
-            expression -= self.workflow.deadline
-            constraints["<="].append(Expression(expression))
+            first_slack_index = len(self.workflow.time_matrix.index) * len(self.workflow.time_matrix.columns)
+            for i, coefficient in enumerate(self.slack_coefficients):
+                expression += coefficient * self.variables[first_slack_index + i]
+
+            constraints.append(Expression(expression))
 
         self.constraints = constraints
+
+    def check_solution_correctness(self):
+        ... #todo check if slack values are correct
 
     def decode_solution(self, solution):
         decoded_solution = {}
@@ -123,3 +142,34 @@ class WorkflowSchedulingProblem(Problem):
                     machine_id]
 
         return decoded_solution
+
+    def get_deadlines(self) -> tuple[float, float]:  # todo test this function
+        """Calculates the minimum and maximum path runtime for the whole workflow."""
+
+        flat_runtimes = [(runtime, name) for n, machine_runtimes in self.workflow.time_matrix.items() for runtime, name
+                         in zip(machine_runtimes, self.workflow.task_names)]
+
+        max_path_runtime = 0.0
+        min_path_runtime = 0.0
+
+        for path in self.workflow.paths:
+            max_runtime: defaultdict[str, float] = defaultdict(lambda: 0.0)
+            min_runtime: defaultdict[str, float] = defaultdict(lambda: math.inf)
+
+            for runtime, name in flat_runtimes:
+                if name not in path:
+                    continue
+                max_runtime[name] = max(max_runtime[name], runtime)
+                min_runtime[name] = min(min_runtime[name], runtime)
+            max_path_runtime = max(max_path_runtime, sum(max_runtime.values()))
+            min_path_runtime = max(min_path_runtime, sum(min_runtime.values()))
+
+        return min_path_runtime, max_path_runtime
+
+
+def calc_slack_coefficients(constant: int) -> list[int]:
+    num_slack = int(np.floor(np.log2(constant)))
+    slack_coefficients = [2 ** j for j in range(num_slack)]
+    if constant - 2 ** num_slack >= 0:
+        slack_coefficients.append(constant - 2 ** num_slack + 1)
+    return slack_coefficients

@@ -9,18 +9,18 @@ from ..converter import QUBO, Converter
 
 
 class PennyLaneQAOA(Solver):
-    """QAOA solver based on PennyLane
+    """qaoa solver based on PennyLane
 
     Attributes
     ----------
     problem : Problem
         problem definition
     angles: list[float]
-        angles for the QAOA, also initial values for optimizers
+        angles for the qaoa, also initial values for optimizers
     optimizer : Optmizer
-        optimizer that will be used to find proper QAOA angles (default None)
+        optimizer that will be used to find proper qaoa angles (default None)
     layers : int
-        number of QAOA layers in the circuit (default 3)
+        number of qaoa layers in the circuit (default 3)
     mixer : str
         mixer name (currently only "X" is supported) (default "X")
     weights : list[float]
@@ -41,11 +41,11 @@ class PennyLaneQAOA(Solver):
         problem : Problem
             problem definition
         angles: list[float]
-            angles for QAOA, also initial values for optimizers
+            angles for qaoa, also initial values for optimizers
         optimizer : Optmizer
-            optimizer that will be used to find proper QAOA angles (default None)
+            optimizer that will be used to find proper qaoa angles (default None)
         layers : int
-            number of QAOA layers in the circuit (default 3)
+            number of qaoa layers in the circuit (default 3)
         mixer : str
             mixer name (currently only "X" is supported) (default "X")
         weights : list[float]

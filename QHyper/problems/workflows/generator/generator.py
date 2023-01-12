@@ -170,7 +170,7 @@ class MyQtApp(qtw.QWidget):
         recipe = CustomRecipe()
         workflow = recipe.build_workflow(self.G)
         print(workflow.nodes())
-        workflow.write_json("./data/workflows/generated_new.json")
+        workflow.write_json("/Users/jzawalska/Coding/QHyper/QHyper/problems/workflows/workflows_data/3_tasks_3_machines_1_path.json")
 
 
 if __name__ == '__main__':

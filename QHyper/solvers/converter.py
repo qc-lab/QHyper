@@ -1,8 +1,12 @@
+import dimod
 import sympy
 
 from typing import NewType
 
+from dimod import ConstrainedQuadraticModel
+
 from ..problems.problem import Problem
+
 
 # QUBO = NewType('QUBO', dict[tuple[int, int], float])
 class QUBO(dict):
@@ -31,25 +35,28 @@ class Converter:
                 else:
                     results[key] = value
         print(results)
-        
+
         return results
 
-        
-    # @staticmethod
-    # def to_cqm(problem: Problem):
-    #     binary_polynomial = dimod.BinaryPolynomial(problem.objective_function.as_dict(), dimod.BINARY)
-    #     cqm = dimod.make_quadratic_cqm(binary_polynomial)
+    @staticmethod
+    def to_cqm(problem: Problem):
+        binary_polynomial = dimod.BinaryPolynomial(problem.objective_function.as_dict(), dimod.BINARY)
+        cqm = dimod.make_quadratic_cqm(binary_polynomial)
 
-    #     for sense, constraints in problem.constraints.items():
-    #         for constraint in constraints:
-    #             constraint = constraint.as_dict()
-    #             constraint = dict_to_list(constraint)  # todo check what is wrong with adding dicts
-    #             cqm.add_constraint(constraint, sense)
+        bla = ConstrainedQuadraticModel()
+        for var in problem.variables:  # todo this cqm can probably be initialized in some other way
+            if str(var) not in cqm.variables:
+                cqm.add_variable(dimod.BINARY, str(var))
 
-    #     return cqm
+        for constraint in problem.constraints:
+            constraint = constraint.as_dict()
+            constraint = dict_to_list(constraint)
+            cqm.add_constraint(constraint, "==")
 
-    # @staticmethod
-    # def to_qubo(problem: Problem) -> tuple[dict[tuple[str, str], float], float]:
-    #     cqm = Converter.to_cqm(problem)
-    #     bqm, _ = dimod.cqm_to_bqm(cqm, lagrange_multiplier=10)
-    #     return bqm.to_qubo()  # (qubo, offset)
+        return cqm
+
+    @staticmethod
+    def to_qubo(problem: Problem) -> tuple[dict[tuple[str, str], float], float]:
+        cqm = Converter.to_cqm(problem)
+        bqm, _ = dimod.cqm_to_bqm(cqm, lagrange_multiplier=10)
+        return bqm.to_qubo()  # (qubo, offset)
