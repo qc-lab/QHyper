@@ -165,6 +165,9 @@ class WorkflowSchedulingProblem(Problem):
             min_path_runtime = max(min_path_runtime, sum(min_runtime.values()))
 
         return min_path_runtime, max_path_runtime
+    
+    def get_score(self, result: str) -> float | None:
+        return 0
 
 
 def calc_slack_coefficients(constant: int) -> list[int]:

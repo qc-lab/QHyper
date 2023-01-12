@@ -80,6 +80,7 @@ class PennyLaneQAOA(Solver):
     #     return parse_hamiltonian(cost_operator)
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
         result = qml.Identity(0)
+        print(qubo)
         for variables, coeff in qubo.items():
             if not variables:
                 continue
@@ -250,7 +251,7 @@ class PennyLaneQAOA(Solver):
                 f"| correct: {'True, value: ' + format(value, '.5f') if value is not None else 'False'}"
             )
 
-    def solve(self) -> tuple[float, list[float], list[float]]:
+    def solve(self, qubo=None) -> tuple[float, list[float], list[float]]:
         """Run optimizer and hyperoptimizer (if provided)
         If hyperoptimizer is provided in constructor, weights will be optimized first.
         Then optimizer takes these weights and returns angles which give the best probabilities.
@@ -270,6 +271,7 @@ class PennyLaneQAOA(Solver):
             bounds=[0.00001, 100] #TODO
         ) if self.hyperoptimizer else self.weights
         print(self.problem.variables)
-        qubo = Converter.create_qubo(self.problem, weights)
+        if not qubo:
+            qubo = Converter.create_qubo(self.problem, weights)
         params, _ = self.optimizer.minimize(self.get_expval_func(qubo), self.angles)
         return self.evaluate(qubo, params), params, weights

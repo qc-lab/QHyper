@@ -121,14 +121,14 @@ class KnapsackProblem(Problem):
         equation = 1
         for y in ys:
             equation -= y
-        equation = equation**2
+        equation = equation
         constrains.append(Expression(equation))
         equation = 0
         for i, y in enumerate(ys):
             equation += (i + 1)*y
         for i, x in enumerate(xs):
             equation += -(self.knapsack.items[i].weight)*x
-        equation = equation**2
+        equation = equation
         constrains.append(Expression(equation))
         self.constraints = constrains
 
