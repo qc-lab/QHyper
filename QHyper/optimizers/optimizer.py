@@ -51,7 +51,7 @@ class HyperparametersOptimizer(ABC):
         evaluation_func: Callable[[ArgsType], Callable[[ArgsType], float]],
         bounds: list[float],
         **kwargs: Any
-    ) -> ArgsType:
+    ) -> tuple[float, ArgsType, ArgsType]:
         """Returns hyperparameters which lead to the lowest values returned by the optimizer
         
         Parameters
@@ -106,7 +106,7 @@ class Wrapper:
         self.evaluation_func = evaluation_func
         self.init = init
 
-    def func(self, hyperparams: Any) -> float:
+    def func(self, hyperparams: Any) -> tuple[ArgsType, float]:
         _func = self.func_creator(hyperparams)
         params, _ = self.optimizer.minimize(_func, self.init)
-        return self.evaluation_func(hyperparams, params)
+        return self.evaluation_func(hyperparams, params), params

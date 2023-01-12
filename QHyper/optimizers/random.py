@@ -23,7 +23,7 @@ class Random(HyperparametersOptimizer):
     def __init__(
         self,
         number_of_samples: int = 100,
-        processes: int = mp.cpu_count(),
+        processes: int = 1,
         disable_tqdm: bool = False
     ) -> None:
         """
@@ -87,6 +87,6 @@ class Random(HyperparametersOptimizer):
             results = list(tqdm.tqdm(
                 p.imap(wrapper.func, hyperparams), total=self.number_of_samples, disable=self.disable_tqdm))
 
-        min_idx = np.argmin([result for result in results])
+        min_idx = np.argmin([result[0] for result in results])
 
-        return hyperparams[min_idx]
+        return *wrapper.func(hyperparams[min_idx]), hyperparams[min_idx]
