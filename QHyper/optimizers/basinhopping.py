@@ -1,4 +1,4 @@
-from scipy.optimize import shgo
+from scipy.optimize import basinhopping
 import numpy as np
 
 from typing import Callable, Any
@@ -6,7 +6,7 @@ from typing import Callable, Any
 from .optimizer import HyperparametersOptimizer, ArgsType, Optimizer, Wrapper
 
 
-class Shgo(HyperparametersOptimizer):
+class Basinhopping(HyperparametersOptimizer):
     """Implementation of Cross Entropy Method for hyperparamter tuning
     """
     def __init__(self, niter: int, maxiter: int) -> None:
@@ -58,7 +58,7 @@ class Shgo(HyperparametersOptimizer):
 
         init_params = list(hyperparams_init) + list(np.array(init).flatten())
 
-        result = shgo(
+        result = basinhopping(
             wrapper, init_params, niter=self.niter, 
             minimizer_kwargs={
                 'options': {'maxiter': self.maxiters},

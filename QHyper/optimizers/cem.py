@@ -125,7 +125,7 @@ class CEM(HyperparametersOptimizer):
 
             best_hyperparams = elite_weights[0].reshape(hyperparams_init.shape)
 
-            reward = wrapper.func(best_hyperparams)
+            reward, _ = wrapper.func(best_hyperparams)
             if reward < best_score:
                 best_hyperparams = best_hyperparams
                 best_score = reward
