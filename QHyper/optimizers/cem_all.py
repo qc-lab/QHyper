@@ -7,7 +7,7 @@ import tqdm
 from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer, Wrapper
 
 
-class CEM(HyperparametersOptimizer):
+class AllCEM(HyperparametersOptimizer):
     """Implementation of the Cross Entropy Method for hyperparameter tuning
     
     Attributes
@@ -97,42 +97,50 @@ class CEM(HyperparametersOptimizer):
             hyperparameters which lead to the lowest values returned by the optimizer
         """
 
-        mean = [1] * len(hyperparams_init)
-        cov = np.identity(len(hyperparams_init))
+        mean = [1] * (len(hyperparams_init)+len(np.array(init).flatten()))
+        cov = np.identity(len(hyperparams_init)+len(np.array(init).flatten()))
         best_hyperparams = hyperparams_init
+        best_angles = init
         best_score = float('inf')
 
         scores = []
-        wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
+        wrapper = Wrapper(func_creator, optimizer, evaluation_func, None)
         for i_iteration in range(1, self.epochs+1):
-            hyperparams = np.random.multivariate_normal(mean, cov, size=self.samples_per_epoch)
+            params = np.random.multivariate_normal(mean, cov, size=self.samples_per_epoch)
+            hyperparams = params[:, :len(hyperparams_init)]
+            angles = np.array(params[:, len(hyperparams_init):]).reshape((-1, *np.array(init).shape))
+            # print(hyperparams)
+            # print(angles)
             if bounds:
                 hyperparams[hyperparams < bounds[0]] = bounds[0]
                 hyperparams[hyperparams > bounds[1]] = bounds[1]
 
-            hyperparams = np.concatenate((hyperparams, [best_hyperparams.flatten()]), axis=0)
-            hyperparams = [
-                np.reshape(np.array(hyperparam), hyperparams_init.shape) for hyperparam in hyperparams]
+            # hyperparams = np.concatenate((hyperparams, [best_hyperparams.flatten()]), axis=0)
+            # hyperparams = [
+                # np.reshape(np.array(hyperparam), hyperparams_init.shape) for hyperparam in hyperparams]
 
             with mp.Pool(processes=self.processes) as p:
                 results = list(tqdm.tqdm(
-                    p.imap(wrapper.func, hyperparams), total=len(hyperparams), disable=self.disable_tqdm))
+                    p.starmap(wrapper.func, zip(hyperparams, angles)), total=len(hyperparams), disable=self.disable_tqdm))
 
             rewards = np.array([result[0] for result in results])
 
             elite_idxs = rewards.argsort()[:self.n_elite]
             elite_weights = [hyperparams[i].flatten() for i in elite_idxs]
+            elite_angles = [angles[i].flatten() for i in elite_idxs]
 
-            best_hyperparams = elite_weights[0].reshape(hyperparams_init.shape)
+            # best_hyperparams = elite_weights[0].reshape(hyperparams_init.shape)
+            # best_angles = elite_angles[0].reshape(np.array(init).shape)
 
-            reward, _ = wrapper.func(best_hyperparams)
-            if reward < best_score:
-                best_hyperparams = best_hyperparams
-                best_score = reward
-
-            scores.append(reward)
-            mean = np.mean(elite_weights, axis=0)
-            cov = np.cov(np.stack((elite_weights), axis=1), bias=True)
+            # reward, _ = wrapper.func(best_hyperparams)
+            if rewards[elite_idxs[0]] < best_score:
+                best_hyperparams = elite_weights[0].reshape(hyperparams_init.shape)
+                best_angles = elite_angles[0].reshape(np.array(init).shape)
+                best_score = rewards[elite_idxs[0]]
+            elite_params = np.concatenate([elite_weights, elite_angles], axis=1)
+            # scores.append(rewards[elite_idxs[0]])
+            mean = np.mean(elite_params, axis=0)
+            cov = np.cov(np.stack((elite_params), axis=1), bias=True)
 
             if i_iteration in self.print_on_epochs:
                 # print(f'Epoch {i_iteration}\t'
@@ -142,4 +150,4 @@ class CEM(HyperparametersOptimizer):
                 # print(f'{best_hyperparams} with score: {best_score}')
                 print(f'{best_score}')
 
-        return *wrapper.func(best_hyperparams), best_hyperparams
+        return best_score, best_angles, best_hyperparams
