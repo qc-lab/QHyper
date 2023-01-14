@@ -106,7 +106,8 @@ class Wrapper:
         self.evaluation_func = evaluation_func
         self.init = init
 
-    def func(self, hyperparams: Any) -> tuple[ArgsType, float]:
+    def func(self, hyperparams: Any, angles: Any = None) -> tuple[ArgsType, float]:
+        angles = angles if angles is not None else self.init
         _func = self.func_creator(hyperparams)
-        params, _ = self.optimizer.minimize(_func, self.init)
+        params, _ = self.optimizer.minimize(_func, angles)
         return self.evaluation_func(hyperparams, params), params
