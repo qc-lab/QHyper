@@ -17,13 +17,11 @@ KNAPSACK_PARAMS = {
     'max_weight': 2,
     'items': [(1, 2), (1, 2), (1, 1)]
 }
-PROCESSES = 10
+PROCESSES = 5
 
 
-def compute(i):
-    angles = np.random.rand(10).reshape(2, 5)
-    weights = 10*np.random.rand(2) + 1
-
+def compute(params):
+    angles, weights = params
     knapsack_qaoa = KnapsackProblem(**KNAPSACK_PARAMS)
 
     solver = QAOA(
@@ -33,7 +31,6 @@ def compute(i):
         layers=5,
         angles=angles,
         weights=weights,
-        # hyperoptimizer=Random(number_of_samples=samples, processes=PROCESSES)
     )
 
     value, params, weights = solver.solve()
@@ -41,8 +38,11 @@ def compute(i):
 
 
 def run_one(samples):
+    angles = 2 * np.pi * np.random.rand(samples, 2, 5)
+    weights = 10*np.random.rand(samples, 2) + 1
+
     with mp.Pool(processes=PROCESSES) as p:
-        results = list(p.imap(compute, range(samples)))
+        results = list(p.imap(compute, zip(angles, weights)))
 
     min_idx = np.argmin([result[0] for result in results])
     return results[min_idx][0]

@@ -9,10 +9,6 @@ from .optimizer import HyperparametersOptimizer, ArgsType, Optimizer, Wrapper
 class Shgo(HyperparametersOptimizer):
     """Implementation of Cross Entropy Method for hyperparamter tuning
     """
-    def __init__(self, niter: int, maxiter: int) -> None:
-        self.niter = niter
-        self.maxiters = maxiter
-
     def minimize(
         self, 
         func_creator: Callable[[ArgsType], Callable[[ArgsType], float]], 
@@ -59,10 +55,8 @@ class Shgo(HyperparametersOptimizer):
         init_params = list(hyperparams_init) + list(np.array(init).flatten())
 
         result = shgo(
-            wrapper, init_params, niter=self.niter, 
-            minimizer_kwargs={
-                'options': {'maxiter': self.maxiters},
-                'bounds': [[0.01, 10], [0.01, 10], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None],]
-            }, **kwargs)
+            wrapper,
+            bounds=[[0.01, 10], [0.01, 10], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None],],
+            **kwargs)
 
         return result.fun, np.array(result.x[len(hyperparams_init):]).reshape(init.shape), result.x[:len(hyperparams_init)]

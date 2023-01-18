@@ -24,7 +24,8 @@ class Random(HyperparametersOptimizer):
         self,
         number_of_samples: int = 100,
         processes: int = 1,
-        disable_tqdm: bool = False
+        disable_tqdm: bool = False,
+        bounds: list[tuple[float, float]] = None
     ) -> None:
         """
         Parameters
@@ -40,6 +41,7 @@ class Random(HyperparametersOptimizer):
         self.number_of_samples: int = number_of_samples
         self.processes: int = processes
         self.disable_tqdm: bool = disable_tqdm
+        self.bounds = np.array(bounds)
     
     def minimize(
         self, 
@@ -48,7 +50,7 @@ class Random(HyperparametersOptimizer):
         init: ArgsType, 
         hyperparams_init: ArgsType = None, 
         evaluation_func: Callable[[ArgsType], Callable[[ArgsType], float]] = None,
-        bounds: list[float] = [0, 10]
+        # bounds: list[float] = [0, 10]
     ) -> ArgsType:
         """Returns hyperparameters which lead to the lowest values returned by the optimizer
     
@@ -77,9 +79,9 @@ class Random(HyperparametersOptimizer):
         hyperparams_init = np.array(hyperparams_init)
 
         hyperparams = (
-            (bounds[1] - bounds[0])
+            (self.bounds[:, 1] - self.bounds[:, 0])
             * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
-            + bounds[0])
+            + self.bounds[:, 0])
 
         wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
 

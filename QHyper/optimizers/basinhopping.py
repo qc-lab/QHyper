@@ -9,9 +9,10 @@ from .optimizer import HyperparametersOptimizer, ArgsType, Optimizer, Wrapper
 class Basinhopping(HyperparametersOptimizer):
     """Implementation of Cross Entropy Method for hyperparamter tuning
     """
-    def __init__(self, niter: int, maxiter: int) -> None:
+    def __init__(self, niter: int, maxiter: int, bounds: list[tuple[float, float]] = None) -> None:
         self.niter = niter
         self.maxiters = maxiter
+        self.bounds = np.array(bounds)
 
     def minimize(
         self, 
@@ -62,7 +63,7 @@ class Basinhopping(HyperparametersOptimizer):
             wrapper, init_params, niter=self.niter, 
             minimizer_kwargs={
                 'options': {'maxiter': self.maxiters},
-                'bounds': [[0.01, 10], [0.01, 10], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None], [None, None],]
+                'bounds': self.bounds
             }, **kwargs)
 
         return result.fun, np.array(result.x[len(hyperparams_init):]).reshape(init.shape), result.x[:len(hyperparams_init)]
