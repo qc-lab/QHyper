@@ -30,7 +30,7 @@ def wrapper(niter):
         layers=5,
         angles=angles,
         weights=weights,
-        hyperoptimizer=Basinhopping(niter=niter, maxiter=200, bounds=[(1, 10)]*2 + [(0, np.pi)]*10),
+        hyperoptimizer=Basinhopping(niter=niter, maxiter=200, bounds=[(1, 10)]*2 + [(0, 2*np.pi)]*10),
     )
     result = solver.solve()[0]
     print(f"{niter},{200},{solver.counter},{result}")
