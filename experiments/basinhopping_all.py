@@ -22,15 +22,15 @@ PROCESSES = 32
 def wrapper(niter):
     # niter, maxiter = params
     knapsack_qaoa = KnapsackProblem(**KNAPSACK_PARAMS)
-    angles = np.random.rand(2, 5)
-    weights = np.random.rand(2)
+    angles = 2 * np.pi * np.random.rand(2, 5)
+    weights = 10*np.random.rand(2) + 1
     solver = QAOA(
         problem=knapsack_qaoa,
         platform="pennylane",
         layers=5,
         angles=angles,
         weights=weights,
-        hyperoptimizer=Basinhopping(niter=niter, maxiter=200),
+        hyperoptimizer=Basinhopping(niter=niter, maxiter=200, bounds=[(1, 10)]*2 + [(0, np.pi)]*10),
     )
     result = solver.solve()[0]
     print(f"{niter},{200},{solver.counter},{result}")
@@ -45,6 +45,6 @@ if __name__ == '__main__':
     #     (100, 50), (100, 25), (50, 25), (50, 10), (100, 10)] * 10
     params = [1000, 500, 250, 100, 50, 10] * 10
      
-    with mp.Pool(PROCESSES=PROCESSES) as p:
+    with mp.Pool(processes=PROCESSES) as p:
         results = list(tqdm.tqdm(
-            p.imap(wrapper, params), total=len(params)))
+            p.imap(wrapper, params), total=len(params), disable=True))

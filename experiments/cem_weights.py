@@ -31,7 +31,8 @@ def compute(angles, weights, samples):
         layers=5,
         angles=angles,
         weights=weights,
-        hyperoptimizer=CEM(epochs=5, samples_per_epoch=samples//5, processes=PROCESSES, disable_tqdm=True)
+        hyperoptimizer=CEM(
+            epochs=5, samples_per_epoch=samples//5, processes=PROCESSES, disable_tqdm=True, bounds=[(1, 10)]*2)
     )
 
     value, params, weights = solver.solve()
@@ -41,7 +42,7 @@ def compute(angles, weights, samples):
 def run_one(angles_samples, weights_samples):
     results = []
     for _ in range(angles_samples):
-        angles = np.random.rand(10).reshape(2, 5)
+        angles = 2 * np.pi * np.random.rand(10).reshape(2, 5)
         weights = 10*np.random.rand(2) + 1
 
         results.append(compute(angles, weights, weights_samples))

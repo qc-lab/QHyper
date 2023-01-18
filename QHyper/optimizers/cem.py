@@ -35,7 +35,8 @@ class CEM(HyperparametersOptimizer):
         elite_frac: float = 0.1,
         processes: int = mp.cpu_count(),
         print_on_epochs: list[int] = [],
-        disable_tqdm: bool = False
+        disable_tqdm: bool = False,
+        bounds: list[tuple[float, float]] = None
     ) -> None:
         """
         Parameters
@@ -62,6 +63,7 @@ class CEM(HyperparametersOptimizer):
         self.n_elite: int = max(int(self.samples_per_epoch * self.elite_frac), 1)
         self.print_on_epochs: list[int] = print_on_epochs
         self.disable_tqdm = disable_tqdm
+        self.bounds = np.array(bounds)
 
     def minimize(
         self, 
@@ -70,7 +72,7 @@ class CEM(HyperparametersOptimizer):
         init: ArgsType, 
         hyperparams_init: ArgsType, 
         evaluation_func: Callable[[ArgsType], Callable[[ArgsType], float]] = None,
-        bounds: list[float] = None
+        # bounds: list[float] = None
     ) -> ArgsType:
         """Returns hyperparameters which lead to the lowest values returned by optimizer
         
@@ -96,21 +98,25 @@ class CEM(HyperparametersOptimizer):
         ArgsType
             hyperparameters which lead to the lowest values returned by the optimizer
         """
+        wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
 
-        mean = [1] * len(hyperparams_init)
+        mean = hyperparams_init
         cov = np.identity(len(hyperparams_init))
         best_hyperparams = hyperparams_init
-        best_score = float('inf')
+        best_score, _ = wrapper.func(hyperparams_init)
 
-        scores = []
-        wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
         for i_iteration in range(1, self.epochs+1):
-            hyperparams = np.random.multivariate_normal(mean, cov, size=self.samples_per_epoch)
-            if bounds:
-                hyperparams[hyperparams < bounds[0]] = bounds[0]
-                hyperparams[hyperparams > bounds[1]] = bounds[1]
+            hyperparams = []
+            while len(hyperparams) < self.samples_per_epoch:
+                point = np.random.multivariate_normal(mean, cov)
+                if (self.bounds[:, 0] <= point).all() and (point < self.bounds[:, 1]).all(): 
+                    hyperparams.append(point)
+            # hyperparams = np.random.multivariate_normal(mean, cov, size=self.samples_per_epoch)
+            # if bounds:
+            #     hyperparams[hyperparams < bounds[0]] = bounds[0]
+            #     hyperparams[hyperparams > bounds[1]] = bounds[1]
 
-            hyperparams = np.concatenate((hyperparams, [best_hyperparams.flatten()]), axis=0)
+            # hyperparams = np.concatenate((hyperparams, [best_hyperparams.flatten()]), axis=0)
             hyperparams = [
                 np.reshape(np.array(hyperparam), hyperparams_init.shape) for hyperparam in hyperparams]
 
@@ -130,7 +136,6 @@ class CEM(HyperparametersOptimizer):
                 best_hyperparams = best_hyperparams
                 best_score = reward
 
-            scores.append(reward)
             mean = np.mean(elite_weights, axis=0)
             cov = np.cov(np.stack((elite_weights), axis=1), bias=True)
 
