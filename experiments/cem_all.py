@@ -33,7 +33,7 @@ def compute(angles, weights, samples):
         weights=weights,
         hyperoptimizer=AllCEM(
             epochs=5, samples_per_epoch=samples//5, processes=PROCESSES, disable_tqdm=True, 
-            bounds=[(1, 10)]*2 + [(0, np.pi)]*10)
+            bounds=[(1, 10)]*2 + [(0, 2*np.pi)]*10)
     )
 
     value, params, weights = solver.solve()
