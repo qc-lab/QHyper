@@ -11,7 +11,7 @@ class Basinhopping(HyperparametersOptimizer):
     """
     def __init__(self, niter: int, maxiter: int, bounds: list[tuple[float, float]] = None) -> None:
         self.niter = niter
-        self.maxiters = maxiter
+        self.maxiter = maxiter
         self.bounds = np.array(bounds)
 
     def minimize(
@@ -62,7 +62,7 @@ class Basinhopping(HyperparametersOptimizer):
         result = basinhopping(
             wrapper, init_params, niter=self.niter, 
             minimizer_kwargs={
-                'options': {'maxiter': self.maxiters},
+                'options': {'maxfun': self.maxiter},
                 'bounds': self.bounds
             }, **kwargs)
 

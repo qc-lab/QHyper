@@ -17,6 +17,6 @@ class ScipyOptimizer(Optimizer):
         result = scipy.optimize.minimize(
             wrapper, np.array(init).flatten(),
             bounds=self.bounds if self.bounds is not None else [(0, 2*np.pi)]*len(np.array(init).flatten()),
-            options = {'maxiter': self.maxiter}
+            options = {'maxfun': self.maxiter}
         )
         return result.x.reshape(np.array(init).shape), []
