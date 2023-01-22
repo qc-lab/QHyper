@@ -67,7 +67,6 @@ class PennyLaneQAOA(Solver):
         self.backend: str = kwargs.get("backend", "default.qubit")
 
         self.dev = qml.device(self.backend, wires=self.problem.variables)
-        self.counter = 0
 
     def _create_cost_operator(self, weights: list[float]) -> qml.Hamiltonian:
         elements = [self.problem.objective_function] + self.problem.constraints
@@ -159,7 +158,7 @@ class PennyLaneQAOA(Solver):
         float
             Returns evaluation of given parameters
         """
-        self.counter += 1
+
         probs = self.get_probs_func(weights)(params)
         return self.check_results(probs)
 
