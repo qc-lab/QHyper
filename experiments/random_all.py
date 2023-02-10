@@ -9,6 +9,7 @@ from QHyper.optimizers.shgo import Shgo
 from QHyper.optimizers.qml_gradient_descent import QmlGradientDescent
 from QHyper.solvers.qaoa.core import QAOA
 from QHyper.optimizers.scipy_minimizer import ScipyOptimizer
+from QHyper.optimizers.scipy_all_minimizer import ScipyAllOptimizer
 
 from QHyper.problems.knapsack import Knapsack, KnapsackProblem
 
@@ -27,7 +28,7 @@ def compute(params):
     solver = QAOA(
         problem=knapsack_qaoa,
         platform="pennylane",
-        optimizer=ScipyOptimizer(maxiter=200),
+        hyperoptimizer=ScipyAllOptimizer(maxfun=200, bounds=[(1, 10)]*2 + [(0, 2*np.pi)]*10),
         layers=5,
         angles=angles,
         weights=weights,
