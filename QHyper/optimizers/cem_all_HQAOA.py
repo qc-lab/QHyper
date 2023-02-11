@@ -4,10 +4,37 @@ from typing import Any, Callable
 import numpy as np
 import tqdm
 
-from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer, Wrapper
+from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer
+from .scipy_all_minimizer import ScipyAllOptimizer
 
 
-class AllCEM(HyperparametersOptimizer):
+class Wrapper:
+    """Use hyperparameters to create a function using func_creator,
+    run optimizer on this function, and return its lowest value
+
+    Usefull for HyperparametersOptimizer, which uses multiprocessing, as local functions are not
+    easy pickleable.
+    """
+
+    def __init__(
+        self, 
+        func_creator: Callable[[ArgsType], Callable[[ArgsType], float]],  
+        optimizer: Optimizer, 
+        evaluation_func: Callable[[ArgsType, ArgsType], float],
+        bounds: Any
+    ) -> None:
+        self.func_creator = func_creator
+        self.optimizer = optimizer
+        self.evaluation_func = evaluation_func
+        self.bounds = bounds
+
+    def func(self, weights, angles) -> tuple[ArgsType, float]:
+        return ScipyAllOptimizer(maxfun=200, bounds=self.bounds).minimize(
+            None, None, angles, weights, self.evaluation_func, self.bounds)
+
+
+
+class CEMHQAOA(HyperparametersOptimizer):
     """Implementation of the Cross Entropy Method for hyperparameter tuning
     
     Attributes
@@ -99,13 +126,13 @@ class AllCEM(HyperparametersOptimizer):
             hyperparameters which lead to the lowest values returned by the optimizer
         """
 
-        wrapper = Wrapper(func_creator, optimizer, evaluation_func, None)
+        wrapper = Wrapper(func_creator, optimizer, evaluation_func, self.bounds)
         # mean = [1] * (len(hyperparams_init)+len(np.array(init).flatten()))
         mean = np.concatenate((hyperparams_init, np.array(init).flatten()))
         cov = np.identity(len(hyperparams_init)+len(np.array(init).flatten()))
         best_hyperparams = hyperparams_init
         best_angles = init
-        best_score, _ = wrapper.func(hyperparams_init, init)
+        best_score, _, _ = wrapper.func(hyperparams_init, init)
 
         for i_iteration in range(1, self.epochs+1):
             params = []
@@ -134,7 +161,7 @@ class AllCEM(HyperparametersOptimizer):
             rewards = np.array([result[0] for result in results])
 
             elite_idxs = rewards.argsort()[:self.n_elite]
-            elite_weights = [hyperparams[i].flatten() for i in elite_idxs]
+            elite_weights = [results[i][2].flatten() for i in elite_idxs]
             elite_angles = [results[i][1].flatten() for i in elite_idxs]
 
             # best_hyperparams = elite_weights[0].reshape(hyperparams_init.shape)
