@@ -119,7 +119,6 @@ class PennyLaneQAOA(Solver):
             self._circuit(params, cost_operator)
             x = qml.expval(cost_operator)
             return x
-
         return cost_function
 
     def get_probs_val_func(self, weights):
@@ -251,7 +250,7 @@ class PennyLaneQAOA(Solver):
 
         if self.hyperoptimizer:
             return self.hyperoptimizer.minimize(
-            func_creator=self.get_expval_func, 
+            func_creator=self.get_probs_val_func, 
             optimizer=self.optimizer, 
             init=np.array(self.angles), 
             hyperparams_init=np.array(self.weights), 
@@ -259,7 +258,8 @@ class PennyLaneQAOA(Solver):
             # bounds=[0.001, 10] #TODO
         )
         if self.optimizer:
-            params, _ = self.optimizer.minimize(self.get_expval_func(self.weights), self.angles)
+            # params, _ = self.optimizer.minimize(self.get_expval_func(self.weights), self.angles)
+            params, _ = self.optimizer.minimize(self.get_probs_val_func(self.weights), self.angles)
         else:
             params = self.angles
         return self.evaluate(self.weights, params), params, self.weights
