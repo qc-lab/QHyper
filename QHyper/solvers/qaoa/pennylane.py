@@ -237,7 +237,7 @@ class PennyLaneQAOA(Solver):
                 f"| correct: {'True, value: ' + format(value, '.5f') if value is not None else 'False'}"
             )
 
-    def solve(self) -> tuple[float, list[float], list[float]]:
+    def solve(self, use_get_score=False) -> tuple[float, list[float], list[float]]:
         """Run optimizer and hyperoptimizer (if provided)
         If hyperoptimizer is provided in constructor, weights will be optimized first.
         Then optimizer takes these weights and returns angles which give the best probabilities.
@@ -258,8 +258,10 @@ class PennyLaneQAOA(Solver):
             # bounds=[0.001, 10] #TODO
         )
         if self.optimizer:
-            # params, _ = self.optimizer.minimize(self.get_expval_func(self.weights), self.angles)
-            params, _ = self.optimizer.minimize(self.get_probs_val_func(self.weights), self.angles)
+            if use_get_score:
+                params, _ = self.optimizer.minimize(self.get_probs_val_func(self.weights), self.angles)
+            else:
+                params, _ = self.optimizer.minimize(self.get_expval_func(self.weights), self.angles)
         else:
             params = self.angles
         return self.evaluate(self.weights, params), params, self.weights

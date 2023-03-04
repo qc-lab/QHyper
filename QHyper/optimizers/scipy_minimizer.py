@@ -7,8 +7,8 @@ from .optimizer import ArgsType, Optimizer
 
 
 class ScipyOptimizer(Optimizer):
-    def __init__(self, maxiter: int, bounds: list[tuple[float, float]]=None) -> None:
-        self.maxiter = maxiter
+    def __init__(self, maxfun: int, bounds: list[tuple[float, float]]=None) -> None:
+        self.maxfun = maxfun
         self.bounds = bounds
 
     def minimize(self, func: Callable[[ArgsType], float], init: ArgsType) -> tuple[ArgsType, Any]:
@@ -17,6 +17,6 @@ class ScipyOptimizer(Optimizer):
         result = scipy.optimize.minimize(
             wrapper, np.array(init).flatten(),
             bounds=self.bounds if self.bounds is not None else [(0, 2*np.pi)]*len(np.array(init).flatten()),
-            options = {'maxfun': self.maxiter}
+            options = {'maxfun': self.maxfun}
         )
         return result.x.reshape(np.array(init).shape), []
