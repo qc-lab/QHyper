@@ -6,7 +6,7 @@ from typing import Callable, Any
 from .optimizer import HyperparametersOptimizer, ArgsType, Optimizer, Wrapper
 
 
-class Basinhopping(HyperparametersOptimizer):
+class BasinhoppingTestWeights(HyperparametersOptimizer):
     """Implementation of Cross Entropy Method for hyperparamter tuning
     """
     def __init__(self, niter: int, maxfun: int, bounds: list[tuple[float, float]] = None) -> None:
@@ -51,33 +51,14 @@ class Basinhopping(HyperparametersOptimizer):
         """
 
         # wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
-        # def wrapper(params):
-        #     weights = params[:len(hyperparams_init)]
-        #     angles = np.array(params[len(hyperparams_init):]).reshape(init.shape)
-
-        #     return evaluation_func(weights, angles)
-
-        # init_params = list(hyperparams_init) + list(np.array(init).flatten())
-
-        # result = basinhopping(
-        #     wrapper, init_params, niter=self.niter, 
-        #     minimizer_kwargs={
-        #         'options': {'maxiter': self.maxfun},
-        #         'bounds': self.bounds
-        #     }, **kwargs)
-
-        # return result.fun, np.array(result.x[len(hyperparams_init):]).reshape(init.shape), result.x[:len(hyperparams_init)]
-        def wrapper(angles):
-            return evaluation_func(hyperparams_init, angles.reshape(init.shape))
-
-        init_params = np.array(init).flatten()
+        def wrapper(weights):
+            return evaluation_func(weights, init)
 
         result = basinhopping(
-            wrapper, init_params, niter=self.niter, 
+            wrapper, hyperparams_init, niter=self.niter, 
             minimizer_kwargs={
                 'options': {'maxfun': self.maxfun},
-                'bounds': self.bounds[2:]
+                'bounds': self.bounds
             }, **kwargs)
 
-        return result.fun, np.array(result.x).reshape(init.shape), hyperparams_init
-
+        return result.fun, 0, result.x

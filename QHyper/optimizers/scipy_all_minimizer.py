@@ -21,6 +21,14 @@ class ScipyAllOptimizer(HyperparametersOptimizer):
         bounds: list[float] = None,
         **kwargs: Any
     ) -> ArgsType:
+        # def wrapper(params):
+        #     return func_creator(hyperparams_init)(np.array(params).reshape(np.array(init).shape))
+        # result = scipy.optimize.minimize(
+        #     wrapper, np.array(init).flatten(),
+        #     bounds=self.bounds[2:],
+        #     options = {'maxfun': self.maxfun}
+        # )
+        # return result.fun, np.array(result.x).reshape(init.shape), hyperparams_init
         def wrapper(params):
             weights = params[:len(hyperparams_init)]
             angles = np.array(params[len(hyperparams_init):]).reshape(init.shape)
