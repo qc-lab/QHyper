@@ -1,7 +1,7 @@
 import random
 from collections import namedtuple
 
-from .problem import Problem
+from .base import Problem
 
 Item = namedtuple('Item', "weight value")
 

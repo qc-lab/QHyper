@@ -3,7 +3,7 @@ from typing import Any, Callable
 import pennylane as qml
 from pennylane import numpy as np
 
-from .optimizer import ArgsType, Optimizer
+from .base import Optimizer
 
 
 class QmlGradientDescent(Optimizer):
@@ -32,7 +32,11 @@ class QmlGradientDescent(Optimizer):
         self.optimizer = optimizer
         self.optimization_steps = optimization_steps
 
-    def minimize(self, func: Callable[[ArgsType], float], init: ArgsType) -> tuple[ArgsType, Any]:
+    def minimize(
+        self,
+        func: Callable[[list[float]], float],
+        init: list[float]
+    ) -> tuple[float, list[float]]:
         """Returns params which lead to the lowest value of the provided function and cost history
 
         Parameters
@@ -56,4 +60,4 @@ class QmlGradientDescent(Optimizer):
         for _ in range(self.optimization_steps):
             params, cost = self.optimizer.step_and_cost(func, params)
             cost_history.append(cost)
-        return params, cost_history
+        return cost, params

@@ -1,13 +1,20 @@
+from dataclasses import dataclass
 import multiprocessing as mp
 from typing import Callable
 
 import numpy as np
 import tqdm
 
-from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer, Wrapper
+from .base import Optimizer
 
 
-class Random(HyperparametersOptimizer):
+@dataclass
+class Random(Optimizer):
+    number_of_samples: int
+    processes: int
+    disable_tqdm: bool
+    bounds: list[tuple[float, float]]
+
     """Simple random search
     
     Attributes
@@ -44,14 +51,10 @@ class Random(HyperparametersOptimizer):
         self.bounds = np.array(bounds)
     
     def minimize(
-        self, 
-        func_creator: Callable[[ArgsType], Callable[[ArgsType], float]], 
-        optimizer: Optimizer,
-        init: ArgsType, 
-        hyperparams_init: ArgsType = None, 
-        evaluation_func: Callable[[ArgsType], Callable[[ArgsType], float]] = None,
-        # bounds: list[float] = [0, 10]
-    ) -> ArgsType:
+        self,
+        func: Callable[[list[float]], float],
+        init: list[float]
+    ) -> tuple[float, list[float]]:
         """Returns hyperparameters which lead to the lowest values returned by the optimizer
     
         Parameters
@@ -76,20 +79,21 @@ class Random(HyperparametersOptimizer):
         ArgsType
             Returns hyperparameters which lead to the lowest values returned by the optimizer
         """
-        hyperparams_init = np.array(hyperparams_init)
-
+        hyperparams_init = np.array(init)
         hyperparams = (
             (self.bounds[:, 1] - self.bounds[:, 0])
             * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
             + self.bounds[:, 0])
 
-        wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
+        # results = [func(hyperparam) for hyperparam in hyperparams]
+        with mp.Pool(processes=self.processes) as p:
+            results = list(tqdm.tqdm(
+                p.imap(func, hyperparams), 
+                total=self.number_of_samples, 
+                disable=self.disable_tqdm
+            ))
 
-        results = [wrapper.func(hyperparam) for hyperparam in hyperparams]
-        # with mp.Pool(processes=self.processes) as p:
-        #     results = list(tqdm.tqdm(
-        #         p.imap(wrapper.func, hyperparams), total=self.number_of_samples, disable=self.disable_tqdm))
-
-        min_idx = np.argmin([result[0] for result in results])
-
-        return *wrapper.func(hyperparams[min_idx]), hyperparams[min_idx]
+        min_idx = np.argmin(results)
+        return results[min_idx], hyperparams[min_idx]
+        # return HyperOptimizerResults.from_solver_results(
+        #     results[min_idx], hyperparams[min_idx])

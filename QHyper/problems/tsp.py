@@ -2,7 +2,7 @@ import itertools
 
 import numpy as np
 
-from .problem import Problem
+from .base import Problem
 
 
 class TSP:
