@@ -106,8 +106,8 @@ class VQA(Solver):
         hyper_args, opt_args = self.pqc.get_params(params_inits, best_args)
         opt_wrapper = OptWrapper(self.pqc, self.eval_func, self.problem, hyper_args)
         if self.optimizer:
-            best_opt_args, value = self.optimizer.minimize(opt_wrapper, opt_args)
+            value, best_opt_args = self.optimizer.minimize(opt_wrapper, opt_args)
         else:
-            best_opt_args, value = opt_args, opt_wrapper(opt_args)
+            value, best_opt_args = opt_wrapper(opt_args), opt_args
 
         return value, best_opt_args, hyper_args

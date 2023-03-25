@@ -1,7 +1,9 @@
 import random
+import sympy
 from collections import namedtuple
 
 from .base import Problem
+from QHyper.hyperparameter_gen.parser import Expression
 
 Item = namedtuple('Item', "weight value")
 
@@ -90,7 +92,9 @@ class KnapsackProblem(Problem):
             set items in knapsack (default [])
         """
         self.knapsack = Knapsack(max_weight, max_item_value, items_amount, items)
-        self.variables = len(self.knapsack) + self.knapsack.max_weight
+        # self.variables = len(self.knapsack) + self.knapsack.max_weight
+        self.variables = sympy.symbols(
+            ' '.join([f'x{i}' for i in range(len(self.knapsack) + self.knapsack.max_weight)]))
         self._set_objective_function()
         self._set_constraints()
 
@@ -98,33 +102,34 @@ class KnapsackProblem(Problem):
         """
         Create the objective function defined in SymPy syntax
         """
-        xs = [f"x{i}" for i in range(len(self.knapsack))]
-        equation = "-("
-        for i, x in enumerate(xs):
-            equation += f"+{self.knapsack.items[i].value}*{x}"
-        equation += ")"
-        self.objective_function = equation
+        # xs = [f"x{i}" for i in range(len(self.knapsack))]
+        equation = 0
+        for i, x in enumerate(self.variables[:len(self.knapsack)]):
+            equation += self.knapsack.items[i].value*x
+        equation *= -1
+        # equation += 
+        self.objective_function = Expression(equation)
 
     def _set_constraints(self) -> None:
         """
         Create constraints defined in SymPy syntax
         """
-        xs = [f"x{i}" for i in range(len(self.knapsack))]
-        ys = [f"x{i}" for i in range(
+        xs = [self.variables[i] for i in range(len(self.knapsack))]
+        ys = [self.variables[i] for i in range(
             len(self.knapsack), len(self.knapsack) + self.knapsack.max_weight)]
         constrains = []
-        equation = f"(J"
+        equation = 1
         for y in ys:
-            equation += f"-{y}"
-        equation += f")**2"
-        # constrains.append(equation)
-        equation = "+("
+            equation -= y
+        # equation = equation
+        constrains.append(Expression(equation))
+        equation = 0
         for i, y in enumerate(ys):
-            equation += f"+{i + 1}*{y}"
+            equation += (i + 1)*y
         for i, x in enumerate(xs):
-            equation += f"-{self.knapsack.items[i].weight}*{x}"
-        equation += ")**2"
-        constrains.append(equation)
+            equation += -(self.knapsack.items[i].weight)*x
+        # equation = equation
+        constrains.append(Expression(equation))
         self.constraints = constrains
 
     def get_score(self, result: str) -> float | None:

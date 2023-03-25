@@ -5,9 +5,9 @@ import numpy as np
 from typing import Any
 
 from QHyper.problems.base import Problem
-from .parser import parse_hamiltonian
 
 from QHyper.solvers.vqa.pqc.base import PQC, PQCResults
+from QHyper.solvers.converter import QUBO, Converter
 
 
 @dataclass
@@ -16,23 +16,24 @@ class HQAOA(PQC):
     mixer: str = "X"
     backend: str = "default.qubit"
     
-    def _create_cost_operator(self, problem: Problem, weights: list[float]) -> qml.Hamiltonian:
-        elements = [problem.objective_function] + problem.constraints
-        cost_operator = ""
-        if len(weights) != len(elements):
-            raise Exception(
-                f"Number of provided weights ({len(weights)}) is different from number of elements ({len(elements)})")
-        for weight, ingredient in zip(weights, elements):
-            cost_operator += f"+{weight}*({ingredient})"
-        return parse_hamiltonian(cost_operator)
+    def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
+        result = qml.Identity(0) 
+        for variables, coeff in qubo.items():
+            if not variables:
+                continue
+            tmp = coeff * (0.5 * qml.Identity(str(variables[0])) - 0.5 * qml.PauliZ(str(variables[0])))
+            if len(variables) == 2 and variables[0] != variables[1]:
+                tmp = tmp @ (0.5 * qml.Identity(str(variables[1])) - 0.5 * qml.PauliZ(str(variables[1])))
+            result += tmp
+        return result
 
     def _hadamard_layer(self, problem: Problem):
-        for i in range(problem.variables):
-            qml.Hadamard(i)
+        for i in problem.variables:
+            qml.Hadamard(str(i))
 
     def _create_mixing_hamiltonian(self, problem: Problem) -> qml.Hamiltonian:
         if self.mixer == "X":
-            return qml.qaoa.x_mixer(range(problem.variables))
+            return qml.qaoa.x_mixer([str(x) for x in problem.variables])
         # REQUIRES GRAPH https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.xy_mixer.html
         # if self.mixer == "XY": 
         #     return qml.qaoa.xy_mixer(...)
@@ -59,46 +60,24 @@ class HQAOA(PQC):
         Callable[[list[float]], float]
             Returns function that takes angles and returns probabilities
         """
-
-        cost_operator = self._create_cost_operator(problem, weights)
+        qubo = Converter.create_qubo(problem, weights)
+        cost_operator = self._create_cost_operator(qubo)
 
         @qml.qnode(self.dev)
         def probability_circuit(params):
             self._circuit(problem, params, cost_operator)
-            return qml.probs(wires=range(problem.variables))
+            return qml.probs(wires=[str(x) for x in problem.variables])
 
         return probability_circuit
 
-    # def run(self, problem: Problem, args: list[float], hyper_args: list[float]) -> PQCResults:
-    #     self.dev = qml.device(self.backend, wires=problem.variables)
-    #     # const_params = params_config['weights']
-    #     probs = self.get_probs_func(problem, hyper_args)(args)
-
-    #     results_by_probabilites = {
-    #         format(result, 'b').zfill(problem.variables): float(prob) 
-    #         for result, prob in enumerate(probs)
-    #     }
-    #     return results_by_probabilites, hyper_args
-    
-    # def get_params(
-    #         self, 
-    #         params_inits: dict[str, Any], 
-    #         hyper_args: list[float] = []
-    #     ) -> tuple[list[float], list[float]]: 
-    #     return (
-    #         hyper_args if len(hyper_args) > 0 else params_inits['hyper_args'],
-    #         params_inits['angles']
-    #     )
-
-
     def run(self, problem: Problem, args: list[float], hyper_args: list[float]) -> PQCResults:
-        self.dev = qml.device(self.backend, wires=problem.variables)
-        weights = hyper_args[:1 + len(problem.constraints)]
+        self.dev = qml.device(self.backend, wires=[str(x) for x in problem.variables])
+        weights = args[:1 + len(problem.constraints)]
 
-        probs = self.get_probs_func(problem, weights)(np.array(args).reshape(2, -1))
+        probs = self.get_probs_func(problem, weights)(np.array(args[1 + len(problem.constraints):]).reshape(2, -1))
 
         results_by_probabilites = {
-            format(result, 'b').zfill(problem.variables): float(prob) 
+            format(result, 'b').zfill(len(problem.variables)): float(prob) 
             for result, prob in enumerate(probs)
         }
         return results_by_probabilites, weights
@@ -111,10 +90,10 @@ class HQAOA(PQC):
         if len(hyper_args) > 0:
             return (
                 hyper_args,
-                hyper_args[len(params_inits['hyper_args']):]
+                hyper_args
             )
         else:
             return (
                 np.concatenate((params_inits['hyper_args'], np.array(params_inits['angles']).flatten())),
-                params_inits['angles']
+                np.concatenate((params_inits['hyper_args'], np.array(params_inits['angles']).flatten())),
             )
