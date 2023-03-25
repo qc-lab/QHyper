@@ -1,5 +1,5 @@
 from ..solver import Solver
-from ...problems.problem import Problem
+from ...problems.base import Problem
 
 
 class CQM(Solver):

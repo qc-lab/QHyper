@@ -20,7 +20,7 @@ class CEM(Optimizer):
     bounds: list[tuple[float, float]] = None
     n_elite: int = field(init=False)
 
-    def __post__init__(self):
+    def __post_init__(self):
         self.n_elite: int = max(
             int(self.samples_per_epoch * self.elite_frac), 1)
         self.bounds = np.array(self.bounds)
@@ -138,6 +138,7 @@ class CEM(Optimizer):
                     p.imap(func, hyperparams), total=len(hyperparams), disable=self.disable_tqdm))
 
             elite_idxs = np.array(results).argsort()[:self.n_elite]
+
             elite_weights = [hyperparams[i].flatten() for i in elite_idxs]
 
             best_hyperparams = elite_weights[0].reshape(init.shape)

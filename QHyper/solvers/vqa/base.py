@@ -47,7 +47,7 @@ class Wrapper:
         if self.optimizer:
             value, _ = self.optimizer.minimize(opt_wrapper, opt_args)
         else:
-            value, _ = opt_args, opt_wrapper(opt_args)
+            value = opt_wrapper(opt_args)
         return value
 
 
