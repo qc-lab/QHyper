@@ -9,6 +9,9 @@ import sympy
 from wfcommons import Instance
 from wfcommons.utils import read_json
 
+from sympy.core.expr import Expr
+from typing import cast, no_type_check
+
 from QHyper.hyperparameter_gen.parser import Expression
 from .base import Problem
 
@@ -23,7 +26,7 @@ class TargetMachine:
 
 
 class Workflow:
-    def __init__(self, tasks_file, machines_file, deadline):
+    def __init__(self, tasks_file: str, machines_file: str, deadline: float) -> None:
         self.wf_instance = Instance(tasks_file)
         self.tasks = self._get_tasks()
         self.machines = self._get_machines(machines_file)
@@ -69,23 +72,31 @@ class Workflow:
         return time_df, cost_df
 
 
+def calc_slack_coefficients(constant: int) -> list[int]:
+    num_slack = int(np.floor(np.log2(constant)))
+    slack_coefficients = [2 ** j for j in range(num_slack)]
+    if constant - 2 ** num_slack >= 0:
+        slack_coefficients.append(constant - 2 ** num_slack + 1)
+    return slack_coefficients
+
+
 class WorkflowSchedulingProblem(Problem):
     def __init__(self, workflow: Workflow):
         self.workflow = workflow
-        self.slack_coefficients = self._set_slacks()
+        self.slack_coefficients = self._get_slacks()
         self.variables = sympy.symbols(
             ' '.join([f'x{i}' for i in range(len(self.workflow.tasks) * len(self.workflow.machines))])
             + ' ' + ' '.join([f's{i}' for i in range(len(self.slack_coefficients))]))
         self._set_objective_function()
         self._set_constraints()
 
-    def _set_slacks(self):
+    def _get_slacks(self) -> list[int]:
         min_path_runtime, _ = self.get_deadlines()
         deadline_diff = int(self.workflow.deadline - min_path_runtime)
         return calc_slack_coefficients(deadline_diff)
 
     def _set_objective_function(self) -> None:
-        expression = 0
+        expression: Expr = cast(Expr, 0)
         for task_id, task_name in enumerate(self.workflow.time_matrix.index):
             for machine_id, machine_name in enumerate(self.workflow.time_matrix.columns):
                 cost = self.workflow.cost_matrix[machine_name][task_name]
@@ -98,7 +109,7 @@ class WorkflowSchedulingProblem(Problem):
 
         # machine assignment constraint
         for task_id in range(len(self.workflow.time_matrix.index)):
-            expression = 0
+            expression: Expr = cast(Expr, 0)
             for machine_id in range(len(self.workflow.time_matrix.columns)):
                 expression += self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
             expression -= 1
@@ -109,10 +120,9 @@ class WorkflowSchedulingProblem(Problem):
 
         min_deadline, _ = self.get_deadlines()
         deadline_for_slacks = int(self.workflow.deadline - min_deadline)
-        slack_coefficients = calc_slack_coefficients(deadline_for_slacks)
 
         for path in self.workflow.paths:
-            expression = - self.workflow.deadline
+            expression = cast(Expr, -self.workflow.deadline)
             for task_id, task_name in enumerate(self.workflow.time_matrix.index):
                 for machine_id, machine_name in enumerate(self.workflow.time_matrix.columns):
                     if task_name in path:
@@ -128,10 +138,10 @@ class WorkflowSchedulingProblem(Problem):
 
         self.constraints = constraints
 
-    def check_solution_correctness(self):
-        ... #todo check if slack values are correct
+    def check_solution_correctness(self) -> None:
+        raise NotImplemented  # todo check if slack values are correct
 
-    def decode_solution(self, solution):
+    def decode_solution(self, solution: dict) -> dict:
         decoded_solution = {}
         for variable, value in solution.items():
             name, id = variable[0], int(variable[1:])  # todo add validation
@@ -168,11 +178,3 @@ class WorkflowSchedulingProblem(Problem):
     
     def get_score(self, result: str) -> float | None:
         return 0
-
-
-def calc_slack_coefficients(constant: int) -> list[int]:
-    num_slack = int(np.floor(np.log2(constant)))
-    slack_coefficients = [2 ** j for j in range(num_slack)]
-    if constant - 2 ** num_slack >= 0:
-        slack_coefficients.append(constant - 2 ** num_slack + 1)
-    return slack_coefficients

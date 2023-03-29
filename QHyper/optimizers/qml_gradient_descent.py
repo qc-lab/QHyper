@@ -1,4 +1,5 @@
 from typing import Any, Callable
+import numpy.typing as npt
 
 import pennylane as qml
 from pennylane import numpy as np
@@ -34,9 +35,9 @@ class QmlGradientDescent(Optimizer):
 
     def minimize(
         self,
-        func: Callable[[list[float]], float],
-        init: list[float]
-    ) -> tuple[float, list[float]]:
+        func: Callable[[npt.NDArray[np.float64]], float],
+        init: npt.NDArray[np.float64]
+    ) -> tuple[float, npt.NDArray[np.float64]]:
         """Returns params which lead to the lowest value of the provided function and cost history
 
         Parameters

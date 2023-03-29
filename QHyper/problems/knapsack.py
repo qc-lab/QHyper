@@ -2,6 +2,9 @@ import random
 import sympy
 from collections import namedtuple
 
+from sympy.core.expr import Expr
+from typing import cast
+
 from .base import Problem
 from QHyper.hyperparameter_gen.parser import Expression
 
@@ -55,7 +58,7 @@ class Knapsack:
     def set_knapsack(self, items: list[tuple[int, int]]) -> None:
         self.items = [Item(weight, value) for weight, value in items]
     
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.items)
 
 
@@ -103,11 +106,11 @@ class KnapsackProblem(Problem):
         Create the objective function defined in SymPy syntax
         """
         # xs = [f"x{i}" for i in range(len(self.knapsack))]
-        equation = 0
+        equation: Expr = cast(Expr, 0)
         for i, x in enumerate(self.variables[:len(self.knapsack)]):
             equation += self.knapsack.items[i].value*x
         equation *= -1
-        # equation += 
+
         self.objective_function = Expression(equation)
 
     def _set_constraints(self) -> None:
@@ -118,12 +121,12 @@ class KnapsackProblem(Problem):
         ys = [self.variables[i] for i in range(
             len(self.knapsack), len(self.knapsack) + self.knapsack.max_weight)]
         constrains = []
-        equation = 1
+        equation: Expr = cast(Expr, 1)
         for y in ys:
             equation -= y
         # equation = equation
         constrains.append(Expression(equation))
-        equation = 0
+        equation = cast(Expr, 0)
         for i, y in enumerate(ys):
             equation += (i + 1)*y
         for i, x in enumerate(xs):

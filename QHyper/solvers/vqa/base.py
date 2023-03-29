@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
-
-from typing import Optional, Any
+import numpy as np
+from typing import Optional, Any, cast
+import numpy.typing as npt
 
 from QHyper.problems.base import Problem
 
@@ -18,10 +19,10 @@ class OptWrapper:
     pqc: PQC
     eval_func: EvalFunc
     problem: Problem
-    hyper_params: list[float]
+    hyper_params: npt.NDArray[np.float64]
     # params_config: dict[str, Any]
 
-    def __call__(self, args: list[float]) -> float:
+    def __call__(self, args: npt.NDArray[np.float64]) -> float:
         results, weights = self.pqc.run(self.problem, args, self.hyper_params)
         # weights = self.params_config  # TODO
         return self.eval_func.evaluate(results, self.problem, weights)
@@ -32,7 +33,7 @@ class Wrapper:
     pqc: PQC
     eval_func: EvalFunc
     problem: Problem
-    optimizer: Optimizer
+    optimizer: Optional[Optimizer]
     params_config: dict[str, Any]
 
     # def run(self, args: list[float]) -> float:
@@ -40,12 +41,12 @@ class Wrapper:
     #     weights = self.params_config  # TODO
     #     return self.eval_func.evaluate(results, self.problem, weights)
 
-    def __call__(self, hargs: list[float]) -> float:
+    def __call__(self, hargs: npt.NDArray[np.float64]) -> float:
         hyper_args, opt_args = self.pqc.get_params(self.params_config, hargs)
         opt_wrapper = OptWrapper(self.pqc, self.eval_func, self.problem, hyper_args)
         # opt_args = self.pqc.get_opt(args)
         if self.optimizer:
-            value, _ = self.optimizer.minimize(opt_wrapper, opt_args)
+            value, _ = self.optimizer.minimize(opt_wrapper, np.array(opt_args))
         else:
             value = opt_wrapper(opt_args)
         return value
@@ -57,7 +58,6 @@ class VQA(Solver):
     pqc: PQC
     optimizer: Optional[Optimizer]
     eval_func: EvalFunc
-    config: field(default_factory=dict)
 
     def __init__(
             self,
@@ -65,14 +65,17 @@ class VQA(Solver):
             pqc: PQC | str = "",
             optimizer: Optimizer | str = "",
             eval_func: EvalFunc | str = "",
-            config: Optional[dict[str, dict[str, Any]]] = {}
+            config: dict[str, dict[str, Any]] = {}
     ) -> None:
         self.problem = problem
 
         if isinstance(pqc, str):
             if pqc == "":
-                pqc = config['pqc'].pop('type')
-            self.pqc = PQC_BY_NAME[pqc](**config.get('pqc', {}))
+                try:
+                    pqc = config['pqc'].pop('type')
+                except KeyError:
+                    raise Exception("Configuration for PQC was not provided")
+            self.pqc = PQC_BY_NAME[cast(str, pqc)](**config.get('pqc', {}))
         else:
             self.pqc = pqc
 
@@ -82,19 +85,22 @@ class VQA(Solver):
             else:
                 if optimizer == "":
                     optimizer = config['optimizer'].pop('type')
-                self.optimizer = OPTIMIZERS_BY_NAME[optimizer](
+                self.optimizer = OPTIMIZERS_BY_NAME[cast(str, optimizer)](
                     **config.get('optimizer', {}))
         else:
             self.optimizer = optimizer
 
         if isinstance(eval_func, str):
             if eval_func == "":
-                eval_func = config['eval_func'].pop('type')
-            self.eval_func = EVAL_FUNCS_BY_NAME[eval_func](**config.get('eval_func', {}))
+                try:
+                    eval_func = config['eval_func'].pop('type')
+                except KeyError:
+                    raise Exception("Configuration for Eval Func was not provided")
+            self.eval_func = EVAL_FUNCS_BY_NAME[cast(str, eval_func)](**config.get('eval_func', {}))
         else:
             self.eval_func = eval_func
 
-    def solve(self, params_inits: dict[str, Any], hyper_optimizer: Optional[Optimizer] = None) -> SolverResults:
+    def solve(self, params_inits: dict[str, Any], hyper_optimizer: Optional[Optimizer] = None) -> Any:
         hyper_args, _ = self.pqc.get_params(params_inits)
         wrapper = Wrapper(self.pqc, self.eval_func, self.problem, self.optimizer, params_inits)
 

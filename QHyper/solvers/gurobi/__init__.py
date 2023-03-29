@@ -1,1 +1,1 @@
-from gurobi import Gurobi
+from .gurobi import Gurobi

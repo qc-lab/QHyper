@@ -3,6 +3,9 @@ import itertools
 import numpy as np
 import sympy
 
+from sympy.core.expr import Expr
+from typing import cast
+
 from .base import Problem
 from ..hyperparameter_gen.parser import Expression
 
@@ -14,7 +17,7 @@ class TSP:
     ----------
     number_of_cities : int
         cities count
-    coords_range : tuple[float, float]
+    coords_range : tuple[int, int]
         range of coordinates of the cities
     cities_coords : list[tuple[float, float]]
         coordinates of the cities
@@ -24,7 +27,7 @@ class TSP:
         normalized to (0, 1] matrix of distances between cities
     """
 
-    def __init__(self, number_of_cities: int, coords_range: tuple[float, float] = (0, 10000)) -> None:
+    def __init__(self, number_of_cities: int, coords_range: tuple[int, int] = (0, 10000)) -> None:
         """
         Parameters
         ----------
@@ -34,18 +37,18 @@ class TSP:
             range of coordinates of the cities
         """
         self.number_of_cities: int = number_of_cities
-        self.coords_range: tuple[float, float] = coords_range
+        self.coords_range: tuple[int, int] = coords_range
         self.cities_coords: list[tuple[float, float]] = self.get_cities()
         self.distance_matrix: list[list[float]] = self.calculate_distance_matrix()
         self.normalized_distance_matrix: list[list[float]] = self.normalize_distance_matrix()
 
     def get_cities(self) -> list[tuple[float, float]]:
         cities_coords = np.random.randint(self.coords_range[0], self.coords_range[1], size=(self.number_of_cities, 2))
-        return cities_coords
+        return cast(list[tuple[float, float]], cities_coords)
 
     def calculate_distance_between_points(
             self, point_A: tuple[float, float], point_B: tuple[float, float]) -> float:
-        return np.sqrt((point_A[0] - point_B[0]) ** 2 + (point_A[1] - point_B[1]) ** 2)
+        return cast(float, np.sqrt((point_A[0] - point_B[0]) ** 2 + (point_A[1] - point_B[1]) ** 2))
 
     def calculate_distance_matrix(self) -> list[list[float]]:
         distance_matrix = np.zeros((self.number_of_cities, self.number_of_cities))
@@ -54,10 +57,10 @@ class TSP:
                 distance_matrix[i][j] = self.calculate_distance_between_points(
                     self.cities_coords[i], self.cities_coords[j])
                 distance_matrix[j][i] = distance_matrix[i][j]
-        return distance_matrix
+        return cast(list[list[float]], distance_matrix)
 
     def normalize_distance_matrix(self) -> list[list[float]]:
-        return np.divide(self.distance_matrix, np.max(self.distance_matrix))
+        return cast(list[list[float]], np.divide(self.distance_matrix, np.max(self.distance_matrix)))
 
 
 class TSPProblem(Problem):
@@ -75,7 +78,7 @@ class TSPProblem(Problem):
 
     def __init__(
             self,
-            number_of_cities
+            number_of_cities: int
     ) -> None:
         """
         Parameters
@@ -93,7 +96,7 @@ class TSPProblem(Problem):
         return i + t * self.tsp_instance.number_of_cities
 
     def _set_objective_function(self) -> None:
-        equation = 0
+        equation: Expr = cast(Expr, 0)
         for i, j in itertools.permutations(range(0, self.tsp_instance.number_of_cities), 2):
             curr = 0
             for t in range(self.tsp_instance.number_of_cities):
@@ -106,22 +109,22 @@ class TSPProblem(Problem):
         self.objective_function = Expression(equation)
 
     def _set_constraints(self) -> None:
-        self.constraints = []
+        self.constraints: list[Expression] = []
         for i in range(self.tsp_instance.number_of_cities):
-            equation = 1
+            equation: Expr = cast(Expr, 1)
             for t in range(self.tsp_instance.number_of_cities):
                 equation -= self.variables[self._calc_bit(i, t)]
             self.constraints.append(Expression(equation))
 
         for t in range(self.tsp_instance.number_of_cities):
-            equation = 1
+            equation = cast(Expr, 1)
             for i in range(self.tsp_instance.number_of_cities):
                 equation -= self.variables[self._calc_bit(i, t)]
         self.constraints.append(Expression(equation))
 
-    def _get_distance(self, key) -> float:
+    def _get_distance(self, key: str) -> float:
         results = np.array_split(list(key), self.tsp_instance.number_of_cities)
-        dist = 0
+        dist: float = 0
         tab = []
         for result in results:
             tab.append(list(result).index('1'))
@@ -132,11 +135,11 @@ class TSPProblem(Problem):
 
         return dist
 
-    def _valid(self, result):
-        result = np.reshape(list(result), (-1, self.tsp_instance.number_of_cities)).astype(np.bool8)
-        return (result.sum(0) == 1).all() and (result.sum(1) == 1).all()
+    def _valid(self, result: str) -> bool:
+        result_bools = np.reshape(list(result), (-1, self.tsp_instance.number_of_cities)).astype(np.bool8)
+        return cast(bool, (result_bools.sum(0) == 1).all() and (result_bools.sum(1) == 1).all())
 
-    def get_score(self, result) -> float | None:
+    def get_score(self, result: str) -> float | None:
         """Returns length of the route based on provided outcome in bits. 
         
         Parameters
@@ -152,6 +155,3 @@ class TSPProblem(Problem):
         if not self._valid(result):
             return None  # Bigger value that possible distance
         return self._get_distance(result)
-
-    def decode_solution(self):
-        ...

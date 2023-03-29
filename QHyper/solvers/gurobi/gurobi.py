@@ -1,15 +1,29 @@
 import gurobipy as gp
 from gurobipy import GRB
 
+from typing import Any, Optional
+
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
+from QHyper.optimizers.base import Optimizer
+from QHyper.solvers.converter import QUBO
+
+
+def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:
+    cost_function: float = 0
+    for key, value in poly_dict.items():
+        tmp = 1
+        for k in key:
+            tmp *= vars[k]
+        cost_function += tmp * value
+    return cost_function
 
 
 class Gurobi(Solver):  # todo works only for quadratic expressions
-    def __init__(self, **kwargs) -> None:
-        self.problem: Problem = kwargs.get("problem")
+    def __init__(self, **kwargs: Any) -> None:
+        self.problem: Problem = kwargs["problem"]
 
-    def solve(self):
+    def solve(self, params_inits: dict[str, Any], hyper_optimizer: Optional[Optimizer] = None) -> Any:
         gpm = gp.Model("name")
 
         vars = {str(var_name): gpm.addVar(vtype=gp.GRB.BINARY, name=str(var_name))
@@ -60,13 +74,3 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
             solution[v.VarName] = v.X
 
         return solution
-
-
-def calc(vars, poly_dict):
-    cost_function = 0
-    for key, value in poly_dict.items():
-        tmp = 1
-        for k in key:
-            tmp *= vars[k]
-        cost_function += tmp * value
-    return cost_function

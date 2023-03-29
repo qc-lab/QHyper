@@ -1,6 +1,6 @@
 from scipy.optimize import basinhopping
 import numpy as np
-
+import numpy.typing as npt
 from typing import Callable, Any
 
 from .base import Optimizer
@@ -9,7 +9,13 @@ from .base import Optimizer
 class Basinhopping(Optimizer):
     """Implementation of Cross Entropy Method for hyperparamter tuning
     """
-    def __init__(self, niter: int, maxfun: int, bounds: list[tuple[float, float]] = None, config: dict[str, Any]= {}) -> None:
+    def __init__(
+            self, 
+            bounds: list[tuple[float, float]], 
+            niter: int, 
+            maxfun: int, 
+            config: dict[str, Any]= {}
+    ) -> None:
         self.niter = niter
         self.maxfun = maxfun
         self.bounds = np.array(bounds)
@@ -17,9 +23,9 @@ class Basinhopping(Optimizer):
 
     def minimize(
         self,
-        func: Callable[[list[float]], float],
-        init: list[float]
-    ) -> tuple[float, list[float]]:
+        func: Callable[[npt.NDArray[np.float64]], float],
+        init: npt.NDArray[np.float64]
+    ) -> tuple[float, npt.NDArray[np.float64]]:
         """Returns hyperparameters which leads to the lowest values returned by optimizer 1
         
         Parameters
@@ -50,7 +56,7 @@ class Basinhopping(Optimizer):
             func, init, niter=self.niter, 
             minimizer_kwargs={
                 'options': {'maxfun': self.maxfun},
-                'bounds': self.bounds[2:]
+                'bounds': self.bounds
             }, **self.config)
 
         return result.fun, np.array(result.x).reshape(init.shape)

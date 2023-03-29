@@ -1,59 +1,30 @@
 import ast
 import numpy as np
-from typing import Any
+from typing import Any, cast
 
 import sympy
 
-
-def calc_slack_coefficients(constant: int) -> dict[str, int]:
-    num_slack = int(np.floor(np.log2(constant)))
-    slack_coefficients = {f's{j}': 2 ** j for j in range(num_slack)}
-    if constant - 2 ** num_slack >= 0:
-        slack_coefficients[num_slack] = constant - 2 ** num_slack + 1
-    return slack_coefficients
+from QHyper.util import QUBO, VARIABLES
 
 
-class Expression:
-    def __init__(self, polynomial: str):
-        self.polynomial: str = polynomial
-
-    def as_dict(self):
-        parser = Parser()
-        ast_tree = ast.parse(str(sympy.expand(self.polynomial)))
-        parser.visit(ast_tree)
-        return parser.polynomial_as_dict
-
-    # def as_dict_with_slacks(self):
-    #     parser = Parser()
-    #     objective_function = sympy.expand(self.polynomial)
-    #     ast_tree = ast.parse(str(objective_function))
-    #     parser.visit(ast_tree)
-
-    #     result = parser.polynomial_as_dict
-    #     if self.op == '==':
-    #         return result
-
-    #     if self.op == '<=':
-    #         if tuple() in result:
-    #             value = result[tuple()]
-    #             return result | calc_slack_coefficients(value)
-    #         return result
-    #     else:
-    #         raise Exception("Unimplemented")
-
-    def as_string(self):
-        return str(self.polynomial)
+# TODO slack_coefficients is dict[str, Any] and num_slack is int
+# def calc_slack_coefficients(constant: int) -> dict[str, int]:
+#     num_slack = int(np.floor(np.log2(constant)))
+#     slack_coefficients = {f's{j}': 2 ** j for j in range(num_slack)}
+#     if constant - 2 ** num_slack >= 0:
+#         slack_coefficients[num_slack] = constant - 2 ** num_slack + 1
+#     return slack_coefficients
 
 
 class Parser(ast.NodeVisitor):
-    def __init__(self):
-        self.polynomial_as_dict = {}
+    def __init__(self) -> None:
+        self.polynomial_as_dict: QUBO = {}
 
     def visit_Expr(self, node: ast.Expr) -> Any:  # todo make sure it is a single expression
         visit_value = self.visit(node.value)
 
         if isinstance(visit_value, list):
-            for i in visit_value:
+            for i in cast(list[tuple[VARIABLES, float]], visit_value):
                 self.polynomial_as_dict[tuple(i[0])] = i[1]
         elif isinstance(visit_value, str):  # expression consisting of a single variable name
             self.polynomial_as_dict[(visit_value,)] = 1
@@ -92,6 +63,8 @@ class Parser(ast.NodeVisitor):
             return [[variable, constant]]
 
         if isinstance(node.op, ast.Pow):
+            node.left = cast(ast.Name, node.left)
+            node.right = cast(ast.Constant, node.right)
             return [[[node.left.id for _ in range(node.right.value)], 1]]
 
     def visit_UnaryOp(self, node: ast.UnaryOp) -> Any:
@@ -115,7 +88,7 @@ class Parser(ast.NodeVisitor):
         return node.id
 
     @staticmethod
-    def tmp(left, right, multiplier=1):
+    def tmp(left: Any, right: Any, multiplier: int = 1) -> list[Any]:
 
         if isinstance(left, list):
             if isinstance(right, list):
@@ -143,3 +116,39 @@ class Parser(ast.NodeVisitor):
             if isinstance(left, (int, float)):
                 return [[[], left]] + [[[right], multiplier]]
         raise Exception
+    
+
+class Expression:
+    def __init__(self, polynomial: sympy.core.Expr) -> None:
+        self.polynomial: sympy.core.Expr = polynomial
+
+    def as_dict(self) -> QUBO:
+        parser = Parser()
+        ast_tree = ast.parse(str(
+            sympy.expand(self.polynomial))) # type: ignore[no-untyped-call]
+        parser.visit(ast_tree)
+        return parser.polynomial_as_dict
+    
+    def __repr__(self) -> str:
+        return str(self.polynomial)
+
+    # def as_dict_with_slacks(self):
+    #     parser = Parser()
+    #     objective_function = sympy.expand(self.polynomial)
+    #     ast_tree = ast.parse(str(objective_function))
+    #     parser.visit(ast_tree)
+
+    #     result = parser.polynomial_as_dict
+    #     if self.op == '==':
+    #         return result
+
+    #     if self.op == '<=':
+    #         if tuple() in result:
+    #             value = result[tuple()]
+    #             return result | calc_slack_coefficients(value)
+    #         return result
+    #     else:
+    #         raise Exception("Unimplemented")
+
+    def as_string(self) -> str:
+        return str(self.polynomial)

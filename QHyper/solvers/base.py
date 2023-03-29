@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from dataclasses import dataclass
 
 from typing import Any, Optional
@@ -17,9 +19,10 @@ class Solver:
     # config: dict[str, Any]
     """Interface for solvers"""
 
+    @abstractmethod
     def solve(
             self, 
             params_inits: dict[str, Any], 
             hyper_optimizer: Optional[Optimizer] = None
-    ) -> SolverResults:
+    ) -> Any:
         ...

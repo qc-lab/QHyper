@@ -26,6 +26,7 @@ class Problem(ABC):
     objective_function: Expression
     constraints: list[Expression]
     variables: list
+    name: str = ""
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the outcome provided as a binary string

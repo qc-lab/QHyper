@@ -1,6 +1,8 @@
+from abc import abstractmethod
+
 from QHyper.problems.base import Problem
-from QHyper.solvers.vqa.pqc.base import PQCResults
 
 
 class EvalFunc:
-    def evaluate(self, results: PQCResults, problem: Problem, const_params: list[float]) -> float: ...
+    @abstractmethod
+    def evaluate(self, results: dict[str, float], problem: Problem, const_params: list[float]) -> float: ...

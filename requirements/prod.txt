@@ -4,3 +4,5 @@ tqdm==4.64.1
 sympy==1.11.1
 dwave-system
 gurobipy
+types-tqdm
+nptyping

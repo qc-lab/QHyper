@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import multiprocessing as mp
-from typing import Callable
+from typing import Callable, Optional
+import numpy.typing as npt
 
 import numpy as np
 import tqdm
@@ -13,7 +14,7 @@ class Random(Optimizer):
     number_of_samples: int
     processes: int
     disable_tqdm: bool
-    bounds: list[tuple[float, float]]
+    bounds: npt.NDArray[np.float64]
 
     """Simple random search
     
@@ -29,10 +30,10 @@ class Random(Optimizer):
 
     def __init__(
         self,
+        bounds: list[tuple[float, float]],
         number_of_samples: int = 100,
         processes: int = 1,
         disable_tqdm: bool = False,
-        bounds: list[tuple[float, float]] = None
     ) -> None:
         """
         Parameters
@@ -52,9 +53,9 @@ class Random(Optimizer):
     
     def minimize(
         self,
-        func: Callable[[list[float]], float],
-        init: list[float]
-    ) -> tuple[float, list[float]]:
+        func: Callable[[npt.NDArray[np.float64]], float],
+        init: npt.NDArray[np.float64]
+    ) -> tuple[float, npt.NDArray[np.float64]]:
         """Returns hyperparameters which lead to the lowest values returned by the optimizer
     
         Parameters
