@@ -17,16 +17,35 @@ class PQC:
     def __init__(self, **kwargs: Any) -> None: ...
 
     @abstractmethod
-    def run(
+    def run_opt(
         self, 
         problem: Problem, 
-        args: npt.NDArray[np.float64], 
+        opt_args: npt.NDArray[np.float64], 
         hyper_args: npt.NDArray[np.float64]
-    ) -> PQCResults: ...
+    ) -> float: ...
 
     @abstractmethod
-    def get_params(
-        self, 
-        params_inits: dict[str, Any], 
+    def get_opt_args(
+        self,
+        params_init: dict[str, Any],
+        args: Optional[npt.NDArray[np.float64]] = None,
         hyper_args: Optional[npt.NDArray[np.float64]] = None
-    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
+    ) -> npt.NDArray[np.float64]:
+        ...
+
+    @abstractmethod
+    def get_hopt_args(
+        self,
+        params_init: dict[str, Any],
+        args: Optional[npt.NDArray[np.float64]] = None,
+        hyper_args: Optional[npt.NDArray[np.float64]] = None
+    ) -> npt.NDArray[np.float64]:
+        ...
+
+    @abstractmethod
+    def get_init_args(
+        self,
+        opt_args: npt.NDArray[np.float64],
+        hyper_args: npt.NDArray[np.float64]
+    ) -> dict[str, Any]:
+        ...
