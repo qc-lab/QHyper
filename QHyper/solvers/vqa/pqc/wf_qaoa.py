@@ -15,6 +15,7 @@ from QHyper.solvers.vqa.eval_funcs.wfeval import WFEval
 @dataclass
 class WFQAOA(PQC):
     layers: int = 3
+    penalty: float = 0
     mixer: str = "X"
     backend: str = "default.qubit"
  
@@ -85,7 +86,7 @@ class WFQAOA(PQC):
             format(result, 'b').zfill(len(problem.variables)): float(prob) 
             for result, prob in enumerate(probs)
         }
-        return WFEval().evaluate(results_by_probabilites, problem, hyper_args)
+        return WFEval(self.penalty).evaluate(results_by_probabilites, problem, hyper_args)
     
     def get_opt_args(
         self,
@@ -93,7 +94,7 @@ class WFQAOA(PQC):
         args: Optional[npt.NDArray[np.float64]] = None,
         hyper_args: Optional[npt.NDArray[np.float64]] = None
     ) -> npt.NDArray[np.float64]:
-        return args if args else params_init['angles']
+        return args if args else np.array(params_init['angles'])
 
     def get_hopt_args(
         self,

@@ -13,7 +13,7 @@ class Basinhopping(Optimizer):
             self, 
             bounds: list[tuple[float, float]], 
             niter: int, 
-            maxfun: int, 
+            maxfun: int = 200, 
             config: dict[str, Any]= {}
     ) -> None:
         self.niter = niter
@@ -53,7 +53,7 @@ class Basinhopping(Optimizer):
         """
 
         result = basinhopping(
-            func, init, niter=self.niter, 
+            func, init.flatten(), niter=self.niter, 
             minimizer_kwargs={
                 'options': {'maxfun': self.maxfun},
                 'bounds': self.bounds

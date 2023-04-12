@@ -26,7 +26,19 @@ WFQAOA_CONFIG = {
     },
     'pqc': {
         'type': 'wfqaoa',
+        'layers': 5
+    },
+}
+
+WFQAOA_PEN_CONFIG = {
+    'optimizer': {
+        'type': 'scipy',
+        'maxfun': 200,
+    },
+    'pqc': {
+        'type': 'wfqaoa',
         'layers': 5,
+        'penalty': 1
     },
 }
 
@@ -55,6 +67,7 @@ class Wrapper:
          
         self.qaoa = VQA(knapsack, config=QAOA_CONFIG)
         self.wfqaoa = VQA(knapsack, config=WFQAOA_CONFIG)
+        self.wfqaoa_pen = VQA(knapsack, config=WFQAOA_PEN_CONFIG)
         self.hqaoa = VQA(knapsack, config=HQAOA_CONFIG)
         self.tester = VQA(knapsack, config=TESTER_CONFIG)
 
@@ -64,7 +77,7 @@ class Wrapper:
 
         with open(output_file, mode='a') as output:
             print(f"{knapsack.knapsack.items} {knapsack.knapsack.max_weight}", file=output)
-            print("QAOA;WFQAOA;HQAOA", file=output)
+            print("QAOA;WFQAOA;WFQAOA_PEN;HQAOA", file=output)
 
     def __call__(self, i) -> None:
         with open(self.output_file, mode='a') as output:
@@ -72,7 +85,7 @@ class Wrapper:
                 'angles': self.angles[i],
                 'hyper_args': list(self.weights[i]) + [self.weights[i][1]]
             }
-            for solver in [self.qaoa, self.wfqaoa, self.hqaoa]:
+            for solver in [self.qaoa, self.wfqaoa, self.wfqaoa_pen, self.hqaoa]:
                 best_params = solver.solve(params_cofing)
 
                 print(f"{self.tester.evaluate(best_params):.3f}", end=';', file=output)
