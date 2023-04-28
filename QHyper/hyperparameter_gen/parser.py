@@ -1,5 +1,4 @@
 import ast
-import numpy as np
 from typing import Any, cast
 
 import sympy
@@ -20,15 +19,18 @@ class Parser(ast.NodeVisitor):
     def __init__(self) -> None:
         self.polynomial_as_dict: QUBO = {}
 
-    def visit_Expr(self, node: ast.Expr) -> Any:  # todo make sure it is a single expression
+    # todo make sure it is a single expression
+    def visit_Expr(self, node: ast.Expr) -> Any:
         visit_value = self.visit(node.value)
 
         if isinstance(visit_value, list):
             for i in cast(list[tuple[VARIABLES, float]], visit_value):
                 self.polynomial_as_dict[tuple(i[0])] = i[1]
-        elif isinstance(visit_value, str):  # expression consisting of a single variable name
+        elif isinstance(visit_value, str):
+            # expression consisting of a single variable name
             self.polynomial_as_dict[(visit_value,)] = 1
-        elif isinstance(visit_value, (int, float)):  # expression consisting of a single numerical value
+        elif isinstance(visit_value, (int, float)):
+            # expression consisting of a single numerical value
             self.polynomial_as_dict[()] = visit_value
         else:
             raise Exception
@@ -58,7 +60,8 @@ class Parser(ast.NodeVisitor):
                 variable.append(right)
             elif isinstance(right, (int, float)):
                 constant *= right
-            elif isinstance(right, list):  # todo - check that!!! only in the case of powers:
+            elif isinstance(right, list):
+                # todo - check that!!! only in the case of powers:
                 variable += right[0][0]
             return [[variable, constant]]
 
@@ -92,7 +95,8 @@ class Parser(ast.NodeVisitor):
 
         if isinstance(left, list):
             if isinstance(right, list):
-                right[0][1] = multiplier * right[0][1]  # todo not sure if right should be modifed if it is static
+                # todo not sure if right should be modifed if it is static
+                right[0][1] = multiplier * right[0][1]
                 return left + right
             elif isinstance(right, (int, float)):
                 return left + [[[], multiplier * right]]
@@ -116,7 +120,7 @@ class Parser(ast.NodeVisitor):
             if isinstance(left, (int, float)):
                 return [[[], left]] + [[[right], multiplier]]
         raise Exception
-    
+
 
 class Expression:
     def __init__(self, polynomial: sympy.core.Expr) -> None:
@@ -125,10 +129,10 @@ class Expression:
     def as_dict(self) -> QUBO:
         parser = Parser()
         ast_tree = ast.parse(str(
-            sympy.expand(self.polynomial))) # type: ignore[no-untyped-call]
+            sympy.expand(self.polynomial)))  # type: ignore[no-untyped-call]
         parser.visit(ast_tree)
         return parser.polynomial_as_dict
-    
+
     def __repr__(self) -> str:
         return str(self.polynomial)
 

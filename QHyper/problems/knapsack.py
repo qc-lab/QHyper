@@ -25,9 +25,9 @@ class Knapsack:
     """
 
     def __init__(
-        self, 
-        max_weight: int, 
-        max_item_value: int = 10, 
+        self,
+        max_weight: int,
+        max_item_value: int = 10,
         items_amount: int = 0,
         items: list[tuple[int, int]] = []
     ) -> None:
@@ -46,7 +46,10 @@ class Knapsack:
         self.items: list[Item] = []
         self.max_weight: int = max_weight
         self.max_item_value: int = max_item_value
-        self.set_knapsack(items) if items else self.generate_knapsack(items_amount)
+        if items:
+            self.set_knapsack(items)
+        else:
+            self.generate_knapsack(items_amount)
 
     def generate_knapsack(self, items_amount: int) -> None:
         for _ in range(items_amount):
@@ -57,14 +60,14 @@ class Knapsack:
 
     def set_knapsack(self, items: list[tuple[int, int]]) -> None:
         self.items = [Item(weight, value) for weight, value in items]
-    
+
     def __len__(self) -> int:
         return len(self.items)
 
 
 class KnapsackProblem(Problem):
     """Objective function and constraints for the knapsack problem
-    
+
     Attributes
     ----------
     objective_function : str
@@ -72,13 +75,14 @@ class KnapsackProblem(Problem):
     constraints : list[str]
         list of constraints in SymPy syntax
     variables : int
-        number of qubits in the circuit, equals to sum of the number of items in the knapsack the max weight of a knapsack
+        number of qubits in the circuit, equals to sum of the number
+        of items in the knapsack the max weight of a knapsack
     """
 
     def __init__(
         self,
-        max_weight: int, 
-        max_item_value: int = 10, 
+        max_weight: int,
+        max_item_value: int = 10,
         items_amount: int = 0,
         items: list[tuple[int, int]] = []
     ) -> None:
@@ -94,16 +98,19 @@ class KnapsackProblem(Problem):
         items: list[tuple[int, int]]
             set items in knapsack (default [])
         """
-        self.knapsack = Knapsack(max_weight, max_item_value, items_amount, items)
+        self.knapsack = Knapsack(
+            max_weight, max_item_value, items_amount, items)
         # self.variables = len(self.knapsack) + self.knapsack.max_weight
-        self.variables = sympy.symbols(
-            ' '.join([f'x{i}' for i in range(len(self.knapsack) + self.knapsack.max_weight)]))
+        self.variables = sympy.symbols(' '.join(
+            [f'x{i}' for i
+             in range(len(self.knapsack) + self.knapsack.max_weight)]
+        ))
         self._set_objective_function()
         self._set_constraints()
 
     def _set_objective_function(self) -> None:
         """
-        Create the objective function defined in SymPy syntax
+        Create the objective functiif items on defined in SymPy syntax
         """
         # xs = [f"x{i}" for i in range(len(self.knapsack))]
         equation: Expr = cast(Expr, 0)
@@ -137,7 +144,7 @@ class KnapsackProblem(Problem):
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the provided outcome in bits
-        
+
         Parameters
         ----------
         result : str
@@ -146,7 +153,8 @@ class KnapsackProblem(Problem):
         Returns
         -------
         float | None
-            Returns sum of value of picked items if were picked correctly, else returns None
+            Returns sum of value of picked items
+            if were picked correctly, else returns None
         """
         sum = 0
         weight = 0

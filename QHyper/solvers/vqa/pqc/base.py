@@ -18,9 +18,9 @@ class PQC:
 
     @abstractmethod
     def run_opt(
-        self, 
-        problem: Problem, 
-        opt_args: npt.NDArray[np.float64], 
+        self,
+        problem: Problem,
+        opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64]
     ) -> float: ...
 

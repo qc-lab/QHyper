@@ -21,8 +21,8 @@ class Solver:
 
     @abstractmethod
     def solve(
-            self, 
-            params_inits: dict[str, Any], 
+            self,
+            params_inits: dict[str, Any],
             hyper_optimizer: Optional[Optimizer] = None
     ) -> Any:
         ...

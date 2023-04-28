@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Callable
 import numpy.typing as npt
 
 import pennylane as qml
@@ -20,12 +20,17 @@ class QmlGradientDescent(Optimizer):
         number of optimization steps
     """
 
-    def __init__(self, optimizer: qml.GradientDescentOptimizer, optimization_steps: int) -> None:
+    def __init__(
+        self,
+        optimizer: qml.GradientDescentOptimizer,
+        optimization_steps: int
+    ) -> None:
         """
         Parameters
         ----------
         optimizer : qml.GradientDescentOptimizer
-            object of class GradientDescentOptimizer or inheriting from this class
+            object of class GradientDescentOptimizer
+            or inheriting from this class
         optimization_steps : int
             number of optimization steps
         """
@@ -38,7 +43,8 @@ class QmlGradientDescent(Optimizer):
         func: Callable[[npt.NDArray[np.float64]], float],
         init: npt.NDArray[np.float64]
     ) -> tuple[float, npt.NDArray[np.float64]]:
-        """Returns params which lead to the lowest value of the provided function and cost history
+        """Returns params which lead to the lowest value of
+            the provided function and cost history
 
         Parameters
         ----------

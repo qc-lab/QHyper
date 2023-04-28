@@ -21,7 +21,7 @@ class OptWrapper:
 
     def __call__(self, args: npt.NDArray[np.float64]) -> float:
         return self.pqc.run_opt(self.problem, args, self.hyper_params)
-    
+
 
 @dataclass
 class Wrapper:
@@ -77,12 +77,14 @@ class VQA(Solver):
         else:
             self.optimizer = optimizer
 
-    def solve(self, params_inits: dict[str, Any], hyper_optimizer: Optional[Optimizer] = None) -> Any:
+    def solve(self, params_inits: dict[str, Any],
+              hyper_optimizer: Optional[Optimizer] = None) -> Any:
         hyper_args = self.pqc.get_hopt_args(params_inits)
 
         if hyper_optimizer:
-            #TODO
-            wrapper = Wrapper(self.pqc, self.problem, self.optimizer, params_inits)
+            # TODO
+            wrapper = Wrapper(
+                self.pqc, self.problem, self.optimizer, params_inits)
             _, best_hargs = hyper_optimizer.minimize(wrapper, hyper_args)
         else:
             best_hargs = hyper_args

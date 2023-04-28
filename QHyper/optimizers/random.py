@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import multiprocessing as mp
-from typing import Callable, Optional
+from typing import Callable
 import numpy.typing as npt
 
 import numpy as np
@@ -17,7 +17,7 @@ class Random(Optimizer):
     bounds: npt.NDArray[np.float64]
 
     """Simple random search
-    
+
     Attributes
     ----------
     number_of_samples : int
@@ -50,14 +50,15 @@ class Random(Optimizer):
         self.processes: int = processes
         self.disable_tqdm: bool = disable_tqdm
         self.bounds = np.array(bounds)
-    
+
     def minimize(
         self,
         func: Callable[[npt.NDArray[np.float64]], float],
         init: npt.NDArray[np.float64]
     ) -> tuple[float, npt.NDArray[np.float64]]:
-        """Returns hyperparameters which lead to the lowest values returned by the optimizer
-    
+        """Returns hyperparameters which lead to the lowest values
+            returned by the optimizer
+
         Parameters
         ----------
         func_creator : Callable[[ArgsType], Callable[[ArgsType], float]]
@@ -70,7 +71,7 @@ class Random(Optimizer):
         hyperparams_init : ArgsType
             initial hyperparameters
         evaluation_func : Callable[[ArgsType], Callable[[ArgsType], float]]
-            function, which receives hyperparameters, and returns 
+            function, which receives hyperparameters, and returns
             function which receives params and return evaluation
         bounds : list[float]
             bounds for hyperparameters (default None)
@@ -78,7 +79,8 @@ class Random(Optimizer):
         Returns
         -------
         ArgsType
-            Returns hyperparameters which lead to the lowest values returned by the optimizer
+            Returns hyperparameters which lead to the lowest values
+            returned by the optimizer
         """
         hyperparams_init = np.array(init)
         hyperparams = (
@@ -89,8 +91,8 @@ class Random(Optimizer):
         # results = [func(hyperparam) for hyperparam in hyperparams]
         with mp.Pool(processes=self.processes) as p:
             results = list(tqdm.tqdm(
-                p.imap(func, hyperparams), 
-                total=self.number_of_samples, 
+                p.imap(func, hyperparams),
+                total=self.number_of_samples,
                 disable=self.disable_tqdm
             ))
 

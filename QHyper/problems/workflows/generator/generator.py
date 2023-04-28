@@ -1,3 +1,4 @@
+# type: ignore
 # VIEW - things from PyQt
 # MODEL - the DAG
 # CONTROLLER - things that take the input and provide it to the Model

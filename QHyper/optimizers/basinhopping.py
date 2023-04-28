@@ -10,11 +10,11 @@ class Basinhopping(Optimizer):
     """Implementation of Cross Entropy Method for hyperparamter tuning
     """
     def __init__(
-            self, 
-            bounds: list[tuple[float, float]], 
-            niter: int, 
-            maxfun: int = 200, 
-            config: dict[str, Any]= {}
+            self,
+            bounds: list[tuple[float, float]],
+            niter: int,
+            maxfun: int = 200,
+            config: dict[str, Any] = {}
     ) -> None:
         self.niter = niter
         self.maxfun = maxfun
@@ -26,12 +26,13 @@ class Basinhopping(Optimizer):
         func: Callable[[npt.NDArray[np.float64]], float],
         init: npt.NDArray[np.float64]
     ) -> tuple[float, npt.NDArray[np.float64]]:
-        """Returns hyperparameters which leads to the lowest values returned by optimizer 1
-        
+        """Returns hyperparameters which leads to the lowest values
+            returned by optimizer 1
+
         Parameters
         ----------
         func_creator : Callable[[ArgsType], Callable[[ArgsType], float]]
-            function, which receives hyperparameters, and returns  
+            function, which receives hyperparameters, and returns
             function which will be optimized using optimizer
         optimizer : Optimizer
             object of class Optimizer
@@ -42,18 +43,19 @@ class Basinhopping(Optimizer):
         bounds : list[float]
             bounds for hyperparameters (default None)
         evaluation_func : Callable[[ArgsType], Callable[[ArgsType], float]]
-            function, which receives hyperparameters, and returns 
+            function, which receives hyperparameters, and returns
             function which receives params and return evaluation
         kwargs : Any
             allow additional arguments passed to scipy.optimize.Shgo
         Returns
         -------
         ArgsType
-            hyperparameters which leads to the lowest values returned by optimizer
+            hyperparameters which leads to the lowest values
+            returned by optimizer
         """
 
         result = basinhopping(
-            func, init.flatten(), niter=self.niter, 
+            func, init.flatten(), niter=self.niter,
             minimizer_kwargs={
                 'options': {'maxfun': self.maxfun},
                 'bounds': self.bounds

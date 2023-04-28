@@ -1,3 +1,4 @@
+#type: ignore
 from logging import Logger
 import random
 from typing import Optional, Set, List

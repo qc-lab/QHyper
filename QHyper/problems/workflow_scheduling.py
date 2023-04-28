@@ -9,8 +9,10 @@ import sympy
 from wfcommons import Instance
 from wfcommons.utils import read_json
 
+from networkx.classes.reportviews import NodeView
+
 from sympy.core.expr import Expr
-from typing import cast, no_type_check
+from typing import cast
 
 from QHyper.hyperparameter_gen.parser import Expression
 from .base import Problem
@@ -26,7 +28,9 @@ class TargetMachine:
 
 
 class Workflow:
-    def __init__(self, tasks_file: str, machines_file: str, deadline: float) -> None:
+    def __init__(
+            self, tasks_file: str, machines_file: str, deadline: float
+    ) -> None:
         self.wf_instance = Instance(tasks_file)
         self.tasks = self._get_tasks()
         self.machines = self._get_machines(machines_file)
@@ -36,38 +40,51 @@ class Workflow:
         self.task_names = self.time_matrix.index
         self.machine_names = self.time_matrix.columns
 
-    def _get_tasks(self):
+    def _get_tasks(self) -> NodeView:
         return self.wf_instance.workflow.nodes(data=True)
 
-    def _get_machines(self, machines_file):
+    def _get_machines(self, machines_file: str) -> dict[str, TargetMachine]:
         target_machines = read_json(machines_file)
-        return {machine['name']: TargetMachine(**machine) for machine in target_machines["machines"]}
+        return {
+            machine['name']: TargetMachine(**machine)
+            for machine in target_machines["machines"]
+        }
 
-    def _set_paths(self):
+    def _set_paths(self) -> None:
         all_paths = []
         for root in self.wf_instance.roots():
             for leaf in self.wf_instance.leaves():
-                paths = nx.all_simple_paths(self.wf_instance.workflow, root, leaf)
+                paths = nx.all_simple_paths(
+                    self.wf_instance.workflow, root, leaf)
                 all_paths.extend(paths)
 
         self.paths = all_paths
 
-    def _calc_dataframes(self):
+    def _calc_dataframes(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         costs, runtimes = {}, {}
         for machine_name, machine_details in self.machines.items():
             machine_cost, machine_runtime = [], []
             for task_name, task in self.tasks:
                 old_machine = task["task"].machine
-                number_of_operations = task["task"].runtime * old_machine.cpu_speed * old_machine.cpu_cores * 10 ** 6
-                real_runtime = number_of_operations / (  # todo can this overflow?
-                        machine_details.cpu["speed"] * machine_details.cpu["count"] * 10 ** 6)
+                number_of_operations = (
+                    task["task"].runtime
+                    * old_machine.cpu_speed
+                    * old_machine.cpu_cores
+                    * 10 ** 6
+                )
+                # todo can this overflow?
+                real_runtime = number_of_operations / (
+                        machine_details.cpu["speed"]
+                        * machine_details.cpu["count"] * 10 ** 6)
                 machine_runtime.append(real_runtime)
                 machine_cost.append(real_runtime * machine_details.price)
             costs[machine_name] = machine_cost
             runtimes[machine_name] = machine_runtime
 
-        time_df = pd.DataFrame(data=runtimes, index=self.wf_instance.workflow.nodes)
-        cost_df = pd.DataFrame(data=costs, index=self.wf_instance.workflow.nodes)
+        time_df = pd.DataFrame(
+            data=runtimes, index=self.wf_instance.workflow.nodes)
+        cost_df = pd.DataFrame(
+            data=costs, index=self.wf_instance.workflow.nodes)
 
         return time_df, cost_df
 
@@ -84,9 +101,12 @@ class WorkflowSchedulingProblem(Problem):
     def __init__(self, workflow: Workflow):
         self.workflow = workflow
         self.slack_coefficients = self._get_slacks()
-        self.variables = sympy.symbols(
-            ' '.join([f'x{i}' for i in range(len(self.workflow.tasks) * len(self.workflow.machines))])
-            + ' ' + ' '.join([f's{i}' for i in range(len(self.slack_coefficients))]))
+        self.variables = sympy.symbols(' '.join(
+            [f'x{i}' for i in range(
+                len(self.workflow.tasks) * len(self.workflow.machines))]
+        ) + ' ' + ' '.join(
+            [f's{i}' for i in range(len(self.slack_coefficients))]))
+
         self._set_objective_function()
         self._set_constraints()
 
@@ -98,9 +118,13 @@ class WorkflowSchedulingProblem(Problem):
     def _set_objective_function(self) -> None:
         expression: Expr = cast(Expr, 0)
         for task_id, task_name in enumerate(self.workflow.time_matrix.index):
-            for machine_id, machine_name in enumerate(self.workflow.time_matrix.columns):
+            for machine_id, machine_name in enumerate(
+                    self.workflow.time_matrix.columns):
                 cost = self.workflow.cost_matrix[machine_name][task_name]
-                expression += cost * self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
+                expression += cost * self.variables[
+                    machine_id
+                    + task_id * len(self.workflow.time_matrix.columns)
+                ]
 
         self.objective_function = Expression(expression)
 
@@ -111,7 +135,10 @@ class WorkflowSchedulingProblem(Problem):
         for task_id in range(len(self.workflow.time_matrix.index)):
             expression: Expr = cast(Expr, 0)
             for machine_id in range(len(self.workflow.time_matrix.columns)):
-                expression += self.variables[machine_id + task_id * len(self.workflow.time_matrix.columns)]
+                expression += self.variables[
+                    machine_id
+                    + task_id * len(self.workflow.time_matrix.columns)
+                ]
             expression -= 1
 
             constraints.append(Expression(expression))
@@ -119,52 +146,67 @@ class WorkflowSchedulingProblem(Problem):
         # deadline constraint
 
         min_deadline, _ = self.get_deadlines()
-        deadline_for_slacks = int(self.workflow.deadline - min_deadline)
+        # deadline_for_slacks = int(self.workflow.deadline - min_deadline)
 
         for path in self.workflow.paths:
             expression = cast(Expr, -self.workflow.deadline)
-            for task_id, task_name in enumerate(self.workflow.time_matrix.index):
-                for machine_id, machine_name in enumerate(self.workflow.time_matrix.columns):
+            for task_id, task_name in enumerate(
+                    self.workflow.time_matrix.index):
+                for machine_id, machine_name in enumerate(
+                        self.workflow.time_matrix.columns):
                     if task_name in path:
-                        time = self.workflow.time_matrix[machine_name][task_name]
+                        time = self.workflow.time_matrix[
+                            machine_name][task_name]
                         expression += time * self.variables[
-                            machine_id + task_id * len(self.workflow.time_matrix.columns)]
+                            machine_id
+                            + task_id * len(self.workflow.time_matrix.columns)
+                        ]
 
-            first_slack_index = len(self.workflow.time_matrix.index) * len(self.workflow.time_matrix.columns)
+            first_slack_index = (
+                len(self.workflow.time_matrix.index)
+                * len(self.workflow.time_matrix.columns)
+            )
             for i, coefficient in enumerate(self.slack_coefficients):
-                expression += coefficient * self.variables[first_slack_index + i]
+                expression += (
+                    coefficient * self.variables[first_slack_index + i])
 
             constraints.append(Expression(expression))
 
         self.constraints = constraints
 
     def check_solution_correctness(self) -> None:
-        raise NotImplemented  # todo check if slack values are correct
+        raise NotImplementedError  # todo check if slack values are correct
 
     def decode_solution(self, solution: dict) -> dict:
         decoded_solution = {}
         for variable, value in solution.items():
-            name, id = variable[0], int(variable[1:])  # todo add validation
+            _, id = variable[0], int(variable[1:])  # todo add validation
             if value == 1.0:
                 machine_id = id % len(self.workflow.machines)
                 task_id = id // len(self.workflow.machines)
-                decoded_solution[self.workflow.time_matrix.index[task_id]] = self.workflow.time_matrix.columns[
-                    machine_id]
+                decoded_solution[self.workflow.time_matrix.index[task_id]] = (
+                    self.workflow.time_matrix.columns[machine_id])
 
         return decoded_solution
 
     def get_deadlines(self) -> tuple[float, float]:  # todo test this function
-        """Calculates the minimum and maximum path runtime for the whole workflow."""
+        """Calculates the minimum and maximum path runtime
+           for the whole workflow."""
 
-        flat_runtimes = [(runtime, name) for n, machine_runtimes in self.workflow.time_matrix.items() for runtime, name
-                         in zip(machine_runtimes, self.workflow.task_names)]
+        flat_runtimes = [
+            (runtime, name)
+            for n, machine_runtimes in self.workflow.time_matrix.items()
+            for runtime, name in zip(
+                machine_runtimes, self.workflow.task_names)
+        ]
 
         max_path_runtime = 0.0
         min_path_runtime = 0.0
 
         for path in self.workflow.paths:
             max_runtime: defaultdict[str, float] = defaultdict(lambda: 0.0)
-            min_runtime: defaultdict[str, float] = defaultdict(lambda: math.inf)
+            min_runtime: defaultdict[str, float] = defaultdict(
+                lambda: math.inf)
 
             for runtime, name in flat_runtimes:
                 if name not in path:
@@ -175,6 +217,6 @@ class WorkflowSchedulingProblem(Problem):
             min_path_runtime = max(min_path_runtime, sum(min_runtime.values()))
 
         return min_path_runtime, max_path_runtime
-    
+
     def get_score(self, result: str) -> float | None:
         return 0

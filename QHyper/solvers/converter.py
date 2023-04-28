@@ -1,5 +1,4 @@
 import dimod
-import sympy
 
 from dimod import ConstrainedQuadraticModel
 
@@ -20,7 +19,9 @@ class Converter:
         results: dict[VARIABLES, float] = {}
 
         if len(weights) != len(problem.constraints) + 1:
-            raise Exception(f"Expected {len(problem.constraints)+1} weights, got {len(weights)}")
+            raise Exception(
+                f"Expected {len(problem.constraints)+1} weights, "
+                f"got {len(weights)}")
 
         objective_function = Expression(
             problem.objective_function.polynomial * weights[0])
@@ -44,10 +45,12 @@ class Converter:
 
     @staticmethod
     def to_cqm(problem: Problem) -> ConstrainedQuadraticModel:
-        binary_polynomial = dimod.BinaryPolynomial(problem.objective_function.as_dict(), dimod.BINARY)
+        binary_polynomial = dimod.BinaryPolynomial(
+            problem.objective_function.as_dict(), dimod.BINARY)
         cqm = dimod.make_quadratic_cqm(binary_polynomial)
 
-        for var in problem.variables:  # todo this cqm can probably be initialized in some other way
+        # todo this cqm can probably be initialized in some other way
+        for var in problem.variables:
             if str(var) not in cqm.variables:
                 cqm.add_variable(dimod.BINARY, str(var))
 

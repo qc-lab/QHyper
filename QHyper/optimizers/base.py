@@ -2,7 +2,8 @@ from abc import abstractmethod
 import numpy as np
 
 import numpy.typing as npt
-from typing import Any, Callable, Iterable
+from typing import Callable
+
 
 class Optimizer:
     @abstractmethod
