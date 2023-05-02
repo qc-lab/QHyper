@@ -30,18 +30,6 @@ WFQAOA_CONFIG = {
     },
 }
 
-# WFQAOA_PEN_CONFIG = {
-#     'optimizer': {
-#         'type': 'scipy',
-#         'maxfun': 200,
-#     },
-#     'pqc': {
-#         'type': 'wfqaoa',
-#         'layers': 5,
-#         'penalty': 1
-#     },
-# }
-
 QAOA_CONFIG = {
     'optimizer': {
         'type': 'scipy',
@@ -64,7 +52,7 @@ class Wrapper:
     def __init__(self, max_weight, items, samples, output_file) -> None:
         knapsack = KnapsackProblem(
             max_weight=max_weight, items=items)
-         
+
         self.qaoa = VQA(knapsack, config=QAOA_CONFIG)
         self.wfqaoa = VQA(knapsack, config=WFQAOA_CONFIG)
         # self.wfqaoa_pen = VQA(knapsack, config=WFQAOA_PEN_CONFIG)
@@ -110,11 +98,6 @@ if __name__ == '__main__':
     items=list(zip(args.weights, args.values))
     output_file = f'{args.w}_{"_".join([f"{w}-{v}" for w,v in list(zip(args.weights, args.values))])}.csv'
     wrapper = Wrapper(args.w, items, args.samples, output_file)
-   
-    # qaoa = VQA(knapsack, config=QAOA_CONFIG)
-    # wfqaoa = VQA(knapsack, config=WFQAOA_CONFIG)
-    # hqaoa = VQA(knapsack, config=HQAOA_CONFIG)
-    # tester = VQA(knapsack, config=TESTER_CONFIG)
-        
+
     with mp.Pool(processes=args.processes) as pool:
         pool.map(wrapper, range(args.samples))
