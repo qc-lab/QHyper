@@ -92,11 +92,6 @@ if __name__ == '__main__':
     items=list(zip(args.weights, args.values))
     output_file = f'bh_{args.niter}_{args.w}_{"_".join([f"{w}-{v}" for w,v in list(zip(args.weights, args.values))])}.csv'
     wrapper = Wrapper(args.w, items, args.samples, output_file, args.niter)
-   
-    # qaoa = VQA(knapsack, config=QAOA_CONFIG)
-    # wfqaoa = VQA(knapsack, config=WFQAOA_CONFIG)
-    # hqaoa = VQA(knapsack, config=HQAOA_CONFIG)
-    # tester = VQA(knapsack, config=TESTER_CONFIG)
-        
+
     with mp.Pool(processes=args.processes) as pool:
         pool.map(wrapper, range(args.samples))
