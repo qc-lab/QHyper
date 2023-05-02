@@ -111,7 +111,7 @@ class HQAOA(PQC):
         hyper_args: Optional[npt.NDArray[np.float64]] = None
     ) -> npt.NDArray[np.float64]:
         return np.concatenate((
-            hyper_args if hyper_args else params_init['hyper_args'],
+            hyper_args if len(hyper_args) else params_init['hyper_args'],
             np.array(args if args else params_init['angles']).flatten()
         ))
 
