@@ -1,0 +1,34 @@
+{
+  "machines": [
+    {
+      "nodeName": "OneCpu",
+      "memory": 1024000,
+      "price": 1,
+      "memory_cost_multiplier": 1,
+      "cpu": {
+        "speed": 1,
+        "count": 1
+      }
+    },
+    {
+      "nodeName": "FourCpu",
+      "memory": 1024000,
+      "price": 25,
+      "memory_cost_multiplier": 1,
+      "cpu": {
+        "speed": 1,
+        "count": 4
+      }
+    },
+    {
+      "nodeName": "SixteenCpu",
+      "memory": 1024000,
+      "price": 625,
+      "memory_cost_multiplier": 1,
+      "cpu": {
+        "speed": 1,
+        "count": 16
+      }
+    }
+  ]
+}

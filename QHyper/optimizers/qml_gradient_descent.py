@@ -1,9 +1,10 @@
-from typing import Any, Callable
+from typing import Callable
+import numpy.typing as npt
 
 import pennylane as qml
 from pennylane import numpy as np
 
-from .optimizer import ArgsType, Optimizer
+from .base import Optimizer
 
 
 class QmlGradientDescent(Optimizer):
@@ -19,12 +20,17 @@ class QmlGradientDescent(Optimizer):
         number of optimization steps
     """
 
-    def __init__(self, optimizer: qml.GradientDescentOptimizer, optimization_steps: int) -> None:
+    def __init__(
+        self,
+        optimizer: qml.GradientDescentOptimizer,
+        optimization_steps: int
+    ) -> None:
         """
         Parameters
         ----------
         optimizer : qml.GradientDescentOptimizer
-            object of class GradientDescentOptimizer or inheriting from this class
+            object of class GradientDescentOptimizer
+            or inheriting from this class
         optimization_steps : int
             number of optimization steps
         """
@@ -32,8 +38,13 @@ class QmlGradientDescent(Optimizer):
         self.optimizer = optimizer
         self.optimization_steps = optimization_steps
 
-    def minimize(self, func: Callable[[ArgsType], float], init: ArgsType) -> tuple[ArgsType, Any]:
-        """Returns params which lead to the lowest value of the provided function and cost history
+    def minimize(
+        self,
+        func: Callable[[npt.NDArray[np.float64]], float],
+        init: npt.NDArray[np.float64]
+    ) -> tuple[float, npt.NDArray[np.float64]]:
+        """Returns params which lead to the lowest value of
+            the provided function and cost history
 
         Parameters
         ----------
@@ -56,4 +67,4 @@ class QmlGradientDescent(Optimizer):
         for _ in range(self.optimization_steps):
             params, cost = self.optimizer.step_and_cost(func, params)
             cost_history.append(cost)
-        return params, cost_history
+        return cost, params

@@ -1,15 +1,23 @@
+from dataclasses import dataclass
 import multiprocessing as mp
 from typing import Callable
+import numpy.typing as npt
 
 import numpy as np
 import tqdm
 
-from .optimizer import ArgsType, HyperparametersOptimizer, Optimizer, Wrapper
+from .base import Optimizer
 
 
-class Random(HyperparametersOptimizer):
+@dataclass
+class Random(Optimizer):
+    number_of_samples: int
+    processes: int
+    disable_tqdm: bool
+    bounds: npt.NDArray[np.float64]
+
     """Simple random search
-    
+
     Attributes
     ----------
     number_of_samples : int
@@ -22,9 +30,10 @@ class Random(HyperparametersOptimizer):
 
     def __init__(
         self,
+        bounds: list[tuple[float, float]],
         number_of_samples: int = 100,
-        processes: int = mp.cpu_count(),
-        disable_tqdm: bool = False
+        processes: int = 1,
+        disable_tqdm: bool = False,
     ) -> None:
         """
         Parameters
@@ -40,18 +49,16 @@ class Random(HyperparametersOptimizer):
         self.number_of_samples: int = number_of_samples
         self.processes: int = processes
         self.disable_tqdm: bool = disable_tqdm
-    
+        self.bounds = np.array(bounds)
+
     def minimize(
-        self, 
-        func_creator: Callable[[ArgsType], Callable[[ArgsType], float]], 
-        optimizer: Optimizer,
-        init: ArgsType, 
-        hyperparams_init: ArgsType = None, 
-        evaluation_func: Callable[[ArgsType], Callable[[ArgsType], float]] = None,
-        bounds: list[float] = [0, 10]
-    ) -> ArgsType:
-        """Returns hyperparameters which lead to the lowest values returned by the optimizer
-    
+        self,
+        func: Callable[[npt.NDArray[np.float64]], float],
+        init: npt.NDArray[np.float64]
+    ) -> tuple[float, npt.NDArray[np.float64]]:
+        """Returns hyperparameters which lead to the lowest values
+            returned by the optimizer
+
         Parameters
         ----------
         func_creator : Callable[[ArgsType], Callable[[ArgsType], float]]
@@ -64,7 +71,7 @@ class Random(HyperparametersOptimizer):
         hyperparams_init : ArgsType
             initial hyperparameters
         evaluation_func : Callable[[ArgsType], Callable[[ArgsType], float]]
-            function, which receives hyperparameters, and returns 
+            function, which receives hyperparameters, and returns
             function which receives params and return evaluation
         bounds : list[float]
             bounds for hyperparameters (default None)
@@ -72,21 +79,24 @@ class Random(HyperparametersOptimizer):
         Returns
         -------
         ArgsType
-            Returns hyperparameters which lead to the lowest values returned by the optimizer
+            Returns hyperparameters which lead to the lowest values
+            returned by the optimizer
         """
-        hyperparams_init = np.array(hyperparams_init)
-
+        hyperparams_init = np.array(init)
         hyperparams = (
-            (bounds[1] - bounds[0])
+            (self.bounds[:, 1] - self.bounds[:, 0])
             * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
-            + bounds[0])
+            + self.bounds[:, 0])
 
-        wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
-
+        # results = [func(hyperparam) for hyperparam in hyperparams]
         with mp.Pool(processes=self.processes) as p:
             results = list(tqdm.tqdm(
-                p.imap(wrapper.func, hyperparams), total=self.number_of_samples, disable=self.disable_tqdm))
+                p.imap(func, hyperparams),
+                total=self.number_of_samples,
+                disable=self.disable_tqdm
+            ))
 
-        min_idx = np.argmin([result for result in results])
-
-        return hyperparams[min_idx]
+        min_idx = np.argmin(results)
+        return results[min_idx], hyperparams[min_idx]
+        # return HyperOptimizerResults.from_solver_results(
+        #     results[min_idx], hyperparams[min_idx])

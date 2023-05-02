@@ -1,0 +1,54 @@
+{
+  "machines": [
+    {
+      "name": "AresCpu",
+      "memory": 8192000,
+      "cpu": {
+        "speed": 1.6,
+        "count": 1
+      },
+      "price": 0.08,
+      "memory_cost_multiplier": 0.8
+    },
+    {
+      "name": "AresGpu",
+      "memory": 8192000,
+      "cpu": {
+        "speed": 1.6,
+        "count": 100
+      },
+      "price": 5.0,
+      "memory_cost_multiplier": 0.8
+    },
+    {
+      "name": "PrometeusCpu",
+      "memory": 4096000,
+      "cpu": {
+        "speed": 1.0,
+        "count": 1
+      },
+      "price": 0.08,
+      "memory_cost_multiplier": 0.4
+    },
+    {
+      "name": "PrometeusGpu",
+      "memory": 4096000,
+      "cpu": {
+        "speed": 1,
+        "count": 100
+      },
+      "price": 5.0,
+      "memory_cost_multiplier": 0.4
+    },
+    {
+      "name": "ZeusCpu",
+      "memory": 2048000,
+      "cpu": {
+        "speed": 0.25,
+        "count": 1
+      },
+      "price": 0.08,
+      "memory_cost_multiplier": 0.2
+    }
+  ]
+}

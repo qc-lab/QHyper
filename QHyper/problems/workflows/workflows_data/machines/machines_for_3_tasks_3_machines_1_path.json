@@ -1,0 +1,34 @@
+{
+  "machines": [
+    {
+      "name": "MachineA",
+      "memory": 0,
+      "cpu": {
+        "speed": 0.3333333333333333,
+        "count": 1
+      },
+      "price": 1.0,
+      "memory_cost_multiplier": 0
+    },
+    {
+      "name": "MachineB",
+      "memory": 0,
+      "cpu": {
+        "speed": 1.0,
+        "count": 1
+      },
+      "price": 4.0,
+      "memory_cost_multiplier": 0
+    },
+    {
+      "name": "MachineC",
+      "memory": 0,
+      "cpu": {
+        "speed": 0.5,
+        "count": 1
+      },
+      "price": 2.0,
+      "memory_cost_multiplier": 0
+    }
+  ]
+}
