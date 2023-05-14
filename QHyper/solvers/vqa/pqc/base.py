@@ -12,6 +12,7 @@ PQCResults = tuple[dict[str, float], list[float]]
 
 class PQC:
     pqc_type: str
+    mixer: str
 
     @abstractmethod
     def __init__(self, **kwargs: Any) -> None: ...
