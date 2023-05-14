@@ -10,12 +10,14 @@ from QHyper.problems.base import Problem
 from QHyper.solvers.vqa.pqc.base import PQC
 from QHyper.solvers.converter import QUBO, Converter
 
+from .mixers import MIXERS_BY_NAME
+
 
 @dataclass
 class QAOA(PQC):
     layers: int = 3
-    mixer: str = "X"
     backend: str = "default.qubit"
+    mixer: str = 'pl_x_mixer'
 
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
         result = qml.Identity(0)
@@ -39,13 +41,9 @@ class QAOA(PQC):
             qml.Hadamard(str(i))
 
     def _create_mixing_hamiltonian(self, problem: Problem) -> qml.Hamiltonian:
-        if self.mixer == "X":
-            return qml.qaoa.x_mixer([str(x) for x in problem.variables])
-        # REQUIRES GRAPH
-        # https://docs.pennylane.ai/en/stable/code/api/pennylane.qaoa.mixers.xy_mixer.html
-        # if self.mixer == "XY":
-        #     return qml.qaoa.xy_mixer(...)
-        raise Exception(f"Unknown {self.mixer} mixer")
+        if self.mixer not in MIXERS_BY_NAME:
+            raise Exception(f"Unknown {self.mixer} mixer")
+        return MIXERS_BY_NAME[self.mixer]([str(v) for v in problem.variables])
 
     def _circuit(self, problem: Problem, params: npt.NDArray[np.float64],
                  cost_operator: qml.Hamiltonian) -> None:
@@ -87,7 +85,7 @@ class QAOA(PQC):
         args: Optional[npt.NDArray[np.float64]] = None,
         hyper_args: Optional[npt.NDArray[np.float64]] = None
     ) -> npt.NDArray[np.float64]:
-        return args if args else np.array(params_init['angles'])
+        return args if args is not None else np.array(params_init['angles'])
 
     def get_hopt_args(
         self,
@@ -96,7 +94,7 @@ class QAOA(PQC):
         hyper_args: Optional[npt.NDArray[np.float64]] = None
     ) -> npt.NDArray[np.float64]:
         return (
-            hyper_args if hyper_args
+            hyper_args if hyper_args is not None
             else np.array(params_init['hyper_args'])
         )
 
