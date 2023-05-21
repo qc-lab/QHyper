@@ -1,6 +1,6 @@
 import dimod
 
-from dimod import ConstrainedQuadraticModel
+from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
 
 from typing import Any, cast
 
@@ -64,3 +64,19 @@ class Converter:
         cqm = Converter.to_cqm(problem)
         bqm, _ = dimod.cqm_to_bqm(cqm, lagrange_multiplier=10)
         return cast(tuple[QUBO, float], bqm.to_qubo())  # (qubo, offset)
+    
+
+    @staticmethod
+    def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
+        dqm = dimod.DiscreteQuadraticModel()
+
+        for i in problem.G.nodes():
+            dqm.add_variable(problem.num_partitions, label=i)
+
+        for i in problem.G.nodes():
+            for j in problem.G.nodes():
+                if i==j:
+                    continue #the algorithm skips the linear term in QUBO/Ising formulation as in k-community a node has to belong to one community, therefore there is no effect in the maximising constellation
+                dqm.set_quadratic(i,j, {(c, c): ((-1)*problem.B[i,j]) for c in problem.partitions})
+
+        return dqm
