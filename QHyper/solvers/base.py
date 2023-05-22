@@ -22,7 +22,7 @@ class Solver:
     @abstractmethod
     def solve(
             self,
-            params_inits: dict[str, Any],
+            params_inits: dict[str, Any] = None,
             hyper_optimizer: Optional[Optimizer] = None
     ) -> Any:
         ...

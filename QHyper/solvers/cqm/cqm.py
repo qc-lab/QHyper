@@ -1,3 +1,4 @@
+from dimod import ConstrainedQuadraticModel
 from dwave.system import LeapHybridCQMSampler
 
 from typing import Any, Optional
@@ -15,7 +16,7 @@ class CQM(Solver):
 
     def solve(
             self,
-            params_inits: dict[str, Any],
+            params_inits: dict[str, Any] = None,
             hyper_optimizer: Optional[Optimizer] = None
     ) -> Any:
         converter = Converter()
@@ -28,3 +29,14 @@ class CQM(Solver):
         ]
 
         return correct_solutions[0]
+    
+    def solve_mock(
+            self,
+            params_inits: dict[str, Any] = None,
+            hyper_optimizer: Optional[Optimizer] = None
+    ) -> ConstrainedQuadraticModel:
+        """"
+        mock solve method as a wrapper to Converter.to_cqm method
+        created on 22.05 for learning purposes only 
+        """
+        return Converter.to_cqm_mock(self.problem)

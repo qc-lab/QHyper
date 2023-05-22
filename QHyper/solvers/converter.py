@@ -58,6 +58,25 @@ class Converter:
             cqm.add_constraint(dict_to_list(constraint.as_dict()), "==")
 
         return cqm
+    
+    @staticmethod
+    def to_cqm_mock(problem: Problem) -> ConstrainedQuadraticModel:
+        """
+        to_cqm method skipping constraints
+        created as a mock for learning purposes
+        22.05 learning DQM
+        """
+        binary_polynomial = dimod.BinaryPolynomial(
+            problem.objective_function.as_dict(), dimod.BINARY)
+        cqm = dimod.make_quadratic_cqm(binary_polynomial)
+
+        # todo this cqm can probably be initialized in some other way
+        for var in problem.variables:
+            if str(var) not in cqm.variables:
+                cqm.add_variable(dimod.BINARY, str(var))
+
+        return cqm
+
 
     @staticmethod
     def to_qubo(problem: Problem) -> tuple[QUBO, float]:
@@ -67,16 +86,29 @@ class Converter:
     
 
     @staticmethod
-    def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
+    def to_dqm(problem: Problem) -> DiscreteQuadraticModel | None:
+        pass
+
+    @staticmethod
+    def to_dqm_mock(problem: Problem) -> DiscreteQuadraticModel:
+        """
+        mock method createating some DQM
+        created on 22.05 for learning purposes only
+        """
         dqm = dimod.DiscreteQuadraticModel()
 
-        for i in problem.G.nodes():
-            dqm.add_variable(problem.num_partitions, label=i)
+        for var in problem.variables:
+            if str(var) not in dqm.variables:
+                dqm.add_variable(4, str(var))
 
-        for i in problem.G.nodes():
-            for j in problem.G.nodes():
-                if i==j:
-                    continue #the algorithm skips the linear term in QUBO/Ising formulation as in k-community a node has to belong to one community, therefore there is no effect in the maximising constellation
-                dqm.set_quadratic(i,j, {(c, c): ((-1)*problem.B[i,j]) for c in problem.partitions})
+        for i, var in enumerate(problem.variables):
+            for j, (key, val) in enumerate(problem.objective_function.as_dict().items()):
+                print(f"var: {var}, obj: {key[0]}{val}")
+                if i == j:
+                    continue
+                idx: int = cast(int, dqm.variables.index(key[0]))
+                var1 = var
+                var2 = dqm.variables[idx]
+                dqm.set_quadratic(str(var1), var2, {(c, c): ((-1)*10) for c in range(4)})
 
         return dqm
