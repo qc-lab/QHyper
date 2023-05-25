@@ -6,7 +6,12 @@ from QHyper.solvers.converter import Converter
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
 from QHyper.optimizers.base import Optimizer
+from dwave.cloud import Client
 
+
+def get_token(self):
+    with Client.from_config() as client:
+        return client.token
 
 
 class DQM(Solver):
@@ -21,7 +26,7 @@ class DQM(Solver):
     ) -> Any:
         converter = Converter()
         dqm = converter.to_dqm(self.problem)
-        sampler = LeapHybridDQMSampler()
+        sampler = LeapHybridDQMSampler(token=get_token())
         
         sampleset = sampler.sample_dqm(dqm, self.time)
 
