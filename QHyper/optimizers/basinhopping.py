@@ -7,7 +7,37 @@ from .base import Optimizer
 
 
 class Basinhopping(Optimizer):
-    """Implementation of Cross Entropy Method for hyperparamter tuning
+    """
+    Class for the Basin-hopping algorithm for global optimization.
+
+    Parameters
+    ----------
+    bounds : list[tuple[float, float]]
+        A list of tuples specifying the lower and upper bounds for each dimension of the search space.
+    niter : int
+        The number of basin-hopping iterations to perform.
+    maxfun : int, optional
+        Maximum number of function evaluations.
+        Default is 200.
+    config : dict, optional
+        Additional configuration options for the basinhopping function.
+        Default is an empty dictionary.
+
+    Attributes
+    ----------
+    niter : int
+        The number of basin-hopping iterations to perform.
+    maxfun : int
+        Maximum number of function evaluations.
+    bounds : numpy.ndarray
+        An array of shape (n, 2) specifying the lower and upper bounds for each dimension of the search space.
+    config : dict
+        Additional configuration options for the basinhopping function.
+
+    Methods
+    -------
+    minimize(func, init)
+        Minimizes the given function using the Basin-hopping algorithm.
     """
     def __init__(
             self,
@@ -26,34 +56,24 @@ class Basinhopping(Optimizer):
         func: Callable[[npt.NDArray[np.float64]], float],
         init: npt.NDArray[np.float64]
     ) -> tuple[float, npt.NDArray[np.float64]]:
-        """Returns hyperparameters which leads to the lowest values
-            returned by optimizer 1
+        """
+        Minimize the given function using the Basin-hopping algorithm.
 
         Parameters
         ----------
-        func_creator : Callable[[ArgsType], Callable[[ArgsType], float]]
-            function, which receives hyperparameters, and returns
-            function which will be optimized using optimizer
-        optimizer : Optimizer
-            object of class Optimizer
-        init : ArgsType
-            initial args for optimizer
-        hyperparams_init : ArgsType
-            initial hyperparameters
-        bounds : list[float]
-            bounds for hyperparameters (default None)
-        evaluation_func : Callable[[ArgsType], Callable[[ArgsType], float]]
-            function, which receives hyperparameters, and returns
-            function which receives params and return evaluation
-        kwargs : Any
-            allow additional arguments passed to scipy.optimize.Shgo
+        func : callable
+            The objective function to be minimized.
+            The function should take a single argument, which is a NumPy array of type np.float64,
+            and return a float value.
+        init : numpy.ndarray
+            The initial point for the optimization algorithm.
+            The array should have dtype np.float64.
+
         Returns
         -------
-        ArgsType
-            hyperparameters which leads to the lowest values
-            returned by optimizer
+        tuple
+            A tuple containing the minimum function value and the corresponding optimal point.
         """
-
         result = basinhopping(
             func, init.flatten(), niter=self.niter,
             minimizer_kwargs={

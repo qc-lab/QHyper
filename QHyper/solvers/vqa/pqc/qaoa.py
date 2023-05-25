@@ -98,7 +98,7 @@ class QAOA(PQC):
             else np.array(params_init['hyper_args'])
         )
 
-    def get_init_args(
+    def get_params_init_format(
         self,
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64]

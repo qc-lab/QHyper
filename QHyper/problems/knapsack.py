@@ -16,12 +16,12 @@ class Knapsack:
 
     Attributes
     ----------
-    items: list[Item]
-        list of items
     max_weight: int
         maximum weight of an item
     max_item_value: int
         maximum value of an item
+    items: list[Item]
+        list of items
     """
 
     def __init__(

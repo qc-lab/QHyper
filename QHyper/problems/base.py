@@ -1,5 +1,7 @@
 from abc import ABC
 
+from typing import Any
+
 from QHyper.hyperparameter_gen.parser import Expression
 
 
@@ -17,25 +19,24 @@ class Problem(ABC):
 
     Attributes
     ----------
-    objective_function
+    objective_function: Expression
         objective function in SymPy syntax
-    constraints : list[str]
+    constraints : list[Expression]
         list of constraints in SymPy syntax
-    variables : int
-        number of variables in the problem
+    variables : list[Any]
+        list of variables in the problem
     name: str
         helps to differentiate various problems (default "")
     """
     objective_function: Expression
     constraints: list[Expression]
-    variables: list
+    variables: list[Any]
     name: str = ""
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the outcome provided as a binary string
 
-        Necessary only for hyperoptimizers. Not needed for minimizing
-        functions with constant weights.
+        Necessary to evaluate results.
 
         Parameters
         ----------

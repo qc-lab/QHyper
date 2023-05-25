@@ -16,18 +16,6 @@ class Random(Optimizer):
     disable_tqdm: bool
     bounds: npt.NDArray[np.float64]
 
-    """Simple random search
-
-    Attributes
-    ----------
-    number_of_samples : int
-        number of random samples (default 100)
-    processes : int
-         number of processors that will be used (default cpu count)
-    disable_tqdm: bool
-        if set to True, tdqm will be disabled (default False)
-    """
-
     def __init__(
         self,
         bounds: list[tuple[float, float]],
