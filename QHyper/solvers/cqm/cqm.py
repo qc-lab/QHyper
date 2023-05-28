@@ -1,3 +1,4 @@
+import os
 from dimod import ConstrainedQuadraticModel
 from dwave.system import LeapHybridCQMSampler
 
@@ -7,6 +8,10 @@ from QHyper.solvers.converter import Converter
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
 from QHyper.optimizers.base import Optimizer
+
+
+
+token = os.environ['DWAVE_API_TOKEN']
 
 
 class CQM(Solver):
@@ -21,7 +26,7 @@ class CQM(Solver):
     ) -> Any:
         converter = Converter()
         cqm = converter.to_cqm(self.problem)
-        sampler = LeapHybridCQMSampler()
+        sampler = LeapHybridCQMSampler(token=token)
         solutions = sampler.sample_cqm(cqm, self.time)
         correct_solutions = [
             s for s in solutions
@@ -29,14 +34,3 @@ class CQM(Solver):
         ]
 
         return correct_solutions[0]
-    
-    def solve_mock(
-            self,
-            params_inits: dict[str, Any] = None,
-            hyper_optimizer: Optional[Optimizer] = None
-    ) -> ConstrainedQuadraticModel:
-        """"
-        mock solve method as a wrapper to Converter.to_cqm method
-        created on 22.05 for learning purposes only 
-        """
-        return Converter.to_cqm_mock(self.problem)
