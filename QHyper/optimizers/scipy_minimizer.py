@@ -18,11 +18,6 @@ class ScipyOptimizer(Optimizer):
     bounds : list[tuple[float, float]] or None
         A list of tuples specifying the lower and upper bounds for each dimension of the search space,
         or None if no bounds are provided.
-
-    Methods
-    -------
-    minimize(func, init)
-        Minimizes the given function using the SciPy optimizer.
     """
     def __init__(
             self,

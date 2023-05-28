@@ -33,11 +33,6 @@ class Basinhopping(Optimizer):
         An array of shape (n, 2) specifying the lower and upper bounds for each dimension of the search space.
     config : dict
         Additional configuration options for the basinhopping function.
-
-    Methods
-    -------
-    minimize(func, init)
-        Minimizes the given function using the Basin-hopping algorithm.
     """
     def __init__(
             self,

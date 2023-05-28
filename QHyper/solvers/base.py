@@ -16,11 +16,6 @@ class Solver:
     ----------
     problem : Problem
         The problem to be solved.
-
-    Methods
-    -------
-    solve(params_inits=None, hyper_optimizer=None)
-        Solve the problem using the solver.
     """
 
     problem: Problem
