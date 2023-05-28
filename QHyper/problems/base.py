@@ -1,5 +1,7 @@
 from abc import ABC
 
+import sympy
+
 from typing import Any
 
 from QHyper.hyperparameter_gen.parser import Expression
@@ -30,7 +32,7 @@ class Problem(ABC):
     """
     objective_function: Expression
     constraints: list[Expression]
-    variables: list[Any]
+    variables: tuple[sympy.Symbol]
     name: str = ""
 
     def get_score(self, result: str) -> float | None:
