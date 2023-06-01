@@ -80,7 +80,7 @@ class Converter:
 
         for var in problem.variables:
             if str(var) not in dqm.variables:
-                dqm.add_variable(2, str(var))
+                dqm.add_variable(num_cases, str(var))
 
         def dqm_var(var_str_idx: str):
             return dqm.variables.index(var_str_idx)
