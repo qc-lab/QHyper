@@ -6,6 +6,7 @@ from typing import Any, cast
 
 from QHyper.hyperparameter_gen.parser import Expression
 from QHyper.problems.base import Problem
+from QHyper.problems.brain_community_detection import BrainCommunityDetectionProblem
 from QHyper.util import QUBO, VARIABLES
 
 
@@ -94,4 +95,20 @@ class Converter:
             else:
                 dqm.set_linear(dqm.variables[u_idx], [bias for _ in range(num_cases)])
         
+        return dqm
+    
+
+    @staticmethod
+    def from_graph_to_dqm(problem: BrainCommunityDetectionProblem) -> DiscreteQuadraticModel:
+        dqm = dimod.DiscreteQuadraticModel()
+
+        for i in problem.G.nodes():
+            dqm.add_variable(problem.num_cases, label=i)
+
+        for i in problem.G.nodes():
+            for j in problem.G.nodes():
+                if i==j:
+                    continue
+                dqm.set_quadratic(i,j, {(c, c): ((-1)*problem.B[i,j]) for c in range(problem.num_cases)})
+
         return dqm

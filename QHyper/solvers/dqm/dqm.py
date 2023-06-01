@@ -33,3 +33,18 @@ class DQM(Solver):
         sampleset = sampler.sample_dqm(dqm, self.time)
 
         return sampleset
+    
+    
+    def solve_from_graph(
+            self,
+            params_inits: dict[str, Any] = None,
+            hyper_optimizer: Optional[Optimizer] = None
+    ) -> Any:
+        converter = Converter()
+        sampler = LeapHybridDQMSampler(token=token)
+        
+        dqm = converter.from_graph_to_dqm(self.problem)
+
+        sampleset = sampler.sample_dqm(dqm, self.time)
+
+        return sampleset

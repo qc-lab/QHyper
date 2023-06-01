@@ -31,7 +31,7 @@ def safe_open(path, permission):
 
 
 
-class BrainCommunityDetection(Problem):
+class BrainCommunityDetectionProblem(Problem):
     def __init__(self, path, data_name, num_clusters):
             self.num_cases = num_clusters
             self.data_name = data_name
@@ -39,7 +39,7 @@ class BrainCommunityDetection(Problem):
             self.G = nx.from_numpy_matrix(self.A)
             self.B = nx.modularity_matrix(self.G)
             self._set_variables()
-            self._set_objective_function()
+            self.objective_function = [] # Due to sympy expression err
             self.objective_function = []
 
     
@@ -85,16 +85,16 @@ class BrainCommunityDetection(Problem):
         communities_class, mods_LCDA, times_LCDA, Ncomms, total_time = self.compare_with_louvain()
 
         headers = ['modularity_classical', 'modularity_quantum', 'communities', 'run_time_dwave', 'energy', 'counts', 'sample', 'communities_class_louvain', 'time_louvain']
-        # data = [nx_comm.modularity(self.G, communities_class),  nx_comm.modularity(self.G, communities), communities, run_time, energy, counts, sample, communities_class, total_time]
-        # with safe_open(f'{output_folder}/{self.data_name}run{self.num_cases}.csv', 'w') as file:
-        #     writer = csv.writer(file)
-        #     writer.writerow(headers)
-        #     writer.writerow(data)
+        data = [nx_comm.modularity(self.G, communities_class),  nx_comm.modularity(self.G, communities), communities, run_time, energy, counts, sample, communities_class, total_time]
+        with safe_open(f'{output_folder}/{self.data_name}run{self.num_cases}.csv', 'w') as file:
+            writer = csv.writer(file)
+            writer.writerow(headers)
+            writer.writerow(data)
 
         color_map = []
 
         for node in self.G: # 1, 2, 3
-            color_map.append(COLORS[sample['x'+str(node)]])
+            color_map.append(COLORS[sample[node]])
         f = plt.figure()
 
         nx.draw(self.G, node_color=color_map, with_labels=True, ax=f.add_subplot(111))
@@ -104,7 +104,7 @@ class BrainCommunityDetection(Problem):
 
         for i, node in enumerate(self.G):
             clus[i, 0] = node
-            clus[i, 1] = sample['x'+str(node)]
+            clus[i, 1] = sample[node]
 
         np.savetxt(f"{output_folder}/{self.data_name}graph{self.num_cases}.csv", clus, delimiter=",")
         

@@ -1,7 +1,7 @@
 import csv
 import os
 import numpy as np
-from QHyper.problems.brain_community_detection import MaxCut, MaxCutProblem, BrainCommunityDetection
+from QHyper.problems.brain_community_detection import BrainCommunityDetectionProblem
 from QHyper.solvers.dqm import DQM
 import sympy
 from sympy.core.expr import Expr
@@ -48,7 +48,7 @@ def read_sympy_equation():
 
 
 def main():
-    brain = BrainCommunityDetection(path, data_name, num_cases)
+    brain = BrainCommunityDetectionProblem(path, data_name, num_cases)
     print(brain.objective_function)
 
     G = brain.G
