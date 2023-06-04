@@ -40,7 +40,7 @@ class BrainCommunityDetectionProblem(Problem):
             self.B = nx.modularity_matrix(self.G)
             self._set_variables()
             self.objective_function = [] # Due to sympy expression err
-            self.objective_function = []
+            self.constraints = []
 
     
     def _set_variables(self) -> None:
