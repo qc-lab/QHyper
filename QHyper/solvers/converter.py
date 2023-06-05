@@ -6,6 +6,9 @@ from typing import Any, cast
 
 from QHyper.hyperparameter_gen.parser import Expression
 from QHyper.problems.base import Problem
+from QHyper.problems.brain_community_detection import (
+    BrainCommunityDetectionProblem,
+)
 from QHyper.util import QUBO, VARIABLES
 
 
@@ -21,10 +24,12 @@ class Converter:
         if len(weights) != len(problem.constraints) + 1:
             raise Exception(
                 f"Expected {len(problem.constraints)+1} weights, "
-                f"got {len(weights)}")
+                f"got {len(weights)}"
+            )
 
         objective_function = Expression(
-            problem.objective_function.polynomial * weights[0])
+            problem.objective_function.polynomial * weights[0]
+        )
         for key, value in objective_function.as_dict().items():
             if key in results:
                 results[key] += value
@@ -46,7 +51,8 @@ class Converter:
     @staticmethod
     def to_cqm(problem: Problem) -> ConstrainedQuadraticModel:
         binary_polynomial = dimod.BinaryPolynomial(
-            problem.objective_function.as_dict(), dimod.BINARY)
+            problem.objective_function.as_dict(), dimod.BINARY
+        )
         cqm = dimod.make_quadratic_cqm(binary_polynomial)
 
         # todo this cqm can probably be initialized in some other way
@@ -64,19 +70,62 @@ class Converter:
         cqm = Converter.to_cqm(problem)
         bqm, _ = dimod.cqm_to_bqm(cqm, lagrange_multiplier=10)
         return cast(tuple[QUBO, float], bqm.to_qubo())  # (qubo, offset)
-    
 
     @staticmethod
     def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
         dqm = dimod.DiscreteQuadraticModel()
 
+        try:
+            num_cases = problem.num_cases
+            if num_cases in [None, 0]:
+                num_cases = 2
+        except:
+            num_cases = 2
+
+        for var in problem.variables:
+            if str(var) not in dqm.variables:
+                dqm.add_variable(num_cases, str(var))
+
+        def dqm_var(var_str_idx: str):
+            return dqm.variables.index(var_str_idx)
+
+        for vars, bias in problem.objective_function.as_dict().items():
+            u, *v = vars
+            u_idx: int = cast(int, dqm_var(u))
+            if v:
+                v_idx: int = cast(int, dqm_var(*v))
+                dqm.set_quadratic(
+                    dqm.variables[u_idx],
+                    dqm.variables[v_idx],
+                    {(case, case): bias for case in range(num_cases)},
+                )
+            else:
+                dqm.set_linear(
+                    dqm.variables[u_idx], [bias for _ in range(num_cases)]
+                )
+
+        return dqm
+
+    @staticmethod
+    def from_graph_to_dqm(
+        problem: BrainCommunityDetectionProblem,
+    ) -> DiscreteQuadraticModel:
+        dqm = dimod.DiscreteQuadraticModel()
+
         for i in problem.G.nodes():
-            dqm.add_variable(problem.k, label=i)
+            dqm.add_variable(problem.num_cases, label=i)
 
         for i in problem.G.nodes():
             for j in problem.G.nodes():
-                if i==j:
+                if i == j:
                     continue
-                dqm.set_quadratic(i,j, {(c, c): ((-1)*problem.B[i,j]) for c in range(problem.k)})
+                dqm.set_quadratic(
+                    i,
+                    j,
+                    {
+                        (c, c): ((-1) * problem.B[i, j])
+                        for c in range(problem.num_cases)
+                    },
+                )
 
         return dqm

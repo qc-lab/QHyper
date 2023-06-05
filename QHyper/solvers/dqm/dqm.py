@@ -6,12 +6,11 @@ from QHyper.solvers.converter import Converter
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
 from QHyper.optimizers.base import Optimizer
-from dwave.cloud import Client
+
+import os
 
 
-def get_token(self):
-    with Client.from_config() as client:
-        return client.token
+token = os.environ["DWAVE_API_TOKEN"]
 
 
 class DQM(Solver):
@@ -20,14 +19,27 @@ class DQM(Solver):
         self.time: float = time
 
     def solve(
-            self,
-            params_inits: dict[str, Any],
-            hyper_optimizer: Optional[Optimizer] = None
+        self,
+        params_inits: dict[str, Any] = None,
+        hyper_optimizer: Optional[Optimizer] = None,
     ) -> Any:
         converter = Converter()
+        sampler = LeapHybridDQMSampler(token=token)
+
         dqm = converter.to_dqm(self.problem)
-        sampler = LeapHybridDQMSampler(token=get_token())
-        
+        sampleset = sampler.sample_dqm(dqm, self.time)
+
+        return sampleset
+
+    def solve_from_graph(
+        self,
+        params_inits: dict[str, Any] = None,
+        hyper_optimizer: Optional[Optimizer] = None,
+    ) -> Any:
+        converter = Converter()
+        sampler = LeapHybridDQMSampler(token=token)
+
+        dqm = converter.from_graph_to_dqm(self.problem)
         sampleset = sampler.sample_dqm(dqm, self.time)
 
         return sampleset
