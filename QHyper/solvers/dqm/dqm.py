@@ -1,4 +1,3 @@
-from dimod import DiscreteQuadraticModel
 from dwave.system import LeapHybridDQMSampler
 
 from typing import Any, Optional
@@ -8,11 +7,10 @@ from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
 from QHyper.optimizers.base import Optimizer
 
-from dwave.cloud import Client, config
 import os
 
 
-token = os.environ['DWAVE_API_TOKEN']
+token = os.environ["DWAVE_API_TOKEN"]
 
 
 class DQM(Solver):
@@ -21,30 +19,27 @@ class DQM(Solver):
         self.time: float = time
 
     def solve(
-            self,
-            params_inits: dict[str, Any] = None,
-            hyper_optimizer: Optional[Optimizer] = None
+        self,
+        params_inits: dict[str, Any] = None,
+        hyper_optimizer: Optional[Optimizer] = None,
     ) -> Any:
         converter = Converter()
         sampler = LeapHybridDQMSampler(token=token)
-        
-        dqm = converter.to_dqm(self.problem)
 
+        dqm = converter.to_dqm(self.problem)
         sampleset = sampler.sample_dqm(dqm, self.time)
 
         return sampleset
-    
-    
+
     def solve_from_graph(
-            self,
-            params_inits: dict[str, Any] = None,
-            hyper_optimizer: Optional[Optimizer] = None
+        self,
+        params_inits: dict[str, Any] = None,
+        hyper_optimizer: Optional[Optimizer] = None,
     ) -> Any:
         converter = Converter()
         sampler = LeapHybridDQMSampler(token=token)
-        
-        dqm = converter.from_graph_to_dqm(self.problem)
 
+        dqm = converter.from_graph_to_dqm(self.problem)
         sampleset = sampler.sample_dqm(dqm, self.time)
 
         return sampleset
