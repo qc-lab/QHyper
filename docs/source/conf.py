@@ -26,12 +26,12 @@ extensions = [
     'numpydoc',
 ]
 
-
+pygments_style = 'sphinx'
 
 templates_path = ['_templates']
 exclude_patterns = []
 
-numpydoc_show_class_members = False 
+numpydoc_show_class_members = False
 
 # autodoc_default_options = {"autosummary": True}
 

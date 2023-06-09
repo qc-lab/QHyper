@@ -6,7 +6,7 @@
 Welcome to QHyper's documentation!
 ==================================
 
-.. include:: ../../README.md
+.. include:: ../../README.rst
 
 
 Contents
