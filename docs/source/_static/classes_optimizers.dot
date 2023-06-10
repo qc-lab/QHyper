@@ -1,0 +1,15 @@
+digraph "classes_optimizers" {
+rankdir=BT
+charset="utf-8"
+"QHyper.optimizers.basinhopping.Basinhopping" [color="black", fontcolor="black", label="Basinhopping", shape="record", style="solid"];
+"QHyper.optimizers.cem.CEM" [color="black", fontcolor="black", label="CEM", shape="record", style="solid"];
+"QHyper.optimizers.base.Optimizer" [color="black", fontcolor="black", label="Optimizer", shape="record", style="solid"];
+"QHyper.optimizers.qml_gradient_descent.QmlGradientDescent" [color="black", fontcolor="black", label="QmlGradientDescent", shape="record", style="solid"];
+"QHyper.optimizers.random.Random" [color="black", fontcolor="black", label="Random", shape="record", style="solid"];
+"QHyper.optimizers.scipy_minimizer.ScipyOptimizer" [color="black", fontcolor="black", label="ScipyOptimizer", shape="record", style="solid"];
+"QHyper.optimizers.basinhopping.Basinhopping" -> "QHyper.optimizers.base.Optimizer" [arrowhead="empty", arrowtail="none"];
+"QHyper.optimizers.cem.CEM" -> "QHyper.optimizers.base.Optimizer" [arrowhead="empty", arrowtail="none"];
+"QHyper.optimizers.qml_gradient_descent.QmlGradientDescent" -> "QHyper.optimizers.base.Optimizer" [arrowhead="empty", arrowtail="none"];
+"QHyper.optimizers.random.Random" -> "QHyper.optimizers.base.Optimizer" [arrowhead="empty", arrowtail="none"];
+"QHyper.optimizers.scipy_minimizer.ScipyOptimizer" -> "QHyper.optimizers.base.Optimizer" [arrowhead="empty", arrowtail="none"];
+}

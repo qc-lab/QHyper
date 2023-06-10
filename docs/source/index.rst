@@ -12,7 +12,6 @@ Welcome to QHyper's documentation!
 Contents
 --------
 .. toctree::
-   :maxdepth: 1
 
    Home <self>
    usage

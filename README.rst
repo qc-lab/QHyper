@@ -44,6 +44,38 @@ Architecture
 ================
 
 QHyper consists with three main components:
-* Problems - classes describing different types of problems e.g. Knapsack problem or Travelling Salesman Problem
-* Solvers - classes definng differnt types of solvers e.g. quantum solvers like QAOA or CQM, but also classical algorithms like Gurobi
-* Optimizers - classes implementing different types of optimizers
+    * :ref:`README Problems` - classes describing different types of problems e.g. Knapsack problem or Travelling Salesman Problem
+    * :ref:`README Solvers` - classes definng differnt types of solvers e.g. quantum solvers like QAOA or CQM, but also classical algorithms like Gurobi
+    * :ref:`README Optimizers` - classes implementing different types of optimizer
+
+Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
+
+.. _README Problems:
+
+Problems
+----------
+
+.. graphviz:: _static/classes_problems.dot
+
+More detailed information can be found on :ref:`QHyper.problems.base.Problem`.
+
+
+.. _README Solvers:
+
+Solvers
+----------
+
+.. graphviz:: _static/classes_solvers.dot
+
+
+More detailed information can be found on :ref:`QHyper.solvers.base.Solver`.
+
+.. _README Optimizers:
+
+Optimizers
+----------
+
+.. graphviz:: _static/classes_optimizers.dot
+
+
+More detailed information can be found on :ref:`QHyper.optimizers.base.Optimizer`.

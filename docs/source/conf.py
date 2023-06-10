@@ -24,6 +24,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'numpydoc',
+    'sphinx.ext.graphviz',
+    'sphinx.ext.autosectionlabel'
 ]
 
 pygments_style = 'sphinx'
