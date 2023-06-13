@@ -99,9 +99,9 @@ def calc_slack_coefficients(constant: int) -> list[int]:
 
 class WorkflowSchedulingProblem(Problem):
     def __init__(self, workflow: Workflow):
-        self.workflow = workflow
+        self.workflow: Workflow = workflow
         self.slack_coefficients = self._get_slacks()
-        self.variables = sympy.symbols(' '.join(
+        self.variables: tuple[sympy.Symbol] = sympy.symbols(' '.join(
             [f'x{i}' for i in range(
                 len(self.workflow.tasks) * len(self.workflow.machines))]
         ) + ' ' + ' '.join(
@@ -126,10 +126,10 @@ class WorkflowSchedulingProblem(Problem):
                     + task_id * len(self.workflow.time_matrix.columns)
                 ]
 
-        self.objective_function = Expression(expression)
+        self.objective_function: Expression = Expression(expression)
 
     def _set_constraints(self) -> None:
-        constraints = []
+        self.constraints: list[Expression] = []
 
         # machine assignment constraint
         for task_id in range(len(self.workflow.time_matrix.index)):
@@ -141,7 +141,7 @@ class WorkflowSchedulingProblem(Problem):
                 ]
             expression -= 1
 
-            constraints.append(Expression(expression))
+            self.constraints.append(Expression(expression))
 
         # deadline constraint
 
@@ -170,9 +170,7 @@ class WorkflowSchedulingProblem(Problem):
                 expression += (
                     coefficient * self.variables[first_slack_index + i])
 
-            constraints.append(Expression(expression))
-
-        self.constraints = constraints
+            self.constraints.append(Expression(expression))
 
     def check_solution_correctness(self) -> None:
         raise NotImplementedError  # todo check if slack values are correct

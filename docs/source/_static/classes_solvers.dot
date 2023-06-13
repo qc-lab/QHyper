@@ -1,0 +1,19 @@
+digraph "classes_solvers" {
+rankdir=BT
+charset="utf-8"
+"QHyper.solvers.cqm.cqm.CQM" [color="black", fontcolor="black", label="CQM", shape="record", style="solid"];
+"QHyper.solvers.gurobi.gurobi.Gurobi" [color="black", fontcolor="black", label="Gurobi", shape="record", style="solid"];
+"QHyper.solvers.vqa.pqc.h_qaoa.HQAOA" [color="black", fontcolor="black", label="HQAOA", shape="record", style="solid"];
+"QHyper.solvers.vqa.pqc.base.PQC" [color="black", fontcolor="black", label="PQC", shape="record", style="solid"];
+"QHyper.solvers.vqa.pqc.qaoa.QAOA" [color="black", fontcolor="black", label="QAOA", shape="record", style="solid"];
+"QHyper.solvers.base.Solver" [color="black", fontcolor="black", label="Solver", shape="record", style="solid"];
+"QHyper.solvers.vqa.base.VQA" [color="black", fontcolor="black", label="VQA", shape="record", style="solid"];
+"QHyper.solvers.vqa.pqc.wf_qaoa.WFQAOA" [color="black", fontcolor="black", label="WFQAOA", shape="record", style="solid"];
+"QHyper.solvers.cqm.cqm.CQM" -> "QHyper.solvers.base.Solver" [arrowhead="empty", arrowtail="none"];
+"QHyper.solvers.gurobi.gurobi.Gurobi" -> "QHyper.solvers.base.Solver" [arrowhead="empty", arrowtail="none"];
+"QHyper.solvers.vqa.base.VQA" -> "QHyper.solvers.base.Solver" [arrowhead="empty", arrowtail="none"];
+"QHyper.solvers.vqa.pqc.h_qaoa.HQAOA" -> "QHyper.solvers.vqa.pqc.qaoa.QAOA" [arrowhead="empty", arrowtail="none"];
+"QHyper.solvers.vqa.pqc.qaoa.QAOA" -> "QHyper.solvers.vqa.pqc.base.PQC" [arrowhead="empty", arrowtail="none"];
+"QHyper.solvers.vqa.pqc.wf_qaoa.WFQAOA" -> "QHyper.solvers.vqa.pqc.qaoa.QAOA" [arrowhead="empty", arrowtail="none"];
+"QHyper.solvers.vqa.pqc.base.PQC" -> "QHyper.solvers.vqa.base.VQA" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="pqc", style="solid"];
+}

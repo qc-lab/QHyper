@@ -8,33 +8,24 @@ Interfaces
 
 .. rubric:: Hyperoptimizer
 
-.. autosummary:: 
+.. autosummary::
     :toctree: generated
 
-    optimizer.HyperparametersOptimizer
+    base.Optimizer
 
 .. rubric:: Optimizer
 
-.. autosummary:: 
-    :toctree: generated
-
-    optimizer.Optimizer
 
 Classes
 -------
 
-.. rubric:: Hyperoptimizers
-
-.. autosummary:: 
-    :toctree: generated
-
-    CEM
-    random
-
-
 .. rubric:: Optimizers
 
-.. autosummary:: 
+.. autosummary::
     :toctree: generated
 
-    qml_gradient_descent
+    basinhopping.Basinhopping
+    cem.CEM
+    random.Random
+    scipy_minimizer.ScipyOptimizer
+    qml_gradient_descent.QmlGradientDescent

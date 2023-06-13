@@ -6,3 +6,5 @@ dwave-system
 gurobipy
 types-tqdm
 nptyping
+pandas
+wfcommons

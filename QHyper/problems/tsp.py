@@ -3,7 +3,6 @@ import itertools
 import numpy as np
 import sympy
 
-from sympy.core.expr import Expr
 from typing import cast
 
 from .base import Problem
@@ -85,13 +84,15 @@ class TSPProblem(Problem):
 
     Attributes
     ----------
-    objective_function : str
+    objective_function : Expression
         objective function in SymPy syntax
-    constraints : list[str]
+    constraints : list[Expression]
         list of constraints in SymPy syntax
     variables : int
         number of qubits in the circuit, equals to number of cities
         to the power of 2
+    tsp_instance: TSP
+        TSP problem instace
     """
 
     def __init__(
@@ -106,7 +107,7 @@ class TSPProblem(Problem):
         """
 
         self.tsp_instance = TSP(number_of_cities)
-        self.variables = sympy.symbols(
+        self.variables: tuple[sympy.Symbol] = sympy.symbols(
             ' '.join([f'x{i}' for i in range(number_of_cities ** 2)]))
         self._set_objective_function()
         self._set_constraints()
@@ -115,7 +116,7 @@ class TSPProblem(Problem):
         return i + t * self.tsp_instance.number_of_cities
 
     def _set_objective_function(self) -> None:
-        equation: Expr = cast(Expr, 0)
+        equation = cast(sympy.Expr, 0)
         for i, j in itertools.permutations(
             range(0, self.tsp_instance.number_of_cities), 2
         ):
@@ -131,18 +132,18 @@ class TSPProblem(Problem):
             equation += (
                 self.tsp_instance.normalized_distance_matrix[i][j] * curr
             )
-        self.objective_function = Expression(equation)
+        self.objective_function: Expression = Expression(equation)
 
     def _set_constraints(self) -> None:
         self.constraints: list[Expression] = []
         for i in range(self.tsp_instance.number_of_cities):
-            equation: Expr = cast(Expr, 1)
+            equation = cast(sympy.Expr, 1)
             for t in range(self.tsp_instance.number_of_cities):
                 equation -= self.variables[self._calc_bit(i, t)]
             self.constraints.append(Expression(equation))
 
         for t in range(self.tsp_instance.number_of_cities):
-            equation = cast(Expr, 1)
+            equation = cast(sympy.Expr, 1)
             for i in range(self.tsp_instance.number_of_cities):
                 equation -= self.variables[self._calc_bit(i, t)]
         self.constraints.append(Expression(equation))

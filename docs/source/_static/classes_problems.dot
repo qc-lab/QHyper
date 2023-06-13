@@ -1,0 +1,17 @@
+digraph "classes_problems" {
+rankdir=BT
+charset="utf-8"
+"QHyper.problems.knapsack.Knapsack" [color="black", fontcolor="black", label="Knapsack", shape="record", style="solid"];
+"QHyper.problems.knapsack.KnapsackProblem" [color="black", fontcolor="black", label="KnapsackProblem", shape="record", style="solid"];
+"QHyper.problems.base.Problem" [color="black", fontcolor="black", label="Problem", shape="record", style="solid"];
+"QHyper.problems.tsp.TSP" [color="black", fontcolor="black", label="TSP", shape="record", style="solid"];
+"QHyper.problems.tsp.TSPProblem" [color="black", fontcolor="black", label="TSPProblem", shape="record", style="solid"];
+"QHyper.problems.workflow_scheduling.Workflow" [color="black", fontcolor="black", label="Workflow", shape="record", style="solid"];
+"QHyper.problems.workflow_scheduling.WorkflowSchedulingProblem" [color="black", fontcolor="black", label="WorkflowSchedulingProblem", shape="record", style="solid"];
+"QHyper.problems.knapsack.KnapsackProblem" -> "QHyper.problems.base.Problem" [arrowhead="empty", arrowtail="none"];
+"QHyper.problems.tsp.TSPProblem" -> "QHyper.problems.base.Problem" [arrowhead="empty", arrowtail="none"];
+"QHyper.problems.workflow_scheduling.WorkflowSchedulingProblem" -> "QHyper.problems.base.Problem" [arrowhead="empty", arrowtail="none"];
+"QHyper.problems.knapsack.Knapsack" -> "QHyper.problems.knapsack.KnapsackProblem" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="knapsack", style="solid"];
+"QHyper.problems.tsp.TSP" -> "QHyper.problems.tsp.TSPProblem" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="tsp_instance", style="solid"];
+"QHyper.problems.workflow_scheduling.Workflow" -> "QHyper.problems.workflow_scheduling.WorkflowSchedulingProblem" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="workflow", style="solid"];
+}
