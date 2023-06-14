@@ -79,7 +79,7 @@ class BrainCommunityDetectionProblem(Problem):
         """
         self.num_cases = num_clusters
         self.data_name = data_name
-        self.A = np.genfromtxt(f"{path}/{data_name}.csv", delimiter=" ")
+        self.A = np.genfromtxt(f"{path}/{data_name}.csv", delimiter="	")
         self.G = nx.from_numpy_matrix(self.A)
         self.B = nx.modularity_matrix(self.G)
         self._set_variables()
