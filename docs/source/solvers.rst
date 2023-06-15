@@ -11,3 +11,18 @@ Interfaces
 
     base.Solver
 
+
+Classes
+-------
+
+.. toctree::
+    :maxdepth: 1
+
+    vqa
+
+.. autosummary::
+   :toctree: generated
+
+   cqm.cqm.CQM
+   gurobi.gurobi.Gurobi
+

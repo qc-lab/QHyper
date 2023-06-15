@@ -3,23 +3,18 @@ Optimizers
 
 .. currentmodule:: QHyper.optimizers
 
-Interfaces
-----------
 
-.. rubric:: Hyperoptimizer
+Interface
+----------
 
 .. autosummary::
     :toctree: generated
 
     base.Optimizer
 
-.. rubric:: Optimizer
-
 
 Classes
 -------
-
-.. rubric:: Optimizers
 
 .. autosummary::
     :toctree: generated

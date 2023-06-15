@@ -34,7 +34,7 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 numpydoc_show_class_members = False
-
+autosectionlabel_prefix_document = True
 # autodoc_default_options = {"autosummary": True}
 
 # autosummary_imported_members = True

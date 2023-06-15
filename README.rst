@@ -57,7 +57,7 @@ Problems
 
 .. graphviz:: _static/classes_problems.dot
 
-More detailed information can be found on :ref:`QHyper.problems.base.Problem`.
+More detailed information can be found on :ref:`generated/qhyper.problems.base.problem:qhyper.problems.base.problem`.
 
 
 .. _README Solvers:
@@ -68,7 +68,7 @@ Solvers
 .. graphviz:: _static/classes_solvers.dot
 
 
-More detailed information can be found on :ref:`QHyper.solvers.base.Solver`.
+More detailed information can be found on :ref:`generated/qhyper.solvers.base.solver:qhyper.solvers.base.solver`.
 
 .. _README Optimizers:
 
@@ -78,4 +78,4 @@ Optimizers
 .. graphviz:: _static/classes_optimizers.dot
 
 
-More detailed information can be found on :ref:`QHyper.optimizers.base.Optimizer`.
+More detailed information can be found on :ref:`generated/qhyper.optimizers.base.optimizer:qhyper.optimizers.base.optimizer`.

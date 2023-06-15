@@ -18,19 +18,6 @@ class PQC:
     ----------
     pqc_type : str
         Type of the parameterized quantum circuit.
-
-    Methods
-    -------
-    __init__(**kwargs)
-        Initialize the PQC.
-    run_opt(problem, opt_args, hyper_args)
-        Run optimization using the PQC.
-    get_opt_args(params_init, args=None, hyper_args=None)
-        Get optimization arguments.
-    get_hopt_args(params_init, args=None, hyper_args=None)
-        Get hyperparameter optimization arguments.
-    get_params_init_format(opt_args, hyper_args)
-        Get initial arguments.
     """
 
     pqc_type: str

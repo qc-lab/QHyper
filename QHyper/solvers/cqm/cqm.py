@@ -12,11 +12,6 @@ class CQM(Solver):
     """
     Class for solving a problem using the Constrained Quadratic Model (CQM) approach.
 
-    Methods
-    -------
-    solve(params_inits=None, hyper_optimizer=None)
-        Solve the problem using the CQM approach.
-
     Attributes
     ----------
     problem : Problem
