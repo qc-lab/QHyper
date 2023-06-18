@@ -14,8 +14,5 @@ class WFEval(EvalFunc):
     ) -> float:
         score: float = 0
         for result, prob in results.items():
-            if (value := problem.get_score(result)) is None:
-                score += prob * self.penalty
-            else:
-                score -= prob * value
+            score += prob * problem.get_score(result)
         return score

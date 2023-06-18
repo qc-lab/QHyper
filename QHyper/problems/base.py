@@ -38,7 +38,7 @@ class Problem(ABC):
     name: str = ""
     cases: int = 1
 
-    def get_score(self, result: str) -> float | None:
+    def get_score(self, result: str) -> float:
         """Returns score of the outcome provided as a binary string
 
         Necessary to evaluate results.
@@ -50,9 +50,9 @@ class Problem(ABC):
 
         Returns
         -------
-        float | None
-            Returns float if outcome is correct and meets all criteria,
-            otherwise returns None
+        float
+            Returns float indicating the score, if function should be
+            maximized the returned value should be returned with negative sign
         """
         raise Exception("Unimplemented")
 

@@ -172,7 +172,7 @@ class TSPProblem(Problem):
             and (result_bools.sum(1) == 1).all()
         )
 
-    def get_score(self, result: str) -> float | None:
+    def get_score(self, result: str) -> float:
         """Returns length of the route based on provided outcome in bits.
 
         Parameters
@@ -182,9 +182,9 @@ class TSPProblem(Problem):
 
         Returns
         -------
-        float | None
-            Returns length of the route, or None if route wasn't correct
+        float
+            Returns length of the route, or 0 if route wasn't correct
         """
         if not self._valid(result):
-            return None  # Bigger value that possible distance
+            return 0  # Bigger value that possible distance
         return self._get_distance(result)
