@@ -5,7 +5,7 @@ from QHyper.hyperparameter_gen.parser import Expression
 from sympy.core.expr import Expr
 from typing import cast
 import networkx as nx
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 
 
 @dataclass
@@ -14,20 +14,15 @@ class Network:
     modularity_matrix: np.ndarray = field(init=False)
 
     def __post_init__(self):
-        self.modularity_matrix = nx.modularity_matrix(self.G)
+        self.modularity_matrix = nx.modularity_matrix(self.graph)
 
-KarateClub = Network(nx.karate_club_graph())
 
-@dataclass
+KarateClubNetwork = Network(nx.karate_club_graph())
+
 class BrainNetwork(Network):
-    input_data_dir: str
-    input_data_name: str
-    delimiter: str = "	"
-    adjacency_matrix: np.ndarray = field(init=False)
-
-    def __post_init__(self):
-        self.adjacency_matrix = np.genfromtxt(f"{self.input_data_dir}/{self.input_data_name}.csv", delimiter=self.delimiter)
-        super().__init__(nx.from_numpy_matrix(self.adjacency_matrix))
+    def __init__(self, input_data_dir: str, input_data_name: str, delimiter: str="	"):
+        adj_matrix = np.genfromtxt(f"{input_data_dir}/{input_data_name}.csv", delimiter=delimiter)
+        super().__init__(nx.from_numpy_matrix(adj_matrix))
 
 
 class CommunityDetectionProblem(Problem):
@@ -37,7 +32,7 @@ class CommunityDetectionProblem(Problem):
 
     Attributes:
     ----------
-    num_communities: int
+    N_communities: int
         number of communities into which the graph shall be divided
     G: networkx graph
         networkx implementation of graph
@@ -53,20 +48,27 @@ class CommunityDetectionProblem(Problem):
         in the graph
     """
 
-    def __init__(self, num_communities: int = 2) -> None:
+    def __init__(self, network_data: Network, N_communities: int = 2) -> None:
         """
         Parameters
         ----------
-        num_communities: int
+        N_communities: int
             number of communities into which the graph shall be divided
             (default 2)
         """
-        self.num_communities = num_communities
-        self.G = nx.karate_club_graph()
-        self.B = nx.modularity_matrix(self.G)
+        self.N_cases = N_communities
+        self.G = network_data.graph
+        self.B = network_data.modularity_matrix
         self._set_variables()
-        self._set_objective_function()
         self.constraints = []
+        
+        # Not loading the obj. fun. for brain problem
+        # until the sympy/dict situation is resolved
+        if isinstance(network_data, BrainNetwork):
+            self.objective_function = []  # for now
+        else:
+            self._set_objective_function()
+        
 
     def _set_variables(self) -> None:
         """
@@ -90,6 +92,3 @@ class CommunityDetectionProblem(Problem):
 
         self.objective_function = Expression(equation)
 
-
-
-    
