@@ -5,7 +5,7 @@ from QHyper.hyperparameter_gen.parser import Expression
 from sympy.core.expr import Expr
 from typing import cast
 import networkx as nx
-from dataclasses import dataclass, field, InitVar
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -19,9 +19,14 @@ class Network:
 
 KarateClubNetwork = Network(nx.karate_club_graph())
 
+
 class BrainNetwork(Network):
-    def __init__(self, input_data_dir: str, input_data_name: str, delimiter: str="	"):
-        adj_matrix = np.genfromtxt(f"{input_data_dir}/{input_data_name}.csv", delimiter=delimiter)
+    def __init__(
+        self, input_data_dir: str, input_data_name: str, delimiter: str = "	"
+    ):
+        adj_matrix = np.genfromtxt(
+            f"{input_data_dir}/{input_data_name}.csv", delimiter=delimiter
+        )
         super().__init__(nx.from_numpy_matrix(adj_matrix))
 
 
@@ -61,14 +66,13 @@ class CommunityDetectionProblem(Problem):
         self.B = network_data.modularity_matrix
         self._set_variables()
         self.constraints = []
-        
+
         # Not loading the obj. fun. for brain problem
         # until the sympy/dict situation is resolved
         if isinstance(network_data, BrainNetwork):
             self.objective_function = []  # for now
         else:
             self._set_objective_function()
-        
 
     def _set_variables(self) -> None:
         """
@@ -91,4 +95,3 @@ class CommunityDetectionProblem(Problem):
         equation *= -1
 
         self.objective_function = Expression(equation)
-
