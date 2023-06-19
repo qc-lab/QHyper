@@ -6,8 +6,8 @@ from typing import Any, cast
 
 from QHyper.hyperparameter_gen.parser import Expression
 from QHyper.problems.base import Problem
-from QHyper.problems.brain_community_detection import (
-    BrainCommunityDetectionProblem,
+from QHyper.problems.community_detection import (
+    CommunityDetectionProblem,
 )
 from QHyper.util import QUBO, VARIABLES
 
@@ -76,15 +76,15 @@ class Converter:
         dqm = dimod.DiscreteQuadraticModel()
 
         try:
-            num_cases = problem.num_cases
-            if num_cases in [None, 0]:
-                num_cases = 2
+            N_cases = problem.N_cases
+            if N_cases in [None, 0]:
+                N_cases = 2
         except:
-            num_cases = 2
+            N_cases = 2
 
         for var in problem.variables:
             if str(var) not in dqm.variables:
-                dqm.add_variable(num_cases, str(var))
+                dqm.add_variable(N_cases, str(var))
 
         def dqm_var(var_str_idx: str):
             return dqm.variables.index(var_str_idx)
@@ -97,23 +97,24 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[u_idx],
                     dqm.variables[v_idx],
-                    {(case, case): bias for case in range(num_cases)},
+                    {(case, case): bias for case in range(N_cases)},
                 )
             else:
                 dqm.set_linear(
-                    dqm.variables[u_idx], [bias for _ in range(num_cases)]
+                    dqm.variables[u_idx], [bias for _ in range(N_cases)]
                 )
 
         return dqm
 
     @staticmethod
     def from_graph_to_dqm(
-        problem: BrainCommunityDetectionProblem,
+        problem: CommunityDetectionProblem,
     ) -> DiscreteQuadraticModel:
+        N_cases = problem.N_cases
         dqm = dimod.DiscreteQuadraticModel()
 
         for i in problem.G.nodes():
-            dqm.add_variable(problem.num_cases, label=i)
+            dqm.add_variable(N_cases, label=i)
 
         for i in problem.G.nodes():
             for j in problem.G.nodes():
@@ -122,10 +123,7 @@ class Converter:
                 dqm.set_quadratic(
                     i,
                     j,
-                    {
-                        (c, c): ((-1) * problem.B[i, j])
-                        for c in range(problem.num_cases)
-                    },
+                    {(c, c): ((-1) * problem.B[i, j]) for c in range(N_cases)},
                 )
 
         return dqm
