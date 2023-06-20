@@ -34,7 +34,7 @@ class CQM(Solver):
 
     def solve(
             self,
-            params_inits: dict[str, Any] = None,
+            params_inits: dict[str, Any] = {},
             hyper_optimizer: Optional[Optimizer] = None
     ) -> Any:
         """

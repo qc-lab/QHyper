@@ -3,6 +3,9 @@ from typing import Type
 from .base import Solver
 
 from .vqa.base import VQA
+from .gurobi.gurobi import Gurobi
+from .cqm.cqm import CQM
+
 
 SOLVERS: dict[str, Type[Solver]] = {
     # 'cqm': cqm.CQM,
@@ -12,7 +15,8 @@ SOLVERS: dict[str, Type[Solver]] = {
     # 'qaoa': VQA(optimizer='scipy', pqc="qiskit_qaoa", eval_func='qaoa'),
     # 'wfqaoa': VQA(optimizer='scipy', pqc="qaoa", eval_func='wfeval')
     'vqa': VQA,
-    # 'qurobi': QUROBI
+    'gurobi': Gurobi,
+    'cqm': CQM,
 }
 
 

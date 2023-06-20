@@ -3,7 +3,7 @@
 
 QHyper - a software framework for hybrid quantum-classical optimization.
 
-Introduction
+Code example
 =================
 
 QHyper is a python which main goal is to make easier conducting experiments.
@@ -40,42 +40,9 @@ Focuses on quantum algorithms, allows also to use classical solvers.
 
 
 
-Architecture
+Documentation
 ================
 
-QHyper consists with three main components:
-    * :ref:`README Problems` - classes describing different types of problems e.g. Knapsack problem or Travelling Salesman Problem
-    * :ref:`README Solvers` - classes definng differnt types of solvers e.g. quantum solvers like QAOA or CQM, but also classical algorithms like Gurobi
-    * :ref:`README Optimizers` - classes implementing different types of optimizer
+Documentation can be found at `qhyper.readthedocs.io`_
 
-Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
-
-.. _README Problems:
-
-Problems
-----------
-
-.. graphviz:: _static/classes_problems.dot
-
-More detailed information can be found on :ref:`generated/qhyper.problems.base.problem:qhyper.problems.base.problem`.
-
-
-.. _README Solvers:
-
-Solvers
-----------
-
-.. graphviz:: _static/classes_solvers.dot
-
-
-More detailed information can be found on :ref:`generated/qhyper.solvers.base.solver:qhyper.solvers.base.solver`.
-
-.. _README Optimizers:
-
-Optimizers
-----------
-
-.. graphviz:: _static/classes_optimizers.dot
-
-
-More detailed information can be found on :ref:`generated/qhyper.optimizers.base.optimizer:qhyper.optimizers.base.optimizer`.
+.. _qhyper.readthedocs.io: https://qhyper.readthedocs.io/en/latest/

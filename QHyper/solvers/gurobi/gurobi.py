@@ -19,8 +19,8 @@ def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:
 
 
 class Gurobi(Solver):  # todo works only for quadratic expressions
-    def __init__(self, **kwargs: Any) -> None:
-        self.problem: Problem = kwargs["problem"]
+    def __init__(self, problem: Problem) -> None:
+        self.problem: Problem = problem
 
     def solve(
             self,
