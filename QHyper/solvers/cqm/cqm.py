@@ -32,11 +32,7 @@ class CQM(Solver):
         self.problem: Problem = problem
         self.time: float = time
 
-    def solve(
-            self,
-            params_inits: dict[str, Any] = {},
-            hyper_optimizer: Optional[Optimizer] = None
-    ) -> Any:
+    def solve(self, params_inits: dict[str, Any] = {}) -> Any:
         """
         Solve the problem using the CQM approach.
 

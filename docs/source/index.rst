@@ -14,7 +14,7 @@ QHyper - a software framework for hybrid quantum-classical optimization.
 Introduction
 =================
 
-QHyper is a python which main goal is to make easier conducting experiments.
+QHyper is a python library which main goal is to make easier conducting experiments.
 Focuses on quantum algorithms, allows also to use classical solvers.
 
 .. code-block:: python

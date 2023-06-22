@@ -24,8 +24,7 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
 
     def solve(
             self,
-            params_inits: dict[str, Any],
-            hyper_optimizer: Optional[Optimizer] = None
+            params_inits: dict[str, Any]
     ) -> Any:
         gpm = gp.Model("name")
 

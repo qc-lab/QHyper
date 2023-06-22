@@ -3,6 +3,7 @@ from abc import abstractmethod
 from typing import Any, Optional
 
 from QHyper.problems.base import Problem
+from QHyper.optimizers import OPTIMIZERS_BY_NAME
 from QHyper.optimizers.base import Optimizer
 
 
@@ -14,9 +15,12 @@ class Solver:
     ----------
     problem : Problem
         The problem to be solved.
+    hyper_optimizer: Optimizer, optional
+        Hyperparameter optmizer.
     """
 
     problem: Problem
+    hyper_optimizer: Optimizer = None
 
     def __init__(self, problem: Problem, **kwargs: Any) -> None:
         pass
@@ -49,21 +53,29 @@ class Solver:
         except KeyError:
             raise Exception("Configuration for Solver was not provided")
 
-        return SOLVERS[solver_type](problem, **solver_args)
+        solver = SOLVERS[solver_type](problem, **solver_args)
+
+        if 'hyper_optimizer' in config:
+            try:
+                optimizer_type = config['hyper_optimizer'].pop('type')
+            except KeyError:
+                raise Exception("Type for hyper optimizer was not provided")
+
+            solver.hyper_optimizer = OPTIMIZERS_BY_NAME[optimizer_type](
+                **config['hyper_optimizer']
+            )
+        return solver
 
     @abstractmethod
     def solve(
             self,
-            params_inits: dict[str, Any],
-            hyper_optimizer: Optional[Optimizer] = None
+            params_inits: dict[str, Any]
     ) -> Any:
         """
         Parameters
         ----------
         params_inits : dict[str, Any], optional
             Initial parameters for the optimization. Default is None.
-        hyper_optimizer : Optimizer, optional
-            Hyperparameter optimizer. Default is None.
 
         Returns
         -------
