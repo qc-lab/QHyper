@@ -32,7 +32,10 @@ Focuses on quantum algorithms, allows also to use classical solvers.
             }
         },
         'hyper_optimizer': {
-            'type': 'random'
+            'type': 'random',
+            'processes': 5,
+            'number_of_samples': 100,
+            'bounds': [[1, 10], [1, 10], [1, 10]]
         }
     }
 

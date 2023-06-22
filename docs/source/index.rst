@@ -26,18 +26,29 @@ Focuses on quantum algorithms, allows also to use classical solvers.
             'hyper_args': [1, 2.5, 2.5],
         }
 
-    >>> solver_config = {
-            'optimizer': {
-                'type': 'scipy',
-                'maxfun': 200,
+    >>> config = {
+            'solver': {
+                'type': 'vqa',
+                'args': {
+                    'optimizer': {
+                        'type': 'scipy',
+                        'maxfun': 200,
+                    },
+                    'pqc': {
+                        'type': 'hqaoa',
+                        'layers': 5,
+                    },
+                }
             },
-            'pqc': {
-                'type': 'hqaoa',
-                'layers': 5,
-            },
+            'hyper_optimizer': {
+                'type': 'random',
+                'processes': 5,
+                'number_of_samples': 100,
+                'bounds': [[1, 10], [1, 10], [1, 10]]
+            }
         }
 
-    >>> vqa = VQA(problem, config=solver_config)
+    >>> vqa = Solver.from_config(problem, config=config)
 
     >>> vqa.solve(params_cofing)
     {
