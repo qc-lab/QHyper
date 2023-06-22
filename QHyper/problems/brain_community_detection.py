@@ -79,12 +79,12 @@ class BrainCommunityDetectionProblem(Problem):
         """
         self.num_cases = num_clusters
         self.data_name = data_name
-        self.A = np.genfromtxt(f"{path}/{data_name}.csv", delimiter=" ")
+        self.A = np.genfromtxt(f"{path}/{data_name}.csv", delimiter="\t", dtype=int)
         self.G = nx.from_numpy_matrix(self.A)
         self.B = nx.modularity_matrix(self.G)
         self._set_variables()
 
-        # Not loading the obj. fun. until the situarion
+        # Not loading the obj. fun. until the situation
         # with sympy expr. error is res
         self.objective_function = []  # for now
         self.constraints = []
@@ -110,6 +110,18 @@ class BrainCommunityDetectionProblem(Problem):
         equation *= -1
 
         self.objective_function = Expression(equation)
+
+    def _set_objective_function_dict(self) -> None:
+        """
+        Create the objective function defined in dictonary
+        """
+        equation: dict = {}
+        for i in self.G.nodes():
+            for j in range(i + 1, len(self.G.nodes)):
+                u_var, v_var = self.variables[i], self.variables[j]
+                equation[(u_var.name, v_var.name)] = -self.B[i, j]
+
+        self.objective_function = Expression(dictionary=equation)
 
     def get_score(self, result: str) -> float | None:
         pass
