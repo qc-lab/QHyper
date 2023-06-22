@@ -128,19 +128,19 @@ class KnapsackProblem(Problem):
         xs = [self.variables[i] for i in range(len(self.knapsack))]
         ys = [self.variables[i] for i in range(
             len(self.knapsack), len(self.knapsack) + self.knapsack.max_weight)]
-        self.constrains: list[Expression] = []
+        self.constraints: list[Expression] = []
         equation = cast(sympy.Expr, 1)
         for y in ys:
             equation -= y
         # equation = equation
-        self.constrains.append(Expression(equation))
+        self.constraints.append(Expression(equation))
         equation = cast(sympy.Expr, 0)
         for i, y in enumerate(ys):
             equation += (i + 1)*y
         for i, x in enumerate(xs):
             equation += -(self.knapsack.items[i].weight)*x
         # equation = equation
-        self.constrains.append(Expression(equation))
+        self.constraints.append(Expression(equation))
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the provided outcome in bits
