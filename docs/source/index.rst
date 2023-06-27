@@ -3,6 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+    :google-site-verification: -BAN3UWgNz2CPUt5v5AcQpDH8GJc0kX0VdKh2Kfj89I
+
+
 Welcome to QHyper's documentation!
 ==================================
 
