@@ -6,16 +6,17 @@ Problems
 Interfaces
 ----------
 
-.. autosummary::  
+.. autosummary::
    :toctree: generated
 
-   problem.Problem
+   base.Problem
 
 Classes
 -------
 
-.. autosummary::  
+.. autosummary::
    :toctree: generated
 
-   Knapsack
-   TSP
+   knapsack
+   tsp
+   workflow_scheduling

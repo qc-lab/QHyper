@@ -15,15 +15,46 @@ token = os.environ['DWAVE_API_TOKEN']
 
 
 class CQM(Solver):
+    """
+    Class for solving a problem using the Constrained Quadratic Model (CQM) approach.
+
+    Attributes
+    ----------
+    problem : Problem
+        The problem to be solved.
+    time : float
+        The maximum time allowed for the CQM solver.
+    """
+
     def __init__(self, problem: Problem, time: float) -> None:
+        """
+        Parameters
+        ----------
+        problem : Problem
+            The problem to be solved.
+        time : float
+            The maximum time allowed for the CQM solver.
+        """
         self.problem: Problem = problem
         self.time: float = time
 
-    def solve(
-            self,
-            params_inits: dict[str, Any] = None,
-            hyper_optimizer: Optional[Optimizer] = None
-    ) -> Any:
+    def solve(self, params_inits: dict[str, Any] = {}) -> Any:
+        """
+        Solve the problem using the CQM approach.
+
+        Parameters
+        ----------
+        params_inits : dict[str, Any], optional
+            Initial parameters for the optimization. Default is None.
+        hyper_optimizer : Optimizer, optional
+            Hyperparameter optimizer. Default is None.
+
+        Returns
+        -------
+        Any
+            The solution to the problem.
+        """
+
         converter = Converter()
         cqm = converter.to_cqm(self.problem)
         sampler = LeapHybridCQMSampler(token=token)
