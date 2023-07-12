@@ -123,7 +123,7 @@ def communities_to_csv(
 
     for i, node in enumerate(problem.G):
         clus[i, 0] = node
-        clus[i, 1] = sample[node]
+        clus[i, 1] = sample['x' + str(node)]
 
     np.savetxt(path, clus, delimiter=delimiter)
 

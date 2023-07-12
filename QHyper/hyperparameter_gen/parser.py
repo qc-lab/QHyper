@@ -123,18 +123,30 @@ class Parser(ast.NodeVisitor):
 
 
 class Expression:
-    def __init__(self, polynomial: sympy.core.Expr) -> None:
-        self.polynomial: sympy.core.Expr = polynomial
+    def __init__(self, polynomial: sympy.core.Expr | dict) -> None:
+        if isinstance(polynomial, sympy.Expr):
+            self.polynomial: sympy.Expr = polynomial
+            self.dict = None
+        elif isinstance(polynomial, dict):
+            self.polynomial = None
+            self.dict = polynomial
 
     def as_dict(self) -> QUBO:
-        parser = Parser()
-        ast_tree = ast.parse(str(
-            sympy.expand(self.polynomial)))  # type: ignore[no-untyped-call]
-        parser.visit(ast_tree)
-        return parser.polynomial_as_dict
+        if self.dict is None:
+            parser = Parser()
+            ast_tree = ast.parse(str(
+                sympy.expand(self.polynomial)))  # type: ignore[no-untyped-call]
+            parser.visit(ast_tree)
+            self.dict = parser.polynomial_as_dict
+        return self.dict
 
     def __repr__(self) -> str:
-        return str(self.polynomial)
+    #     return str(self.dict)
+        if self.polynomial is not None:
+            return str(self.polynomial) 
+        else:
+            return str(self.dict)
+
 
     # def as_dict_with_slacks(self):
     #     parser = Parser()
@@ -155,4 +167,14 @@ class Expression:
     #         raise Exception("Unimplemented")
 
     def as_string(self) -> str:
-        return str(self.polynomial)
+        if self.polynomial is not None:
+            return str(self.polynomial)
+        else:
+            polynomial = str()
+            for k in self.dictionary:
+                if self.dictionary[k] < 0:
+                    polynomial += "- "
+                polynomial += str(abs(self.dictionary[k])) + "*"
+                polynomial += "*".join(k)
+                polynomial += " "
+            return polynomial.rstrip()
