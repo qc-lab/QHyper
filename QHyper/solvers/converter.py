@@ -77,10 +77,8 @@ class Converter:
 
         try:
             N_cases = problem.N_cases
-            if N_cases in [None, 0]:
-                N_cases = 2
         except:
-            N_cases = 2
+            raise Exception("Number of cases expected for DQM")
 
         for var in problem.variables:
             if str(var) not in dqm.variables:
@@ -102,28 +100,6 @@ class Converter:
             else:
                 dqm.set_linear(
                     dqm.variables[u_idx], [bias for _ in range(N_cases)]
-                )
-
-        return dqm
-
-    @staticmethod
-    def from_graph_to_dqm(
-        problem: CommunityDetectionProblem,
-    ) -> DiscreteQuadraticModel:
-        N_cases = problem.N_cases
-        dqm = dimod.DiscreteQuadraticModel()
-
-        for i in problem.G.nodes():
-            dqm.add_variable(N_cases, label=i)
-
-        for i in problem.G.nodes():
-            for j in problem.G.nodes():
-                if i == j:
-                    continue
-                dqm.set_quadratic(
-                    i,
-                    j,
-                    {(c, c): ((-1) * problem.B[i, j]) for c in range(N_cases)},
                 )
 
         return dqm

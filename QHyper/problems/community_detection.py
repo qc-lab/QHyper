@@ -12,12 +12,9 @@ from enum import Enum
 from typing import Union
 
 
-class ObjectiveFunctionFormula(Enum):
+class ObjFunFormula(Enum):
     SYMPY_EXPR = 1
     DICT = 2
-
-SYMBOL = sympy.core.symbol.Symbol
-VARIABLES_SYMPY = Union[tuple[()], tuple[SYMBOL], tuple[SYMBOL, SYMBOL], tuple[SYMBOL, ...]]
 
 
 @dataclass
@@ -65,7 +62,12 @@ class CommunityDetectionProblem(Problem):
         in the graph
     """
 
-    def __init__(self, network_data: Network, N_communities: int = 2, obj_func_formula: ObjectiveFunctionFormula = ObjectiveFunctionFormula.SYMPY_EXPR) -> None:
+    def __init__(
+        self,
+        network_data: Network,
+        N_communities: int = 2,
+        obj_func_formula: ObjFunFormula = ObjFunFormula.SYMPY_EXPR,
+    ) -> None:
         """
         Parameters
         ----------
@@ -79,7 +81,9 @@ class CommunityDetectionProblem(Problem):
         self._set_variables()
         self.constraints = []
 
-        if obj_func_formula == ObjectiveFunctionFormula.DICT or isinstance(network_data, BrainNetwork):
+        if obj_func_formula == ObjFunFormula.DICT or isinstance(
+            network_data, BrainNetwork
+        ):
             self._set_objective_function_as_dict()
         else:
             self._set_objective_function()
@@ -106,12 +110,12 @@ class CommunityDetectionProblem(Problem):
 
         self.objective_function = Expression(equation)
 
-    def _set_objective_function_as_dict(self):
-        equation: dict [VARIABLES, float] = {}
+    def _set_objective_function_as_dict(self) -> None:
+        equation: dict[VARIABLES, float] = {}
         for i in self.G.nodes:
             for j in range(i + 1, len(self.G.nodes)):
                 u_var, v_var = str(self.variables[i]), str(self.variables[j])
                 equation[(u_var, v_var)] = self.B[i, j]
-        equation = {key: -1*val for key, val in equation.items()}
+        equation = {key: -1 * val for key, val in equation.items()}
 
         self.objective_function = Expression(equation)
