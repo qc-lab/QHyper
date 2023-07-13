@@ -86,7 +86,7 @@ class CommunityDetectionProblem(Problem):
         #     self._set_objective_function_as_dict()
         # else:
         #     self._set_objective_function()
-        
+
         self._get_dummies()
         self._set_objective_function_from_dummies()
 
@@ -124,9 +124,17 @@ class CommunityDetectionProblem(Problem):
 
     def _get_dummies(self) -> None:
         self.dummy_coefficients = {
-            var: sympy.symbols(" ".join(
-                [f"s{k}" for k in range(i*self.N_cases, (i+1)*self.N_cases)]
-            )) for i, var in enumerate(self.variables)
+            var: sympy.symbols(
+                " ".join(
+                    [
+                        f"s{k}"
+                        for k in range(
+                            i * self.N_cases, (i + 1) * self.N_cases
+                        )
+                    ]
+                )
+            )
+            for i, var in enumerate(self.variables)
         }
 
     def _set_objective_function_from_dummies(self) -> None:
@@ -139,7 +147,7 @@ class CommunityDetectionProblem(Problem):
                     u_var_dummy = str(self.dummy_coefficients[u_var][case])
                     v_var_dummy = str(self.dummy_coefficients[v_var][case])
                     equation[(u_var_dummy, v_var_dummy)] = self.B[i, j]
-                
+
         equation = {key: -1 * val for key, val in equation.items()}
 
         self.objective_function = Expression(equation)
@@ -161,12 +169,10 @@ class CommunityDetectionProblem(Problem):
         decoded_solution = {}
 
         for variable, value in solution.items():
-            _, id = variable[0], int(variable[len('s'):])
+            _, id = variable[0], int(variable[len("s") :])
             if value == ONE_HOT_VALUE:
                 case_value = id % self.N_cases
                 variable_id = id // self.N_cases
                 decoded_solution[variable_id] = case_value
 
         return decoded_solution
-    
-

@@ -1,6 +1,10 @@
 import os
 from matplotlib import pyplot as plt
-from QHyper.problems.community_detection import CommunityDetectionProblem, KarateClubNetwork, ObjFunFormula as off
+from QHyper.problems.community_detection import (
+    CommunityDetectionProblem,
+    KarateClubNetwork,
+    ObjFunFormula as off,
+)
 from typing import Any
 import gurobipy as gp
 from QHyper.problems.network_communities.utils import COLORS
@@ -32,8 +36,9 @@ def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:
     return cost_function
 
 
-karate_problem = CommunityDetectionProblem(KarateClubNetwork, N_communities=2,
-                                           obj_func_formula=off.DICT)
+karate_problem = CommunityDetectionProblem(
+    KarateClubNetwork, N_communities=2, obj_func_formula=off.DICT
+)
 problem = karate_problem
 
 gpm = gp.Model("KarateProblem")
@@ -41,13 +46,12 @@ gpm = gp.Model("KarateProblem")
 # Variables
 vars = {
     str(var_name): gpm.addVar(vtype=gp.GRB.BINARY, name=str(var_name))
-    for _, v in problem.dummy_coefficients.items() for var_name in v
+    for _, v in problem.dummy_coefficients.items()
+    for var_name in v
 }
 
 # Objective function
-objective_function = calc(
-    vars, problem.objective_function.as_dict()
-)
+objective_function = calc(vars, problem.objective_function.as_dict())
 gpm.setObjective(objective_function, gp.GRB.MINIMIZE)
 
 # ONE-HOT encoding constraints
