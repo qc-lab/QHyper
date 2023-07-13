@@ -32,7 +32,7 @@ COLORS = {
 }
 
 
-def safe_open(path, permission):
+def safe_open(path, permission: str) -> Any:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     return open(path, permission)
 
@@ -50,7 +50,7 @@ class ResultsFrame:
     # QA-specific attribute
     energies: List[float] = field(default_factory=list, init=False)
 
-    def calculate_append_communities(self, sample, N_communities: int) -> None:
+    def calculate_append_communities(self, sample: dict, N_communities: int) -> None:
         communities = []
         for k in range(N_communities):
             comm = []
@@ -63,7 +63,7 @@ class ResultsFrame:
         self.N_communities.append(len(communities))
 
     def calculate_append_communities_counts(
-        self, sample, N_communities: int
+        self, sample: dict, N_communities: int
     ) -> None:
         counts = np.zeros(N_communities)
         for i in sample:
@@ -83,7 +83,7 @@ class ResultsFrame:
 
 
 def draw_communities(
-    problem: CommunityDetectionProblem, sample, path: str
+    problem: CommunityDetectionProblem, sample: dict, path: str
 ) -> None:
     color_map = []
     for node in problem.G:
@@ -100,7 +100,7 @@ def draw_communities(
 
 
 def draw_communities_from_graph(
-    problem: CommunityDetectionProblem, sample, path: str
+    problem: CommunityDetectionProblem, sample: dict, path: str
 ) -> None:
     color_map = []
     for node in problem.G:
@@ -117,7 +117,7 @@ def draw_communities_from_graph(
 
 
 def communities_to_csv(
-    problem: CommunityDetectionProblem, sample, path: str, delimiter: str = ","
+    problem: CommunityDetectionProblem, sample: dict, path: str, delimiter: str = ","
 ) -> None:
     clus = np.zeros((len(problem.G.nodes), 2))
 
@@ -130,7 +130,7 @@ def communities_to_csv(
 
 def results_to_csv(
     qa_results: ResultsFrame, cl_results: ResultsFrame, path: str
-):
+) -> None:
     assert len(qa_results.communities) == len(cl_results.communities)
 
     headers = [

@@ -9,7 +9,6 @@ from dataclasses import dataclass, field
 
 from QHyper.util import VARIABLES
 from enum import Enum
-from typing import Union
 
 
 class ObjFunFormula(Enum):
@@ -22,7 +21,7 @@ class Network:
     graph: nx.Graph
     modularity_matrix: np.ndarray = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.modularity_matrix = nx.modularity_matrix(self.graph)
 
 
@@ -81,12 +80,15 @@ class CommunityDetectionProblem(Problem):
         self._set_variables()
         self.constraints = []
 
-        if obj_func_formula == ObjFunFormula.DICT or isinstance(
-            network_data, BrainNetwork
-        ):
-            self._set_objective_function_as_dict()
-        else:
-            self._set_objective_function()
+        # if obj_func_formula == ObjFunFormula.DICT or isinstance(
+        #     network_data, BrainNetwork
+        # ):
+        #     self._set_objective_function_as_dict()
+        # else:
+        #     self._set_objective_function()
+        
+        self._get_dummies()
+        self._set_objective_function_from_dummies()
 
     def _set_variables(self) -> None:
         """
@@ -119,3 +121,52 @@ class CommunityDetectionProblem(Problem):
         equation = {key: -1 * val for key, val in equation.items()}
 
         self.objective_function = Expression(equation)
+
+    def _get_dummies(self) -> None:
+        self.dummy_coefficients = {
+            var: sympy.symbols(" ".join(
+                [f"s{k}" for k in range(i*self.N_cases, (i+1)*self.N_cases)]
+            )) for i, var in enumerate(self.variables)
+        }
+
+    def _set_objective_function_from_dummies(self) -> None:
+        equation: dict[VARIABLES, float] = {}
+
+        for i in self.G.nodes:
+            for j in range(i + 1, len(self.G.nodes)):
+                u_var, v_var = self.variables[i], self.variables[j]
+                for case in range(self.N_cases):
+                    u_var_dummy = str(self.dummy_coefficients[u_var][case])
+                    v_var_dummy = str(self.dummy_coefficients[v_var][case])
+                    equation[(u_var_dummy, v_var_dummy)] = self.B[i, j]
+                
+        equation = {key: -1 * val for key, val in equation.items()}
+
+        self.objective_function = Expression(equation)
+        self._set_one_hot_constraints()
+
+    def _set_one_hot_constraints(self) -> None:
+        self.constraints: list[Expression] = []
+        ONE_HOT_CONST = -1
+
+        for var, dummies in self.dummy_coefficients.items():
+            expression: Expr = cast(Expr, 0)
+            for dummy in dummies:
+                expression += dummy
+            expression += ONE_HOT_CONST
+            self.constraints.append(Expression(expression))
+
+    def decode_dummies_solution(self, solution: dict) -> dict:
+        ONE_HOT_VALUE = 1.0
+        decoded_solution = {}
+
+        for variable, value in solution.items():
+            _, id = variable[0], int(variable[len('s'):])
+            if value == ONE_HOT_VALUE:
+                case_value = id % self.N_cases
+                variable_id = id // self.N_cases
+                decoded_solution[variable_id] = case_value
+
+        return decoded_solution
+    
+
