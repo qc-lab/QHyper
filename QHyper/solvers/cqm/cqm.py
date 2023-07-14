@@ -64,4 +64,10 @@ class CQM(Solver):
             if len(cqm.violations(s, skip_satisfied=True)) == 0
         ]
 
+        print(f"cqm constraints\n {cqm.constraints}")
+        print(f"\n\nProblem constraints\n {self.problem.constraints}")
+        print(cqm.constraints[0])
+        print(cqm.constraints[0].to_polystring())
+        print(cqm.constraints[1].to_polystring())
+
         return correct_solutions[0]
