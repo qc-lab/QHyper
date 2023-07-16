@@ -123,15 +123,15 @@ class Parser(ast.NodeVisitor):
 
 
 class Expression:
-    def __init__(self, polynomial: sympy.core.Expr = None, dictionary: dict = None) -> None:
-        if polynomial is not None:
-            self.polynomial: sympy.core.Expr = polynomial
-            self.dictionary: dict = None
+    def __init__(self, equation: sympy.core.Expr | dict) -> None:
+        if type(equation) == sympy.core.Expr:
+            self.polynomial: sympy.core.Expr = equation
+            self.dictionary: dict = self.as_dict()
         else:
             self.polynomial: sympy.core.Expr = None
-            self.dictionary: dict = dictionary
+            self.dictionary: dict = equation
 
-    def as_dict(self) -> QUBO:
+    def as_dict(self) -> dict[VARIABLES, float]:
         if self.polynomial is not None:
             parser = Parser()
             ast_tree = ast.parse(str(
@@ -142,11 +142,7 @@ class Expression:
             return self.dictionary
 
     def __repr__(self) -> str:
-        if self.polynomial is not None:
-            return str(self.polynomial) 
-        else:
-            return str(self.dictionary)
-
+        return str(self.dictionary)
 
     # def as_dict_with_slacks(self):
     #     parser = Parser()
@@ -166,7 +162,7 @@ class Expression:
     #     else:
     #         raise Exception("Unimplemented")
 
-    def as_string(self) -> str:
+    def as_polynomial(self) -> str:
         if self.polynomial is not None:
             return str(self.polynomial)
         else:

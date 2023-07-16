@@ -32,7 +32,7 @@ def read_dict():
     eq_parse = json.loads(data)
     equation = {ast.literal_eval(k): v for k, v in eq_parse.items()}
     try:
-        equation_expression = Expression(dictionary=equation)
+        equation_expression = Expression(equation)
         return equation_expression
     except Exception as e:
         raise Exception("Error", e)
@@ -60,10 +60,10 @@ def generate_equation_dict():
             u_var, v_var = variables[i], variables[j]
             equation[(u_var.name, v_var.name)] = -brain.B[i, j]
 
-    equation_expression = Expression(dictionary=equation)
+    equation_expression = Expression(equation)
     try:
         print(equation_expression)  
-        print(equation_expression.as_string())
+        print(equation_expression.as_polynomial())
     finally:
         dict_to_file(equation_expression)
 
