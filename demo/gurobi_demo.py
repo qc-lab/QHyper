@@ -2,22 +2,18 @@ import os
 from matplotlib import pyplot as plt
 from QHyper.problems.community_detection import (
     CommunityDetectionProblem,
+    KarateClubNetwork,
     ObjFunFormula as off,
 )
 from typing import Any
 import gurobipy as gp
 from QHyper.problems.network_communities.utils import COLORS
 import networkx as nx
+from QHyper.solvers.gurobi.gurobi import Gurobi
 
 from QHyper.util import QUBO
 
-from QHyper.problems.community_detection import BrainNetwork
-
-
-path = "QHyper/problems/network_communities/brain_community_data"
-data_name = "Edge_AAL90_Binary"
-
-name = "brain"
+name = "karate"
 
 
 def safe_open(path: str, permission: str) -> Any:
@@ -43,40 +39,15 @@ def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:
     return cost_function
 
 
-brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
-brain_problem = CommunityDetectionProblem(
-    brain_network, N_communities=4, obj_func_formula=off.DICT
+karate_problem = CommunityDetectionProblem(
+    KarateClubNetwork, N_communities=4, obj_func_formula=off.DICT
 )
-problem = brain_problem
+problem = karate_problem
 
-gpm = gp.Model("BrainProblem")
+gurobi = Gurobi(problem=karate_problem)
+solution_gurobi = gurobi.solve({})
 
-# Variables
-vars = {
-    str(var_name): gpm.addVar(vtype=gp.GRB.BINARY, name=str(var_name))
-    for _, v in problem.dummy_coefficients.items()
-    for var_name in v
-}
-
-# Objective function
-objective_function = calc(vars, problem.objective_function.as_dict())
-gpm.setObjective(objective_function, gp.GRB.MINIMIZE)
-
-# ONE-HOT encoding constraints
-for i, constraint in enumerate(problem.constraints):
-    tmp_constraint = calc(vars, constraint.as_dict())
-    gpm.addConstr(tmp_constraint == 0, f"constr_{i}")
-    gpm.update()
-    print(tmp_constraint)
-
-try:
-    gpm.optimize()
-    allvars = gpm.getVars()
-except Exception as e:
-    print(f"---: {e}")
-solution = {}
-for v in allvars:
-    solution[v.VarName] = v.X
+solution = solution_gurobi
 
 print("-----Encoded solution-----")
 keyorder = [v for k, dummies in problem.dummy_coefficients.items() for v in dummies]
@@ -85,6 +56,7 @@ solution = {str(k): d[str(k)] for k in keyorder if str(k) in d}
 
 solution_file = f"demo/demo_output/{name}_gurobi_solution.csv"
 write_to_file(solution, solution_file)
+
 
 # DECODING
 decoded_solution = problem.decode_dummies_solution(solution)

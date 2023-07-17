@@ -45,7 +45,7 @@ def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:
 
 brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
 brain_problem = CommunityDetectionProblem(
-    brain_network, N_communities=4, obj_func_formula=off.DICT
+    brain_network, N_communities=2, obj_func_formula=off.DICT
 )
 problem = brain_problem
 

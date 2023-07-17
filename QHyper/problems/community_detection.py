@@ -77,53 +77,19 @@ class CommunityDetectionProblem(Problem):
         self.N_cases = N_communities
         self.G = network_data.graph
         self.B = network_data.modularity_matrix
-        self._set_variables()
-        self.constraints = []
-
-        # if obj_func_formula == ObjFunFormula.DICT or isinstance(
-        #     network_data, BrainNetwork
-        # ):
-        #     self._set_objective_function_as_dict()
-        # else:
-        #     self._set_objective_function()
-
-        self._get_dummies()
-        self._set_objective_function_from_dummies()
-
-    def _set_variables(self) -> None:
-        """
-        Set the variables in SymPy syntax
-        """
-        self.variables = sympy.symbols(
+        self.variables: tuple[sympy.Symbol] = sympy.symbols(
             " ".join([f"x{i}" for i in range(len(self.G.nodes))])
         )
+        self.constraints = []
+        self.dummy_coefficients: dict = self._get_dummy_coefficients()
 
-    def _set_objective_function(self) -> None:
-        """
-        Create the objective function defined in SymPy syntax
-        """
-        # xs = [f"x{i}" for i in range(len(self.G.nodes))]
-        equation: Expr = cast(Expr, 0)
-        for i in self.G.nodes():
-            for j in range(i + 1, len(self.G.nodes)):
-                u_var, v_var = self.variables[i], self.variables[j]
-                equation += u_var * v_var * self.B[i, j]
-        equation *= -1
+        self._set_objective_function()
+        self._set_one_hot_constraints()
 
-        self.objective_function = Expression(equation)
+        self.variables: tuple[sympy.Symbol] = self._get_variables_from_dummy_coefficients()
 
-    def _set_objective_function_as_dict(self) -> None:
-        equation: dict[VARIABLES, float] = {}
-        for i in self.G.nodes:
-            for j in range(i + 1, len(self.G.nodes)):
-                u_var, v_var = str(self.variables[i]), str(self.variables[j])
-                equation[(u_var, v_var)] = self.B[i, j]
-        equation = {key: -1 * val for key, val in equation.items()}
-
-        self.objective_function = Expression(equation)
-
-    def _get_dummies(self) -> None:
-        self.dummy_coefficients = {
+    def _get_dummy_coefficients(self) -> dict:
+        dummy_coefficients: dict = {
             var: sympy.symbols(
                 " ".join(
                     [
@@ -136,8 +102,18 @@ class CommunityDetectionProblem(Problem):
             )
             for i, var in enumerate(self.variables)
         }
+        return dummy_coefficients
+    
+    def _get_variables_from_dummy_coefficients(self) -> tuple[sympy.Symbol]:
+        # print(self.dummy_coefficients.values())
+        variables: tuple[sympy.Symbol] = sympy.symbols(
+            " ".join([f"{str(var_name)}" for _, v in self.dummy_coefficients.items() for var_name in v])
+        )
+        print(f"variables: {variables}")
+        return variables
 
-    def _set_objective_function_from_dummies(self) -> None:
+    def _set_objective_function(self) -> None:
+        # xs = [f"x{i}" for i in range(len(self.G.nodes))]
         equation: dict[VARIABLES, float] = {}
 
         for i in self.G.nodes:
@@ -151,13 +127,13 @@ class CommunityDetectionProblem(Problem):
         equation = {key: -1 * val for key, val in equation.items()}
 
         self.objective_function = Expression(equation)
-        self._set_one_hot_constraints()
+        # self._set_one_hot_constraints()
 
     def _set_one_hot_constraints(self) -> None:
         self.constraints: list[Expression] = []
         ONE_HOT_CONST = -1
 
-        for var, dummies in self.dummy_coefficients.items():
+        for _, dummies in self.dummy_coefficients.items():
             expression: Expr = cast(Expr, 0)
             for dummy in dummies:
                 expression += dummy
@@ -169,7 +145,7 @@ class CommunityDetectionProblem(Problem):
         decoded_solution = {}
 
         for variable, value in solution.items():
-            _, id = variable[0], int(variable[len("s") :])
+            _, id = variable[0], int(variable[len("s"):])
             if value == ONE_HOT_VALUE:
                 case_value = id % self.N_cases
                 variable_id = id // self.N_cases
