@@ -8,12 +8,6 @@ import networkx as nx
 from dataclasses import dataclass, field
 
 from QHyper.util import VARIABLES
-from enum import Enum
-
-
-class ObjFunFormula(Enum):
-    SYMPY_EXPR = 1
-    DICT = 2
 
 
 @dataclass
@@ -61,12 +55,7 @@ class CommunityDetectionProblem(Problem):
         in the graph
     """
 
-    def __init__(
-        self,
-        network_data: Network,
-        N_communities: int = 2,
-        obj_func_formula: ObjFunFormula = ObjFunFormula.SYMPY_EXPR,
-    ) -> None:
+    def __init__(self, network_data: Network, N_communities: int = 2) -> None:
         """
         Parameters
         ----------
@@ -80,13 +69,10 @@ class CommunityDetectionProblem(Problem):
         self.variables: tuple[sympy.Symbol] = sympy.symbols(
             " ".join([f"x{i}" for i in range(len(self.G.nodes))])
         )
-        self.constraints = []
         self.dummy_coefficients: dict = self._get_dummy_coefficients()
-
         self._set_objective_function()
         self._set_one_hot_constraints()
-
-        self.variables: tuple[sympy.Symbol] = self._get_variables_from_dummy_coefficients()
+        self._set_variables_from_dummy_coefficients()
 
     def _get_dummy_coefficients(self) -> dict:
         dummy_coefficients: dict = {
@@ -103,14 +89,18 @@ class CommunityDetectionProblem(Problem):
             for i, var in enumerate(self.variables)
         }
         return dummy_coefficients
-    
-    def _get_variables_from_dummy_coefficients(self) -> tuple[sympy.Symbol]:
+
+    def _set_variables_from_dummy_coefficients(self) -> None:
         # print(self.dummy_coefficients.values())
-        variables: tuple[sympy.Symbol] = sympy.symbols(
-            " ".join([f"{str(var_name)}" for _, v in self.dummy_coefficients.items() for var_name in v])
+        self.variables: tuple[sympy.Symbol] = sympy.symbols(
+            " ".join(
+                [
+                    f"{str(var_name)}"
+                    for _, v in self.dummy_coefficients.items()
+                    for var_name in v
+                ]
+            )
         )
-        print(f"variables: {variables}")
-        return variables
 
     def _set_objective_function(self) -> None:
         # xs = [f"x{i}" for i in range(len(self.G.nodes))]
@@ -127,7 +117,6 @@ class CommunityDetectionProblem(Problem):
         equation = {key: -1 * val for key, val in equation.items()}
 
         self.objective_function = Expression(equation)
-        # self._set_one_hot_constraints()
 
     def _set_one_hot_constraints(self) -> None:
         self.constraints: list[Expression] = []
@@ -142,13 +131,34 @@ class CommunityDetectionProblem(Problem):
 
     def decode_dummies_solution(self, solution: dict) -> dict:
         ONE_HOT_VALUE = 1.0
-        decoded_solution = {}
+        decoded_solution: dict = {}
 
         for variable, value in solution.items():
-            _, id = variable[0], int(variable[len("s"):])
+            _, id = variable[0], int(variable[len("s") :])
             if value == ONE_HOT_VALUE:
                 case_value = id % self.N_cases
                 variable_id = id // self.N_cases
                 decoded_solution[variable_id] = case_value
 
+        decoded_solution = self.sort_decoded_solution(decoded_solution)
         return decoded_solution
+
+    def sort_dummied_encoded_solution(self, dummies_solution: dict) -> dict:
+        keyorder = [
+            v
+            for _, dummies in self.dummy_coefficients.items()
+            for v in dummies
+        ]
+        solution_by_keyorder: dict = {
+            str(k): dummies_solution[str(k)]
+            for k in keyorder
+            if str(k) in dummies_solution
+        }
+        return solution_by_keyorder
+
+    def sort_decoded_solution(self, decoded_solution: dict) -> dict:
+        keyorder = [int(str(v)[len("x"):]) for v in self.variables]
+        decoded_solution_by_keyorder: dict = {
+            k: decoded_solution[k] for k in keyorder if k in decoded_solution
+        }
+        return decoded_solution_by_keyorder

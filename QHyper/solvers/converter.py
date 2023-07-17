@@ -13,8 +13,6 @@ from QHyper.util import QUBO, VARIABLES
 
 
 def dict_to_list(my_dict: QUBO) -> list[tuple[Any, ...]]:
-    for key, val in my_dict.items():
-        print(f"tuple([*key, val]) : {tuple([*key, val])}")
     return [tuple([*key, val]) for key, val in my_dict.items()]
 
 
@@ -63,7 +61,6 @@ class Converter:
                 cqm.add_variable(dimod.BINARY, str(var))
 
         for i, constraint in enumerate(problem.constraints):
-            print(f"constraint: {constraint}")
             cqm.add_constraint(dict_to_list(constraint.as_dict()), "==", label=i)
 
         return cqm

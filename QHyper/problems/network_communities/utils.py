@@ -32,9 +32,14 @@ COLORS = {
 }
 
 
-def safe_open(path, permission: str) -> Any:
+def safe_open(path: str, permission: str) -> Any:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     return open(path, permission)
+
+
+def write_to_file(solution: Any, solution_file_path: str) -> None:
+    with safe_open(solution_file_path, "w") as file:
+        file.write(str(solution))
 
 
 @dataclass
@@ -50,7 +55,9 @@ class ResultsFrame:
     # QA-specific attribute
     energies: List[float] = field(default_factory=list, init=False)
 
-    def calculate_append_communities(self, sample: dict, N_communities: int) -> None:
+    def calculate_append_communities(
+        self, sample: dict, N_communities: int
+    ) -> None:
         communities = []
         for k in range(N_communities):
             comm = []
@@ -117,13 +124,16 @@ def draw_communities_from_graph(
 
 
 def communities_to_csv(
-    problem: CommunityDetectionProblem, sample: dict, path: str, delimiter: str = ","
+    problem: CommunityDetectionProblem,
+    sample: dict,
+    path: str,
+    delimiter: str = ",",
 ) -> None:
     clus = np.zeros((len(problem.G.nodes), 2))
 
     for i, node in enumerate(problem.G):
         clus[i, 0] = node
-        clus[i, 1] = sample['x' + str(node)]
+        clus[i, 1] = sample["x" + str(node)]
 
     np.savetxt(path, clus, delimiter=delimiter)
 

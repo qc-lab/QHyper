@@ -1,14 +1,17 @@
 class StatsModule:
     @staticmethod
-    def jaccard(nodeset1, nodeset2):
+    def jaccard(nodeset1: set, nodeset2: set) -> float:
         intersection = len(list(nodeset1.intersection(nodeset2)))
         union = (len(nodeset1) + len(nodeset2)) - intersection
         return float(intersection) / union
 
     @staticmethod
     def standarize_sample_cluster_ordering(
-        sample, ref_sample, communities, ref_communities
-    ) -> tuple((dict, list)):
+        sample: dict,
+        ref_sample: dict,
+        communities: list,
+        ref_communities: list,
+    ) -> tuple[dict, list]:
         k = len(communities)
         rename = {}
         # Process communities with their random ordering
