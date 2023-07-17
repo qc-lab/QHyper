@@ -4,6 +4,8 @@ from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
 
 from typing import Any, cast
 
+import sympy
+
 from QHyper.hyperparameter_gen.parser import Expression
 from QHyper.problems.base import Problem
 from QHyper.problems.community_detection import (
@@ -13,8 +15,6 @@ from QHyper.util import QUBO, VARIABLES
 
 
 def dict_to_list(my_dict: QUBO) -> list[tuple[Any, ...]]:
-    for key, val in my_dict.items():
-        print(f"tuple([*key, val]) : {tuple([*key, val])}")
     return [tuple([*key, val]) for key, val in my_dict.items()]
 
 
@@ -63,8 +63,9 @@ class Converter:
                 cqm.add_variable(dimod.BINARY, str(var))
 
         for i, constraint in enumerate(problem.constraints):
-            print(f"constraint: {constraint}")
-            cqm.add_constraint(dict_to_list(constraint.as_dict()), "==", label=i)
+            cqm.add_constraint(
+                dict_to_list(constraint.as_dict()), "==", label=i
+            )
 
         return cqm
 
@@ -78,23 +79,34 @@ class Converter:
     def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
         dqm = dimod.DiscreteQuadraticModel()
 
-        try:
-            N_cases = problem.N_cases
-        except:
-            raise Exception("Number of cases expected for DQM")
+        if not hasattr(problem, "N_cases"):
+            raise Exception(
+                "Number of discrete variable cases required for DQM"
+            )
+        N_cases = problem.N_cases
 
-        for var in problem.variables:
-            if str(var) not in dqm.variables:
-                dqm.add_variable(N_cases, str(var))
+        def get_discrete_var_name(v: sympy.Symbol | str) -> str:
+            return f"x{str(decode_discrete_variable(v))}"
 
-        def dqm_var(var_str_idx: str):
+        def decode_discrete_variable(v: sympy.Symbol | str) -> int:
+            id = int(str(v)[len("s") :])
+            return int(id // problem.N_cases)
+
+        discrete_vars = list(
+            set([get_discrete_var_name(v) for v in problem.variables])
+        )
+        for var in discrete_vars:
+            if var not in dqm.variables:
+                dqm.add_variable(N_cases, var)
+
+        def dqm_var(var_str_idx: str) -> Any | int:
             return dqm.variables.index(var_str_idx)
 
         for vars, bias in problem.objective_function.as_dict().items():
             u, *v = vars
-            u_idx: int = cast(int, dqm_var(u))
+            u_idx: int = cast(int, dqm_var(get_discrete_var_name(u)))
             if v:
-                v_idx: int = cast(int, dqm_var(*v))
+                v_idx: int = cast(int, dqm_var(get_discrete_var_name(*v)))
                 dqm.set_quadratic(
                     dqm.variables[u_idx],
                     dqm.variables[v_idx],
