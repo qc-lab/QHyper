@@ -143,6 +143,7 @@ class CommunityDetectionProblem(Problem):
                 decoded_solution[variable_id] = case_value
 
         decoded_solution = self.sort_decoded_solution(decoded_solution)
+        decoded_solution = self.sort_decoded_solution(decoded_solution)
         return decoded_solution
 
     def sort_dummied_encoded_solution(self, dummies_solution: dict) -> dict:
