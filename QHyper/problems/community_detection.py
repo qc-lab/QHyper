@@ -134,14 +134,16 @@ class CommunityDetectionProblem(Problem):
     def decode_dummies_solution(self, solution: dict) -> dict:
         ONE_HOT_VALUE = 1.0
         decoded_solution: dict = {}
+        decoded_solution: dict = {}
 
         for variable, value in solution.items():
-            _, id = variable[0], int(variable[len("s"):])
+            _, id = variable[0], int(variable[len("s") :])
             if value == ONE_HOT_VALUE:
                 case_value = id % self.N_cases
                 variable_id = id // self.N_cases
                 decoded_solution[variable_id] = case_value
 
+        decoded_solution = self.sort_decoded_solution(decoded_solution)
         decoded_solution = self.sort_decoded_solution(decoded_solution)
         return decoded_solution
 
@@ -149,6 +151,26 @@ class CommunityDetectionProblem(Problem):
         keyorder = [
             v
             for _, dummies in self.dummy_variables.items()
+            for v in dummies
+        ]
+        solution_by_keyorder: dict = {
+            str(k): dummies_solution[str(k)]
+            for k in keyorder
+            if str(k) in dummies_solution
+        }
+        return solution_by_keyorder
+
+    def sort_decoded_solution(self, decoded_solution: dict) -> dict:
+        keyorder = [int(str(v)[len("x"):]) for v in self.variables]
+        decoded_solution_by_keyorder: dict = {
+            k: decoded_solution[k] for k in keyorder if k in decoded_solution
+        }
+        return decoded_solution_by_keyorder
+
+    def sort_dummied_encoded_solution(self, dummies_solution: dict) -> dict:
+        keyorder = [
+            v
+            for _, dummies in self.dummy_coefficients.items()
             for v in dummies
         ]
         solution_by_keyorder: dict = {
