@@ -1,5 +1,4 @@
 from QHyper.problems.community_detection import (
-    BrainNetwork,
     CommunityDetectionProblem,
     KarateClubNetwork,
 )

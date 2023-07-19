@@ -136,7 +136,7 @@ class CommunityDetectionProblem(Problem):
         decoded_solution: dict = {}
 
         for variable, value in solution.items():
-            _, id = variable[0], int(variable[len("s"):])
+            _, id = variable[0], int(variable[len("s") :])
             if value == ONE_HOT_VALUE:
                 case_value = id % self.N_cases
                 variable_id = id // self.N_cases
