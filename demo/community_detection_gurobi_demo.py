@@ -1,4 +1,5 @@
 from QHyper.problems.community_detection import (
+    BrainNetwork,
     CommunityDetectionProblem,
     KarateClubNetwork,
 )
@@ -11,7 +12,7 @@ from QHyper.solvers.gurobi.gurobi import Gurobi
 path = "QHyper/problems/network_communities/brain_community_data"
 data_name = "Edge_AAL90_Binary"
 
-# name = "brain"
+name = "brain"
 
 name = "karate"
 folder = "demo/demo_output"
@@ -23,7 +24,7 @@ img_solution_path = f"{folder}/{name}_gurobi.png"
 karate_problem = CommunityDetectionProblem(KarateClubNetwork, N_communities=4)
 problem = karate_problem
 # brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
-# brain_problem = CommunityDetectionProblem(brain_network, N_communities=4)
+# brain_problem = CommunityDetectionProblem(brain_network, N_communities=2)
 # problem = brain_problem
 
 gurobi = Gurobi(problem=problem)

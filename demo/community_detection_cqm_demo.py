@@ -9,8 +9,8 @@ from QHyper.solvers.cqm import CQM
 path = "QHyper/problems/network_communities/brain_community_data"
 data_name = "Edge_AAL90_Binary"
 
-# name = "brain"
-name = "karate"
+name = "brain"
+# name = "karate"
 
 folder = "demo/demo_output"
 solution_file = f"{folder}/{name}_cqm_solution.csv"
@@ -18,11 +18,11 @@ decoded_solution_file = f"{folder}/{name}_cqm_decoded_solution.csv"
 img_solution_path = f"{folder}/{name}_cqm.png"
 
 
-# brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
-# brain_problem = CommunityDetectionProblem(brain_network, N_communities=4)
-# problem = brain_problem
-karate_problem = CommunityDetectionProblem(network_data=KarateClubNetwork, N_communities=4)
-problem = karate_problem
+brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
+brain_problem = CommunityDetectionProblem(brain_network, N_communities=3)
+problem = brain_problem
+# karate_problem = CommunityDetectionProblem(network_data=KarateClubNetwork, N_communities=3)
+# problem = karate_problem
 
 cqm = CQM(problem, time=5)
 solution = cqm.solve()

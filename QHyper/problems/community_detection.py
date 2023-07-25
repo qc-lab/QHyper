@@ -143,7 +143,6 @@ class CommunityDetectionProblem(Problem):
                 decoded_solution[variable_id] = case_value
 
         decoded_solution = self.sort_decoded_solution(decoded_solution)
-        decoded_solution = self.sort_decoded_solution(decoded_solution)
         return decoded_solution
 
     def sort_dummied_encoded_solution(self, dummies_solution: dict) -> dict:
@@ -152,11 +151,13 @@ class CommunityDetectionProblem(Problem):
             for _, dummies in self.dummy_variables.items()
             for v in dummies
         ]
+        print(f"keyorder: {keyorder}")
         solution_by_keyorder: dict = {
             str(k): dummies_solution[str(k)]
             for k in keyorder
             if str(k) in dummies_solution
         }
+        print(f"solution_by_keyorder: {solution_by_keyorder}")
         return solution_by_keyorder
 
     def sort_decoded_solution(self, decoded_solution: dict) -> dict:

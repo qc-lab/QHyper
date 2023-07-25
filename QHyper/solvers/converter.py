@@ -81,7 +81,7 @@ class Converter:
 
         if not hasattr(problem, "N_cases"):
             raise Exception(
-                "Number of discrete variable cases required for DQM"
+                "Number of discrete variable values (cases) required for DQM"
             )
         N_cases = problem.N_cases
 
