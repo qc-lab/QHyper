@@ -26,7 +26,10 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
             self,
             params_inits: dict[str, Any]
     ) -> Any:
-        gpm = gp.Model("name")
+        name = params_inits["name"] if "name" in params_inits else "name"
+        gpm = gp.Model(name)
+        if "MIPGap" in params_inits:
+            gpm.Params.MIPGap = params_inits["MIPGap"]
 
         vars = {
             str(var_name): gpm.addVar(vtype=gp.GRB.BINARY, name=str(var_name))

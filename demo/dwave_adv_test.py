@@ -38,7 +38,7 @@ img_solution_path = f"{folder}/{name}_adv.png"
 # brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
 # brain_problem = CommunityDetectionProblem(brain_network, N_communities=4)
 # problem = brain_problem
-karate_problem = CommunityDetectionProblem(network_data=KarateClubNetwork, N_communities=4)
+karate_problem = CommunityDetectionProblem(network_data=KarateClubNetwork, N_communities=2)
 problem = karate_problem
 
 adv_sampler = DWaveSampler(solver=dict(topology__type="pegasus"))
@@ -48,9 +48,9 @@ cqm = Converter.to_cqm(problem)
 bqm, _ = dimod.cqm_to_bqm(cqm, lagrange_multiplier=10000)
 
 
-# embedding = minorminer.find_embedding(
-#     dimod.to_networkx_graph(bqm), sampler.to_networkx_graph()
-# )
+embedding = minorminer.find_embedding(
+    dimod.to_networkx_graph(bqm), sampler.to_networkx_graph()
+)
 
 Q = dnx.algorithms.independent_set.maximum_weighted_independent_set_qubo(dimod.to_networkx_graph(bqm))
 
@@ -74,7 +74,8 @@ sampleset = FixedEmbeddingComposite(
     ScaleComposite(sampler),
     embedding=embedding,
 ).sample(
-    dimod.BQM.from_qubo(Q),
+    # dimod.BQM.from_qubo(Q),
+    bqm,
     quadratic_range=sampler.properties["extended_j_range"],
     bias_range=sampler.properties["h_range"],
     chain_strength=3,

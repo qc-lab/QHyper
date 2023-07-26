@@ -26,7 +26,7 @@ def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:
     for key, value in poly_dict.items():
         tmp = 1
         for k in key:
-            tmp *= vars[k]
+            tmp *= vars[str(k)]
         cost_function += tmp * value
     return cost_function
 
@@ -51,24 +51,25 @@ problem = karate_problem
 
 gpm = gp.Model("name")
 
-vars = {
-    str(var_name): gpm.addVar(lb=0, ub=problem.N_cases-1, vtype=gp.GRB.INTEGER, name=str(var_name))
-    for var_name in problem.discrete_variables
-}
+# vars = {
+#     str(var_name): gpm.addVar(lb=0, ub=problem.N_cases-1, vtype=gp.GRB.INTEGER, name=str(var_name))
+#     for var_name in problem.discrete_variables
+# }
+names = [str(var_name) for var_name in problem.discrete_variables]
+gpm.addVars(len(problem.discrete_variables), vtype=gp.GRB.INTEGER, lb=[0]*len(problem.discrete_variables), ub=[problem.N_cases-1]*len(problem.discrete_variables), name=names)
 gpm.update()
-print(f"vars: {vars}")
-print("--------", gpm.getVars())
-print(f"problem.N_cases: {problem.N_cases}")
-for var in vars:
-    print(f"var: {var}")
+
+vars = {str(var.VarName): var for var in gpm.getVars()}
 
 objective_function = calc(
-    vars, problem.objective_function.as_dict())
+    vars, problem.objective_function.as_dict()
+)
 # print(objective_function)
 gpm.setObjective(objective_function, gp.GRB.MINIMIZE)
 
 for i, constraint in enumerate(problem.constraints):
     tmp_constraint = calc(vars, constraint.as_dict())
+    print(tmp_constraint)
     gpm.addConstr(tmp_constraint == 0, f"constr_{i}")
     gpm.update()
     print(tmp_constraint)
