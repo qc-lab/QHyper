@@ -45,7 +45,6 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
             tmp_constraint = calc(vars, constraint.as_dict())
             gpm.addConstr(tmp_constraint == 0, f"constr_{i}")
             gpm.update()
-            print(tmp_constraint)
 
         # eq_constraints = self.problem.constraints["=="]
         # for i, constraint in enumerate(eq_constraints):

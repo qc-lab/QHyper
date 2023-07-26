@@ -123,30 +123,27 @@ class Parser(ast.NodeVisitor):
 
 
 class Expression:
-    def __init__(self, polynomial: sympy.core.Expr | dict) -> None:
-        if isinstance(polynomial, sympy.Expr):
-            self.polynomial: sympy.Expr = polynomial
-            self.dict = None
-        elif isinstance(polynomial, dict):
-            self.polynomial = None
-            self.dict = polynomial
+    def __init__(self, equation: sympy.core.Expr | dict) -> None:
+        if isinstance(equation, sympy.core.Expr):
+            self.polynomial: sympy.core.Expr | None = equation
+            self.dictionary: dict = self.as_dict()
+        elif isinstance(equation, dict):
+            self.polynomial: sympy.core.Expr | None = None
+            self.dictionary: dict = equation
+        else:
+            raise Exception(f"Expression equation must be an instance of sympy.core.Expr or dict, got of type: {type(equation)} instead")
 
     def as_dict(self) -> QUBO:
-        if self.dict is None:
+        if self.polynomial is not None:
             parser = Parser()
             ast_tree = ast.parse(str(
                 sympy.expand(self.polynomial)))  # type: ignore[no-untyped-call]
             parser.visit(ast_tree)
-            self.dict = parser.polynomial_as_dict
-        return self.dict
+            self.dictionary = parser.polynomial_as_dict
+        return self.dictionary
 
     def __repr__(self) -> str:
-    #     return str(self.dict)
-        if self.polynomial is not None:
-            return str(self.polynomial) 
-        else:
-            return str(self.dict)
-
+        return str(self.dictionary)
 
     # def as_dict_with_slacks(self):
     #     parser = Parser()
@@ -166,7 +163,7 @@ class Expression:
     #     else:
     #         raise Exception("Unimplemented")
 
-    def as_string(self) -> str:
+    def as_polynomial(self) -> str:
         if self.polynomial is not None:
             return str(self.polynomial)
         else:

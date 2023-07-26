@@ -29,7 +29,7 @@ brain_problem = CommunityDetectionProblem(brain_network, N_communities=4)
 problem = brain_problem
 
 gurobi = Gurobi(problem=problem)
-solution = gurobi.solve({})
+solution = gurobi.solve({"MIPGap": 0.2})
 decoded_solution = problem.decode_dummies_solution(solution)
 
 write_to_file(solution, solution_file)

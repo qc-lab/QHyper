@@ -89,6 +89,18 @@ class ResultsFrame:
         return dict(sorted(sample_like.items()))
 
 
+def communities_from_sample(sample: dict, N_communities: int) -> list:
+    communities: list = []
+    for k in range(N_communities):
+        comm = []
+        for i in sample:
+            if sample[i] == k:
+                comm.append(i)
+        communities.append(set(comm))
+
+    return communities
+
+
 def draw_communities(
     problem: CommunityDetectionProblem, sample: dict, path: str
 ) -> None:
