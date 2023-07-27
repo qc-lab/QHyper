@@ -102,19 +102,24 @@ def communities_from_sample(sample: dict, N_communities: int) -> list:
 
 
 def draw_communities(
-    problem: CommunityDetectionProblem, sample: dict, path: str
+    problem: CommunityDetectionProblem, sample: dict, path: str, **kwargs
 ) -> None:
     color_map = []
     for node in problem.G:
         color_map.append(COLORS[sample["x" + str(node)]])
 
+    pos = kwargs.get('pos') if 'pos' in kwargs else None
+
     f = plt.figure()
     nx.draw(
         problem.G,
+        pos=pos,
         node_color=color_map,
         with_labels=True,
         ax=f.add_subplot(111),
     )
+    if 'title' in kwargs:
+        plt.title(kwargs.get('title'))
     f.savefig(path)
 
 

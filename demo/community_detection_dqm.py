@@ -1,4 +1,7 @@
-from QHyper.problems.community_detection import BrainNetwork, CommunityDetectionProblem
+from QHyper.problems.community_detection import (
+    BrainNetwork,
+    CommunityDetectionProblem,
+)
 from QHyper.problems.network_communities.utils import draw_communities
 from QHyper.solvers.dqm.dqm import DQM
 
@@ -12,11 +15,12 @@ from QHyper.problems.network_communities.utils import (
     draw_communities,
     draw_communities_from_graph,
     write_to_file,
-    communities_from_sample
+    communities_from_sample,
 )
 from QHyper.solvers.dqm.dqm import DQM
 from QHyper.solvers.gurobi.gurobi import Gurobi
 import networkx.algorithms.community as nx_comm
+import networkx as nx
 
 
 folder = "demo/demo_output"
@@ -27,7 +31,7 @@ path = "QHyper/problems/network_communities/brain_community_data"
 data_name = "Edge_AAL90_Binary"
 brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
 
-karate_problem = CommunityDetectionProblem(KarateClubNetwork, N_communities=4)
+karate_problem = CommunityDetectionProblem(KarateClubNetwork, N_communities=2)
 brain_problem = CommunityDetectionProblem(brain_network, N_communities=4)
 
 
@@ -38,23 +42,39 @@ dqm = DQM(problem, time=5)
 sampleset = dqm.solve()
 sample = sampleset.first.sample
 
-draw_communities(
-    problem=problem, sample=sample, path=f"{folder}/{name}_{solver}.png"
-)
-communities = [{int(c[len('x'):]) for c in comm} for comm in communities_from_sample(sample, problem.N_cases)]
+communities = [
+    {int(c[len("x") :]) for c in comm}
+    for comm in communities_from_sample(sample, problem.N_cases)
+]
 modularity = nx_comm.modularity(problem.G, communities=communities)
 print(f"{solver} {name} modularity: {modularity}")
 
-problem = brain_problem
-name = "brain"
-
-dqm = DQM(problem, time=5)
-sampleset = dqm.solve()
-sample = sampleset.first.sample
-
 draw_communities(
-    problem=problem, sample=sample, path=f"{folder}/{name}_{solver}.png"
+    problem=problem,
+    sample=sample,
+    path=f"{folder}/{name}_{solver}.png",
+    title=f"solver: {solver} mod: {modularity}",
+    pos=nx.spring_layout(problem.G, seed=123),
 )
-communities = [{int(c[len('x'):]) for c in comm} for comm in communities_from_sample(sample, problem.N_cases)]
-modularity = nx_comm.modularity(problem.G, communities=communities)
-print(f"{solver} {name} modularity: {modularity}")
+
+
+# problem = brain_problem
+# name = "brain"
+
+# dqm = DQM(problem, time=5)
+# sampleset = dqm.solve()
+# sample = sampleset.first.sample
+
+# communities = [
+#     {int(c[len("x") :]) for c in comm}
+#     for comm in communities_from_sample(sample, problem.N_cases)
+# ]
+# modularity = nx_comm.modularity(problem.G, communities=communities)
+# print(f"{solver} {name} modularity: {modularity}")
+
+# draw_communities(
+#     problem=problem,
+#     sample=sample,
+#     path=f"{folder}/{name}_{solver}.png",
+#     title=f"solver: {solver} mod: {modularity}",
+# )

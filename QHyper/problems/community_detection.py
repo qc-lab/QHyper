@@ -8,6 +8,12 @@ import networkx as nx
 from dataclasses import dataclass, field
 
 from QHyper.util import VARIABLES
+from enum import Enum
+
+
+class ObjectiveFunctionFormat(Enum):
+    SYMPY_EXPRESSION = 1
+    DICT = 2
 
 
 @dataclass
@@ -77,6 +83,7 @@ class CommunityDetectionProblem(Problem):
 
         self._set_objective_function()
         self._set_one_hot_constraints()
+        # self._set_objective_function_discrete()
 
     def _get_dummy_variables(self) -> dict:
         dummies: dict = {
@@ -120,6 +127,17 @@ class CommunityDetectionProblem(Problem):
 
         self.objective_function = Expression(equation)
 
+    def _set_objective_function_discrete(self) -> None:
+        equation: dict[VARIABLES, float] = {}
+        for i in self.G.nodes:
+            for j in range(i + 1, len(self.G.nodes)):
+                u_var, v_var = self.discrete_variables[i], self.discrete_variables[j]
+                equation[(u_var, v_var)] = self.B[i, j]
+
+        equation = {key: -1 * val for key, val in equation.items()}
+
+        self.objective_function = Expression(equation)
+
     def _set_one_hot_constraints(self) -> None:
         self.constraints: list[Expression] = []
         ONE_HOT_CONST = -1
@@ -151,13 +169,11 @@ class CommunityDetectionProblem(Problem):
             for _, dummies in self.dummy_variables.items()
             for v in dummies
         ]
-        print(f"keyorder: {keyorder}")
         solution_by_keyorder: dict = {
             str(k): dummies_solution[str(k)]
             for k in keyorder
             if str(k) in dummies_solution
         }
-        print(f"solution_by_keyorder: {solution_by_keyorder}")
         return solution_by_keyorder
 
     def sort_decoded_solution(self, decoded_solution: dict) -> dict:
