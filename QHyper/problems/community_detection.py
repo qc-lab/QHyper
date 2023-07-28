@@ -81,9 +81,10 @@ class CommunityDetectionProblem(Problem):
         self.dummy_variables: dict = self._get_dummy_variables()
         self.variables = self._get_variables_from_dummies()
 
-        self._set_objective_function()
-        self._set_one_hot_constraints()
-        # self._set_objective_function_discrete()
+        # self._set_objective_function()
+        # self._set_one_hot_constraints()
+        self._set_objective_function_discrete()
+        self.constraints = []
 
     def _get_dummy_variables(self) -> dict:
         dummies: dict = {
