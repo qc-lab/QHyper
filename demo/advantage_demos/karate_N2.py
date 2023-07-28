@@ -60,32 +60,63 @@ karate_problem = CommunityDetectionProblem(
     network_data=KarateClubNetwork, N_communities=2
 )
 problem = karate_problem
-print(f"obj fun: {problem.objective_function.as_dict()}")
 
 adv_sampler = DWaveSampler(solver=dict(topology__type="pegasus"))
 sampler = adv_sampler
+solver = "adv"
 
-qubo = create_qubo(problem)
-bqm = dimod.BQM.from_qubo(qubo)
-
-# f = plt.figure()
-# nx.draw(
-#     dimod.to_networkx_graph(bqm),
-#     with_labels=True,
-#     ax=f.add_subplot(111),
+# qubo = Converter.create_qubo(problem, [1]+[0]*34)
+# qubo = create_qubo(problem)
+# binary_polynomial = dimod.BinaryPolynomial(
+#     problem.objective_function.as_dict(), dimod.BINARY
 # )
-# plt.show()
-
-embedding = minorminer.find_embedding(
-    dimod.to_networkx_graph(bqm), sampler.to_networkx_graph()
+# bqm = dimod.make_quadratic(binary_polynomial, 5.0, dimod.BINARY)
+# qubo = Converter.to_qubo(problem)
+binary_polynomial = dimod.BinaryPolynomial(
+    problem.objective_function.as_dict(), dimod.BINARY
 )
+cqm = dimod.make_quadratic_cqm(binary_polynomial)
+
+# todo this cqm can probably be initialized in some other way
+# for var in problem.discrete_variables:
+#     if str(var) not in cqm.variables:
+#         cqm.add_variable(dimod.BINARY, str(var))
+
+bqm, _ = dimod.cqm_to_bqm(cqm, lagrange_multiplier=10)
+
+# bqm = dimod.BinaryQuadraticModel.from_qubo(qubo)
+# bqm.add_variables_from('BINARY', [problem.discrete_variables])
+# print(f"bqm: {bqm}\n\n")
+# print(bqm.variables)
+
+# bqm = dimod.BQM.from_qubo(problem.objective_function.as_dict())
+# print(bqm.quadratic)
+# print(bqm.variables)
+# print(bqm.adj)
+# print(bqm.num_variables)
+# print(bmq.num_inter)
+
+f = plt.figure()
+nx.draw(
+    dimod.to_networkx_graph(bqm),
+    with_labels=True,
+    ax=f.add_subplot(111),
+)
+plt.show()
+
+# embedding = minorminer.find_embedding(
+#     dimod.to_networkx_graph(bqm), sampler.to_networkx_graph()
+# )
 sampleset = EmbeddingComposite(adv_sampler).sample(bqm)
 
 sample = sampleset.first.sample
 energy = sampleset.first.energy
 
-solution = problem.sort_dummied_encoded_solution(sample)
-decoded_solution = problem.decode_dummies_solution(solution)
+# solution = problem.sort_dummied_encoded_solution(sample)
+# decoded_solution = problem.decode_dummies_solution(solution)
+solution = sample
+decoded_solution = {int(str(key)[len('x'):]): val for key, val in solution.items()}
+
 
 print(f"solution: {solution}\n\n")
 print(f"decoded_solution: {decoded_solution}\n\n")
@@ -120,5 +151,30 @@ nx.draw(
     with_labels=True,
     ax=f.add_subplot(111),
 )
-plt.title(f"mod: {modularity}")
+plt.title(f"solver: {solver} mod: {modularity}")
 f.savefig(img_solution_path)
+
+communities_class = nx_comm.louvain_communities(problem.G, resolution=0.5)#, seed=123)
+print(communities_class)
+louvain_mod = nx_comm.modularity(problem.G, communities_class)
+print(f"modularity_lovain: {louvain_mod}")
+
+color_map = []
+for node in problem.G:
+    if node in communities_class[0]:
+        color_map.append("red")
+    elif node in communities_class[1]:
+        color_map.append("blue")
+    else:
+        color_map.append(COLORS[7])
+
+f = plt.figure()
+nx.draw(
+    problem.G,
+    pos=nx.spring_layout(problem.G, seed=123),
+    node_color=color_map,
+    with_labels=True,
+    ax=f.add_subplot(111),
+)
+plt.title(f"solver: louvain_method mod: {louvain_mod}")
+f.savefig(f"{folder}/{name}_louvain.png")

@@ -32,7 +32,7 @@ data_name = "Edge_AAL90_Binary"
 brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
 
 karate_problem = CommunityDetectionProblem(KarateClubNetwork, N_communities=2)
-brain_problem = CommunityDetectionProblem(brain_network, N_communities=4)
+# brain_problem = CommunityDetectionProblem(brain_network, N_communities=4)
 
 
 problem = karate_problem
