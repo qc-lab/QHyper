@@ -6,14 +6,9 @@ from sympy.core.expr import Expr
 from typing import cast
 import networkx as nx
 from dataclasses import dataclass, field
+from typing import Iterable, Tuple
 
 from QHyper.util import VARIABLES
-from enum import Enum
-
-
-class ObjectiveFunctionFormat(Enum):
-    SYMPY_EXPRESSION = 1
-    DICT = 2
 
 
 @dataclass
@@ -74,9 +69,11 @@ class CommunityDetectionProblem(Problem):
                 "Number of communities must be greater than or equal to 1"
             )
         self.cases: int = N_communities
-        self.G = network_data.graph
-        self.B = network_data.modularity_matrix
-        self.variables = self._encode_discretes_to_one_hots()
+        self.G: nx.Graph = network_data.graph
+        self.B: np.ndarray = network_data.modularity_matrix
+        self.variables: tuple[
+            sympy.Symbol
+        ] = self._encode_discretes_to_one_hots()
         self._set_objective_function()
         self._set_one_hot_constraints()
 
@@ -84,14 +81,14 @@ class CommunityDetectionProblem(Problem):
         self, discrete_variable: sympy.Symbol, case_value: int
     ) -> sympy.Symbol:
         discrete_id = int(str(discrete_variable)[len("x") :])
-        binary_id = discrete_id * self.cases + case_value
-        return sympy.symbols(f"s{binary_id}")
+        id = discrete_id * self.cases + case_value
+        return sympy.symbols(f"s{id}")
 
     def decode_one_hot_to_discrete(
         self, variable: sympy.Symbol
     ) -> sympy.Symbol:
-        binary_id = int(str(variable)[len("s") :])
-        discrete_id = int(binary_id // self.cases)
+        id = int(str(variable)[len("s") :])
+        discrete_id = int(id // self.cases)
         return sympy.symbols(f"x{discrete_id}")
 
     def decode_case_value_from_one_hot(self, variable: sympy.Symbol) -> int:
@@ -104,34 +101,21 @@ class CommunityDetectionProblem(Problem):
             " ".join(
                 [
                     str(self.encode_discrete_to_one_hot(var, case_val))
+                    for var in self._get_discrete_variable_representation()
                     for case_val in range(self.cases)
-                    for var in self.discrete_variables_repr
                 ]
             )
         )
         return one_hots
 
+    def yield_variables_cases(self) -> Iterable[Tuple[sympy.Symbol, ...]]:
+        """s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), ..."""
+        return zip(*[iter(self.variables)] * self.cases)
+
     def _get_discrete_variable_representation(self) -> tuple[sympy.Symbol]:
         return sympy.symbols(
             " ".join([f"x{i}" for i in range(len(self.G.nodes))])
         )
-
-    # def _set_objective_function(self) -> None:
-    #     equation: dict[VARIABLES, float] = {}
-    #     for i in self.G.nodes:
-    #         for j in range(i + 1, len(self.G.nodes)):
-    #             u_var, v_var = (
-    #                 self.discrete_variables_repr[i],
-    #                 self.discrete_variables_repr[j],
-    #             )
-    #             for case in range(self.cases):
-    #                 u_var_dummy = str(self.dummy_variables[u_var][case])
-    #                 v_var_dummy = str(self.dummy_variables[v_var][case])
-    #                 equation[(u_var_dummy, v_var_dummy)] = self.B[i, j]
-
-    #     equation = {key: -1 * val for key, val in equation.items()}
-
-    #     self.objective_function = Expression(equation)
 
     def _set_objective_function(self) -> None:
         equation: dict[VARIABLES, float] = {}
@@ -151,8 +135,10 @@ class CommunityDetectionProblem(Problem):
         self.constraints: list[Expression] = []
         ONE_HOT_CONST = -1
 
-        for _, dummies in self.dummy_variables.items():
+        dummies: Iterable[Tuple[sympy.Symbol, ...]]
+        for dummies in self.yield_variables_cases():
             expression: Expr = cast(Expr, 0)
+            dummy: sympy.Symbol
             for dummy in dummies:
                 expression += dummy
             expression += ONE_HOT_CONST
@@ -173,9 +159,7 @@ class CommunityDetectionProblem(Problem):
         return decoded_solution
 
     def sort_dummied_encoded_solution(self, dummies_solution: dict) -> dict:
-        keyorder = [
-            v for _, dummies in self.dummy_variables.items() for v in dummies
-        ]
+        keyorder = self.variables
         solution_by_keyorder: dict = {
             str(k): dummies_solution[str(k)]
             for k in keyorder

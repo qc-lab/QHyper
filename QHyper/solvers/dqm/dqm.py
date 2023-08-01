@@ -1,13 +1,10 @@
-from dwave.system import LeapHybridDQMSampler
-
+import os
 from typing import Any
 
-from QHyper.solvers.converter import Converter
+from dwave.system import LeapHybridDQMSampler
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
-
-import os
-
+from QHyper.solvers.converter import Converter
 
 token = os.environ["DWAVE_API_TOKEN"]
 

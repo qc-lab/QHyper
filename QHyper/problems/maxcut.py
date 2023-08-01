@@ -9,13 +9,12 @@ from QHyper.hyperparameter_gen.parser import Expression
 class MaxCutProblem(Problem):
     def __init__(self, edges: list[tuple[int, int]]) -> None:
         self.edges = edges
+        self.cases = 2
         self.variables = sympy.symbols(
             " ".join(
                 [
                     f"x{i}"
-                    for i in range(
-                        len(list(set([v for edge in edges for v in edge])))
-                    )
+                    for i in range(max(v for edge in edges for v in edge) + 1)
                 ]
             )
         )

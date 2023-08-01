@@ -19,9 +19,9 @@ img_solution_path = f"{folder}/{name}_cqm.png"
 
 
 brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
-brain_problem = CommunityDetectionProblem(brain_network, N_communities=3)
+brain_problem = CommunityDetectionProblem(brain_network, N_communities=4)
 problem = brain_problem
-# karate_problem = CommunityDetectionProblem(network_data=KarateClubNetwork, N_communities=3)
+# karate_problem = CommunityDetectionProblem(network_data=KarateClubNetwork, N_communities=4)
 # problem = karate_problem
 
 cqm = CQM(problem, time=5)
