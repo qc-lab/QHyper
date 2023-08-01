@@ -38,7 +38,7 @@ write_to_file(decoded_solution, f"{folder_csv}/{name}_{solver}_decoded_solution.
 draw_communities_from_graph(
     problem=problem, sample=decoded_solution, path=f"{folder}/{name}_{solver}.png"
 )
-modularity = nx_comm.modularity(problem.G, communities=communities_from_sample(decoded_solution, problem.N_cases))
+modularity = nx_comm.modularity(problem.G, communities=communities_from_sample(decoded_solution, problem.cases))
 print(f"{solver} {name} modularity: {modularity}")
 
 problem = brain_problem
@@ -53,5 +53,5 @@ write_to_file(decoded_solution, f"{folder_csv}/{name}_{solver}_decoded_solution.
 draw_communities_from_graph(
     problem=problem, sample=decoded_solution, path=f"{folder}/{name}_{solver}.png"
 )
-modularity = nx_comm.modularity(problem.G, communities=communities_from_sample(decoded_solution, problem.N_cases))
+modularity = nx_comm.modularity(problem.G, communities=communities_from_sample(decoded_solution, problem.cases))
 print(f"{solver} {name} modularity: {modularity}")

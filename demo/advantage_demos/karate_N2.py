@@ -46,18 +46,18 @@ decoded_solution_file = f"{folder}/{name}_adv_decoded_solution.csv"
 img_solution_path = f"{folder}/{name}_adv.png"
 
 
-def create_qubo(problem: Problem) -> QUBO:
-    results: dict[VARIABLES, float] = {}
-    for key, value in problem.objective_function.as_dict().items():
-        if key in results:
-            results[key] += value
-        else:
-            results[key] = value
-    return results
+# def create_qubo(problem: Problem) -> QUBO:
+#     results: dict[VARIABLES, float] = {}
+#     for key, value in problem.objective_function.as_dict().items():
+#         if key in results:
+#             results[key] += value
+#         else:
+#             results[key] = value
+#     return results
 
 
 karate_problem = CommunityDetectionProblem(
-    network_data=KarateClubNetwork, N_communities=2
+    network_data=KarateClubNetwork, N_communities=4
 )
 problem = karate_problem
 
@@ -65,13 +65,15 @@ adv_sampler = DWaveSampler(solver=dict(topology__type="pegasus"))
 sampler = adv_sampler
 solver = "adv"
 
-# qubo = Converter.create_qubo(problem, [1]+[0]*34)
+
 # qubo = create_qubo(problem)
 # binary_polynomial = dimod.BinaryPolynomial(
 #     problem.objective_function.as_dict(), dimod.BINARY
 # )
 # bqm = dimod.make_quadratic(binary_polynomial, 5.0, dimod.BINARY)
 # qubo = Converter.to_qubo(problem)
+# qubo = Converter.create_qubo(problem, [1])
+# bqm = dimod.BinaryQuadraticModel.from_qubo(qubo)
 binary_polynomial = dimod.BinaryPolynomial(
     problem.objective_function.as_dict(), dimod.BINARY
 )
@@ -112,24 +114,24 @@ sampleset = EmbeddingComposite(adv_sampler).sample(bqm)
 sample = sampleset.first.sample
 energy = sampleset.first.energy
 
-# solution = problem.sort_dummied_encoded_solution(sample)
-# decoded_solution = problem.decode_dummies_solution(solution)
-solution = sample
-decoded_solution = {int(str(key)[len('x'):]): val for key, val in solution.items()}
+solution = problem.sort_dummied_encoded_solution(sample)
+decoded_solution = problem.decode_dummies_solution(solution)
+# solution = sample
+# decoded_solution = {int(str(key)[len('x'):]): val for key, val in solution.items()}
 
 
 print(f"solution: {solution}\n\n")
 print(f"decoded_solution: {decoded_solution}\n\n")
 
-write_to_file(solution, solution_file)
-write_to_file(decoded_solution, decoded_solution_file)
+# write_to_file(solution, solution_file)
+# write_to_file(decoded_solution, decoded_solution_file)
 # draw_communities_from_graph(
 #     problem=problem, sample=decoded_solution, path=img_solution_path
 # )
 try:
     modularity = nx_comm.modularity(
         problem.G,
-        communities=communities_from_sample(decoded_solution, problem.N_cases),
+        communities=communities_from_sample(decoded_solution, problem.cases),
     )
     print(f"modularity: {modularity}")
 except Exception as e:
