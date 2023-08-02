@@ -131,13 +131,18 @@ class Expression:
             self.polynomial: sympy.core.Expr | None = None
             self.dictionary: dict = equation
         else:
-            raise Exception(f"Expression equation must be an instance of sympy.core.Expr or dict, got of type: {type(equation)} instead")
+            raise Exception(
+                f"Expression equation must be an instance of \
+                    sympy.core.Expr or dict, got of type: \
+                        {type(equation)} instead"
+            )
 
     def as_dict(self) -> QUBO:
         if self.polynomial is not None:
             parser = Parser()
-            ast_tree = ast.parse(str(
-                sympy.expand(self.polynomial)))  # type: ignore[no-untyped-call]
+            ast_tree = ast.parse(
+                str(sympy.expand(self.polynomial))
+            )  # type: ignore[no-untyped-call]
             parser.visit(ast_tree)
             self.dictionary = parser.polynomial_as_dict
         return self.dictionary

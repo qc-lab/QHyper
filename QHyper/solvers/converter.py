@@ -24,7 +24,10 @@ class Converter:
             )
 
         objective_function = Expression(
-            problem.objective_function.polynomial * weights[0]
+            {
+                key: weights[0] * val
+                for key, val in problem.objective_function.as_dict().items()
+            }
         )
         for key, value in objective_function.as_dict().items():
             if key in results:
@@ -73,9 +76,11 @@ class Converter:
     def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
         dqm = dimod.DiscreteQuadraticModel()
 
+        BIN_OFFSET = 1 if problem.cases == 1 else 0
+
         def binary_to_discrete(v: sympy.Symbol) -> sympy.Symbol:
             id = int(str(v)[len("s") :])
-            discrete_id = int(id // problem.cases)
+            discrete_id = id // problem.cases
             return sympy.Symbol(f"x{discrete_id}")
 
         variables_discrete = [
@@ -84,7 +89,7 @@ class Converter:
         ]
         for var in variables_discrete:
             if var not in dqm.variables:
-                dqm.add_variable(problem.cases, var)
+                dqm.add_variable(problem.cases + BIN_OFFSET, var)
 
         for vars, bias in problem.objective_function.as_dict().items():
             s_i, *s_j = vars
@@ -96,11 +101,15 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
-                    {(case, case): bias for case in range(problem.cases)},
+                    {
+                        (case, case): bias
+                        for case in range(problem.cases + BIN_OFFSET)
+                    },
                 )
             else:
                 dqm.set_linear(
-                    dqm.variables[xi_idx], [bias for _ in range(problem.cases)]
+                    dqm.variables[xi_idx],
+                    [bias for _ in range(problem.cases + BIN_OFFSET)],
                 )
 
         return dqm

@@ -1,14 +1,13 @@
+from dataclasses import dataclass, field
+from typing import Any, Iterable, Tuple, cast
+
+import networkx as nx
 import numpy as np
 import sympy
-from QHyper.problems.base import Problem
 from QHyper.hyperparameter_gen.parser import Expression
-from sympy.core.expr import Expr
-from typing import cast
-import networkx as nx
-from dataclasses import dataclass, field
-from typing import Iterable, Tuple
-
+from QHyper.problems.base import Problem
 from QHyper.util import VARIABLES
+from sympy.core.expr import Expr
 
 
 @dataclass
@@ -26,13 +25,16 @@ class Network:
             self.graph, weight=self.weight
         )
         degree_matrix: np.ndarray = adj_matrix.sum(axis=1)
-        m: int = nx.number_of_edges(self.graph)
-        return adj_matrix - self.resolution * np.outer(
-            degree_matrix, degree_matrix
-        ) / (2 * m)
+        m: int = np.sum(degree_matrix)
+        return (
+            adj_matrix
+            - self.resolution * np.outer(degree_matrix, degree_matrix) / m
+        )
 
 
-KarateClubNetwork = Network(nx.karate_club_graph())
+class KarateClubNetwork(Network):
+    def __init__(self, resolution: float = 1):
+        super().__init__(nx.karate_club_graph(), resolution=resolution)
 
 
 class BrainNetwork(Network):
@@ -58,8 +60,9 @@ class CommunityDetectionProblem(Problem):
 
     Attributes:
     ----------
-    N_communities: int
+    cases: int
         number of communities into which the graph shall be divided
+        (default 2)
     G: networkx graph
         networkx implementation of graph
     B: networkx modularity matrix
@@ -78,47 +81,38 @@ class CommunityDetectionProblem(Problem):
         """
         Parameters
         ----------
+        network_data: Network
+            representation of a network with graph and modularity matrix
         N_communities: int
             number of communities into which the graph shall be divided
             (default 2)
         """
+        self.G: nx.Graph = network_data.graph
+        self.B: np.ndarray = network_data.modularity_matrix
         if N_communities < 1:
             raise Exception(
                 "Number of communities must be greater than or equal to 1"
             )
+
         self.cases: int = N_communities
-        self.G: nx.Graph = network_data.graph
-        self.B: np.ndarray = network_data.modularity_matrix
         self.variables: tuple[
             sympy.Symbol
         ] = self._encode_discretes_to_one_hots()
         self._set_objective_function()
-        self._set_one_hot_constraints()
+        self._set_one_hot_constraints(N_communities)
 
-    def encode_discrete_to_one_hot(
+    def _encode_discrete_to_one_hot(
         self, discrete_variable: sympy.Symbol, case_value: int
     ) -> sympy.Symbol:
         discrete_id = int(str(discrete_variable)[len("x") :])
         id = discrete_id * self.cases + case_value
         return sympy.symbols(f"s{id}")
 
-    def decode_one_hot_to_discrete(
-        self, variable: sympy.Symbol
-    ) -> sympy.Symbol:
-        id = int(str(variable)[len("s") :])
-        discrete_id = int(id // self.cases)
-        return sympy.symbols(f"x{discrete_id}")
-
-    def decode_case_value_from_one_hot(self, variable: sympy.Symbol) -> int:
-        id = int(str(variable)[len("s") :])
-        case_value = id % self.cases
-        return case_value
-
     def _encode_discretes_to_one_hots(self) -> tuple[sympy.Symbol]:
         one_hots: tuple[sympy.Symbol] = sympy.symbols(
             " ".join(
                 [
-                    str(self.encode_discrete_to_one_hot(var, case_val))
+                    str(self._encode_discrete_to_one_hot(var, case_val))
                     for var in self._get_discrete_variable_representation()
                     for case_val in range(self.cases)
                 ]
@@ -126,11 +120,13 @@ class CommunityDetectionProblem(Problem):
         )
         return one_hots
 
-    def yield_variables_cases(self) -> Iterable[Tuple[sympy.Symbol, ...]]:
+    def iter_variables_cases(self) -> Iterable[Tuple[sympy.Symbol, ...]]:
         """s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), ..."""
         return zip(*[iter(self.variables)] * self.cases)
 
-    def _get_discrete_variable_representation(self) -> tuple[sympy.Symbol]:
+    def _get_discrete_variable_representation(
+        self,
+    ) -> tuple[sympy.Symbol] | Any:
         return sympy.symbols(
             " ".join([f"x{i}" for i in range(len(self.G.nodes))])
         )
@@ -141,20 +137,24 @@ class CommunityDetectionProblem(Problem):
             for j in range(i + 1, len(self.G.nodes)):
                 for case_val in range(self.cases):
                     x_i, x_j = sympy.symbols(f"x{i}"), sympy.symbols(f"x{j}")
-                    s_i = str(self.encode_discrete_to_one_hot(x_i, case_val))
-                    s_j = str(self.encode_discrete_to_one_hot(x_j, case_val))
+                    s_i = str(self._encode_discrete_to_one_hot(x_i, case_val))
+                    s_j = str(self._encode_discrete_to_one_hot(x_j, case_val))
                     equation[(s_i, s_j)] = self.B[i, j]
 
         equation = {key: -1 * val for key, val in equation.items()}
 
         self.objective_function = Expression(equation)
 
-    def _set_one_hot_constraints(self) -> None:
-        self.constraints: list[Expression] = []
+    def _set_one_hot_constraints(self, N_communities: int) -> None:
         ONE_HOT_CONST = -1
+        self.constraints: list[Expression] = []
+        # In the case of 1-to-1 mapping between discrete
+        # and binary variable values no one-hot constraints
+        if N_communities == ONE_HOT_CONST * -1:
+            return
 
         dummies: Iterable[Tuple[sympy.Symbol, ...]]
-        for dummies in self.yield_variables_cases():
+        for dummies in self.iter_variables_cases():
             expression: Expr = cast(Expr, 0)
             dummy: sympy.Symbol
             for dummy in dummies:
@@ -162,7 +162,7 @@ class CommunityDetectionProblem(Problem):
             expression += ONE_HOT_CONST
             self.constraints.append(Expression(expression))
 
-    def decode_dummies_solution(self, solution: dict) -> dict:
+    def decode_solution(self, solution: dict) -> dict:
         ONE_HOT_VALUE = 1.0
         decoded_solution: dict = {}
 
@@ -176,12 +176,12 @@ class CommunityDetectionProblem(Problem):
         decoded_solution = self.sort_decoded_solution(decoded_solution)
         return decoded_solution
 
-    def sort_dummied_encoded_solution(self, dummies_solution: dict) -> dict:
+    def sort_encoded_solution(self, encoded_solution: dict) -> dict:
         keyorder = self.variables
         solution_by_keyorder: dict = {
-            str(k): dummies_solution[str(k)]
+            str(k): encoded_solution[str(k)]
             for k in keyorder
-            if str(k) in dummies_solution
+            if str(k) in encoded_solution
         }
         return solution_by_keyorder
 
