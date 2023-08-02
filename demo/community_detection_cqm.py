@@ -1,4 +1,7 @@
-from QHyper.problems.community_detection import CommunityDetectionProblem, KarateClubNetwork
+from QHyper.problems.community_detection import (
+    CommunityDetectionProblem,
+    KarateClubNetwork,
+)
 from QHyper.problems.network_communities.utils import (
     draw_communities_from_graph,
     write_to_file,

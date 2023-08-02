@@ -29,7 +29,10 @@ solver = "dqm"
 
 path = "QHyper/problems/network_communities/brain_community_data"
 data_name = "Edge_AAL90_Binary"
-brain_network = BrainNetwork(input_data_dir=path, input_data_name=data_name)
+resolution = 0.5
+brain_network = BrainNetwork(
+    input_data_dir=path, input_data_name=data_name, resolution=resolution
+)
 
 karate_problem = CommunityDetectionProblem(KarateClubNetwork, N_communities=2)
 # brain_problem = CommunityDetectionProblem(brain_network, N_communities=4)
@@ -46,7 +49,9 @@ communities = [
     {int(c[len("x") :]) for c in comm}
     for comm in communities_from_sample(sample, problem.cases)
 ]
-modularity = nx_comm.modularity(problem.G, communities=communities)
+modularity = nx_comm.modularity(
+    problem.G, communities=communities, resolution=resolution
+)
 print(f"{solver} {name} modularity: {modularity}")
 
 draw_communities(
@@ -69,7 +74,7 @@ draw_communities(
 #     {int(c[len("x") :]) for c in comm}
 #     for comm in communities_from_sample(sample, problem.N_cases)
 # ]
-# modularity = nx_comm.modularity(problem.G, communities=communities)
+# modularity = nx_comm.modularity(problem.G, communities=communities, resolution=0.5)
 # print(f"{solver} {name} modularity: {modularity}")
 
 # draw_communities(

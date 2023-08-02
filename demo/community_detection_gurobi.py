@@ -8,7 +8,7 @@ from QHyper.problems.network_communities.utils import (
     draw_communities,
     draw_communities_from_graph,
     write_to_file,
-    communities_from_sample
+    communities_from_sample,
 )
 from QHyper.solvers.dqm.dqm import DQM
 from QHyper.solvers.gurobi.gurobi import Gurobi
@@ -34,11 +34,18 @@ solution = gurobi.solve({})
 decoded_solution = problem.decode_dummies_solution(solution)
 
 write_to_file(solution, f"{folder_csv}/{name}_{solver}_solution.csv")
-write_to_file(decoded_solution, f"{folder_csv}/{name}_{solver}_decoded_solution.csv")
-draw_communities_from_graph(
-    problem=problem, sample=decoded_solution, path=f"{folder}/{name}_{solver}.png"
+write_to_file(
+    decoded_solution, f"{folder_csv}/{name}_{solver}_decoded_solution.csv"
 )
-modularity = nx_comm.modularity(problem.G, communities=communities_from_sample(decoded_solution, problem.cases))
+draw_communities_from_graph(
+    problem=problem,
+    sample=decoded_solution,
+    path=f"{folder}/{name}_{solver}.png",
+)
+modularity = nx_comm.modularity(
+    problem.G,
+    communities=communities_from_sample(decoded_solution, problem.cases),
+)
 print(f"{solver} {name} modularity: {modularity}")
 
 # problem = brain_problem

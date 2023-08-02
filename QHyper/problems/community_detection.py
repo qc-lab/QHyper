@@ -14,10 +14,22 @@ from QHyper.util import VARIABLES
 @dataclass
 class Network:
     graph: nx.Graph
+    resolution: float = field(default=1)
     modularity_matrix: np.ndarray = field(init=False)
+    weight: str | None = field(default=None)
 
     def __post_init__(self) -> None:
-        self.modularity_matrix = nx.modularity_matrix(self.graph)
+        self.modularity_matrix = self.calculate_modularity_matrix()
+
+    def calculate_modularity_matrix(self) -> np.ndarray:
+        adj_matrix: np.ndarray = nx.to_numpy_array(
+            self.graph, weight=self.weight
+        )
+        degree_matrix: np.ndarray = adj_matrix.sum(axis=1)
+        m: int = nx.number_of_edges(self.graph)
+        return adj_matrix - self.resolution * np.outer(
+            degree_matrix, degree_matrix
+        ) / (2 * m)
 
 
 KarateClubNetwork = Network(nx.karate_club_graph())
@@ -25,12 +37,18 @@ KarateClubNetwork = Network(nx.karate_club_graph())
 
 class BrainNetwork(Network):
     def __init__(
-        self, input_data_dir: str, input_data_name: str, delimiter: str = "	"
+        self,
+        input_data_dir: str,
+        input_data_name: str,
+        delimiter: str = "	",
+        resolution: int = 1,
     ):
         adj_matrix = np.genfromtxt(
             f"{input_data_dir}/{input_data_name}.csv", delimiter=delimiter
         )
-        super().__init__(nx.from_numpy_matrix(adj_matrix))
+        super().__init__(
+            nx.from_numpy_matrix(adj_matrix), resolution=resolution
+        )
 
 
 class CommunityDetectionProblem(Problem):
