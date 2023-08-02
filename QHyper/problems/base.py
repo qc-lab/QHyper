@@ -29,15 +29,15 @@ class Problem(ABC):
         list of variables in the problem
     name: str
         helps to differentiate various problems (default "")
-    case: int
-        maximum number of cases (values) a variable can take
-        (default 1 - for binary variables)
+    cases: int
+        number of variable cases (values)
+        (default 2 - denoting binary variable)
     """
     objective_function: Expression
     constraints: list[Expression]
     variables: tuple[sympy.Symbol]
     name: str = ""
-    cases: int = 1
+    cases: int = 2
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the outcome provided as a binary string
