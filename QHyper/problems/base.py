@@ -31,13 +31,13 @@ class Problem(ABC):
         helps to differentiate various problems (default "")
     cases: int
         number of variable cases (values)
-        (default 2 - denoting binary variable)
+        (default 1 - denoting binary variable)
     """
     objective_function: Expression
     constraints: list[Expression]
     variables: tuple[sympy.Symbol]
     name: str = ""
-    cases: int = 2
+    cases: int = 1
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the outcome provided as a binary string
