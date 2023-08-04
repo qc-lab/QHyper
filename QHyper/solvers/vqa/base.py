@@ -50,11 +50,13 @@ class VQA(Solver):
     def __init__(
             self,
             problem: Problem,
+            hyper_optimizer: Optimizer = None,
             pqc: PQC | str = "",
             optimizer: Optimizer | str = "",
             config: dict[str, dict[str, Any]] = {}
     ) -> None:
         self.problem = problem
+        self.hyper_optimizer = hyper_optimizer
 
         if isinstance(pqc, str):
             if pqc == "":
@@ -77,15 +79,14 @@ class VQA(Solver):
         else:
             self.optimizer = optimizer
 
-    def solve(self, params_inits: dict[str, Any],
-              hyper_optimizer: Optional[Optimizer] = None) -> Any:
+    def solve(self, params_inits: dict[str, Any]) -> Any:
         hyper_args = self.pqc.get_hopt_args(params_inits)
 
-        if hyper_optimizer:
+        if self.hyper_optimizer:
             # TODO
             wrapper = Wrapper(
                 self.pqc, self.problem, self.optimizer, params_inits)
-            _, best_hargs = hyper_optimizer.minimize(wrapper, hyper_args)
+            _, best_hargs = self.hyper_optimizer.minimize(wrapper, hyper_args)
         else:
             best_hargs = hyper_args
 
@@ -96,7 +97,7 @@ class VQA(Solver):
         else:
             best_opt_args = opt_args
 
-        return self.pqc.get_init_args(best_opt_args, best_hargs)
+        return self.pqc.get_params_init_format(best_opt_args, best_hargs)
 
     def evaluate(self, params_inits: dict[str, Any]) -> float:
         hyper_args = self.pqc.get_hopt_args(params_inits)

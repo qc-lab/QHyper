@@ -47,7 +47,7 @@ class CEM(Optimizer):
         if set to True, tdqm will be disabled
     """
 
-    def get_points(
+    def _get_points(
             self,
             mean: npt.NDArray[np.float64],
             cov: npt.NDArray[np.float64]
@@ -102,7 +102,7 @@ class CEM(Optimizer):
         best_score = func(_init)
 
         for _ in range(1, self.epochs+1):
-            hyperparams = self.get_points(mean, cov)
+            hyperparams = self._get_points(mean, cov)
 
             with mp.Pool(processes=self.processes) as p:
                 results = list(tqdm.tqdm(

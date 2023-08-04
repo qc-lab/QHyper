@@ -2,7 +2,6 @@ import random
 import sympy
 from collections import namedtuple
 
-from sympy.core.expr import Expr
 from typing import cast
 
 from .base import Problem
@@ -16,12 +15,12 @@ class Knapsack:
 
     Attributes
     ----------
-    items: list[Item]
-        list of items
     max_weight: int
         maximum weight of an item
     max_item_value: int
         maximum value of an item
+    items: list[Item]
+        list of items
     """
 
     def __init__(
@@ -70,13 +69,15 @@ class KnapsackProblem(Problem):
 
     Attributes
     ----------
-    objective_function : str
-        objective function in SymPy syntax
-    constraints : list[str]
-        list of constraints in SymPy syntax
+    objective_function : Expression
+        objective function in SymPy syntax wrapped in Expression class
+    constraints : list[Expression]
+        list of constraints in SymPy syntax wrapped in Expression class
     variables : int
         number of qubits in the circuit, equals to sum of the number
         of items in the knapsack the max weight of a knapsack
+    knapsack: Knapsack
+        Knapsack instance
     """
 
     def __init__(
@@ -101,7 +102,7 @@ class KnapsackProblem(Problem):
         self.knapsack = Knapsack(
             max_weight, max_item_value, items_amount, items)
         # self.variables = len(self.knapsack) + self.knapsack.max_weight
-        self.variables = sympy.symbols(' '.join(
+        self.variables: tuple[sympy.Symbol] = sympy.symbols(' '.join(
             [f'x{i}' for i
              in range(len(self.knapsack) + self.knapsack.max_weight)]
         ))
@@ -113,12 +114,12 @@ class KnapsackProblem(Problem):
         Create the objective functiif items on defined in SymPy syntax
         """
         # xs = [f"x{i}" for i in range(len(self.knapsack))]
-        equation: Expr = cast(Expr, 0)
+        equation = cast(sympy.Expr, 0)
         for i, x in enumerate(self.variables[:len(self.knapsack)]):
             equation += self.knapsack.items[i].value*x
         equation *= -1
 
-        self.objective_function = Expression(equation)
+        self.objective_function: Expression = Expression(equation)
 
     def _set_constraints(self) -> None:
         """
@@ -127,20 +128,19 @@ class KnapsackProblem(Problem):
         xs = [self.variables[i] for i in range(len(self.knapsack))]
         ys = [self.variables[i] for i in range(
             len(self.knapsack), len(self.knapsack) + self.knapsack.max_weight)]
-        constrains = []
-        equation: Expr = cast(Expr, 1)
+        self.constraints: list[Expression] = []
+        equation = cast(sympy.Expr, 1)
         for y in ys:
             equation -= y
         # equation = equation
-        constrains.append(Expression(equation))
-        equation = cast(Expr, 0)
+        self.constraints.append(Expression(equation))
+        equation = cast(sympy.Expr, 0)
         for i, y in enumerate(ys):
             equation += (i + 1)*y
         for i, x in enumerate(xs):
             equation += -(self.knapsack.items[i].weight)*x
         # equation = equation
-        constrains.append(Expression(equation))
-        self.constraints = constrains
+        self.constraints.append(Expression(equation))
 
     def get_score(self, result: str) -> float | None:
         """Returns score of the provided outcome in bits

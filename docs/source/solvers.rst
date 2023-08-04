@@ -6,23 +6,23 @@ Solvers
 Interfaces
 ----------
 
-.. autosummary:: 
+.. autosummary::
     :toctree: generated
 
-    solver.Solver
+    base.Solver
 
 
-QAOA Solver
------------
+Classes
+-------
 
-.. rubric:: Factory
-.. autosummary:: 
-    :toctree: generated
+.. toctree::
+    :maxdepth: 1
 
-    QAOA.core
+    vqa
 
-.. autosummary:: 
-    :toctree: generated
+.. autosummary::
+   :toctree: generated
 
-    QAOA.Pennylane
-    QAOA.parser
+   cqm.cqm.CQM
+   gurobi.gurobi.Gurobi
+

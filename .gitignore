@@ -8,3 +8,6 @@ docs/build
 docs/source/generated/
 
 paper
+
+.idea
+/.idea

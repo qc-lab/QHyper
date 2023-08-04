@@ -1,10 +1,8 @@
+from typing import Any
+
 import gurobipy as gp
-
-from typing import Any, Optional
-
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
-from QHyper.optimizers.base import Optimizer
 from QHyper.solvers.converter import QUBO
 
 
@@ -19,15 +17,14 @@ def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:
 
 
 class Gurobi(Solver):  # todo works only for quadratic expressions
-    def __init__(self, **kwargs: Any) -> None:
-        self.problem: Problem = kwargs["problem"]
+    def __init__(self, problem: Problem) -> None:
+        self.problem: Problem = problem
 
-    def solve(
-            self,
-            params_inits: dict[str, Any],
-            hyper_optimizer: Optional[Optimizer] = None
-    ) -> Any:
-        gpm = gp.Model("name")
+    def solve(self, params_inits: dict[str, Any]) -> Any:
+        name = params_inits["name"] if "name" in params_inits else "name"
+        gpm = gp.Model(name)
+        if "MIPGap" in params_inits:
+            gpm.Params.MIPGap = params_inits["MIPGap"]
 
         vars = {
             str(var_name): gpm.addVar(vtype=gp.GRB.BINARY, name=str(var_name))
@@ -36,14 +33,14 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
         # gpm.update()
 
         objective_function = calc(
-            vars, self.problem.objective_function.as_dict())
+            vars, self.problem.objective_function.as_dict()
+        )
         gpm.setObjective(objective_function, gp.GRB.MINIMIZE)
 
         for i, constraint in enumerate(self.problem.constraints):
             tmp_constraint = calc(vars, constraint.as_dict())
             gpm.addConstr(tmp_constraint == 0, f"constr_{i}")
             gpm.update()
-            print(tmp_constraint)
 
         # eq_constraints = self.problem.constraints["=="]
         # for i, constraint in enumerate(eq_constraints):

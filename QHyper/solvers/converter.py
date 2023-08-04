@@ -1,14 +1,10 @@
-import dimod
-
-from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
-
 from typing import Any, cast
 
+import dimod
+import sympy
+from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
 from QHyper.hyperparameter_gen.parser import Expression
 from QHyper.problems.base import Problem
-from QHyper.problems.community_detection import (
-    CommunityDetectionProblem,
-)
 from QHyper.util import QUBO, VARIABLES
 
 
@@ -28,7 +24,10 @@ class Converter:
             )
 
         objective_function = Expression(
-            problem.objective_function.polynomial * weights[0]
+            {
+                key: weights[0] * val
+                for key, val in problem.objective_function.as_dict().items()
+            }
         )
         for key, value in objective_function.as_dict().items():
             if key in results:
@@ -60,8 +59,10 @@ class Converter:
             if str(var) not in cqm.variables:
                 cqm.add_variable(dimod.BINARY, str(var))
 
-        for constraint in problem.constraints:
-            cqm.add_constraint(dict_to_list(constraint.as_dict()), "==")
+        for i, constraint in enumerate(problem.constraints):
+            cqm.add_constraint(
+                dict_to_list(constraint.as_dict()), "==", label=i
+            )
 
         return cqm
 
@@ -75,55 +76,40 @@ class Converter:
     def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
         dqm = dimod.DiscreteQuadraticModel()
 
-        try:
-            N_cases = problem.N_cases
-            if N_cases in [None, 0]:
-                N_cases = 2
-        except:
-            N_cases = 2
+        BIN_OFFSET = 1 if problem.cases == 1 else 0
 
-        for var in problem.variables:
-            if str(var) not in dqm.variables:
-                dqm.add_variable(N_cases, str(var))
+        def binary_to_discrete(v: sympy.Symbol) -> sympy.Symbol:
+            id = int(str(v)[len("s") :])
+            discrete_id = id // problem.cases
+            return sympy.Symbol(f"x{discrete_id}")
 
-        def dqm_var(var_str_idx: str):
-            return dqm.variables.index(var_str_idx)
+        variables_discrete = [
+            str(binary_to_discrete(v))
+            for v in problem.variables[:: problem.cases]
+        ]
+        for var in variables_discrete:
+            if var not in dqm.variables:
+                dqm.add_variable(problem.cases + BIN_OFFSET, var)
 
         for vars, bias in problem.objective_function.as_dict().items():
-            u, *v = vars
-            u_idx: int = cast(int, dqm_var(u))
-            if v:
-                v_idx: int = cast(int, dqm_var(*v))
+            s_i, *s_j = vars
+            x_i = binary_to_discrete(s_i)
+            xi_idx: int = cast(int, dqm.variables.index(str(x_i)))
+            if s_j:
+                x_j = binary_to_discrete(*s_j)
+                xj_idx: int = cast(int, dqm.variables.index(str(x_j)))
                 dqm.set_quadratic(
-                    dqm.variables[u_idx],
-                    dqm.variables[v_idx],
-                    {(case, case): bias for case in range(N_cases)},
+                    dqm.variables[xi_idx],
+                    dqm.variables[xj_idx],
+                    {
+                        (case, case): bias
+                        for case in range(problem.cases + BIN_OFFSET)
+                    },
                 )
             else:
                 dqm.set_linear(
-                    dqm.variables[u_idx], [bias for _ in range(N_cases)]
-                )
-
-        return dqm
-
-    @staticmethod
-    def from_graph_to_dqm(
-        problem: CommunityDetectionProblem,
-    ) -> DiscreteQuadraticModel:
-        N_cases = problem.N_cases
-        dqm = dimod.DiscreteQuadraticModel()
-
-        for i in problem.G.nodes():
-            dqm.add_variable(N_cases, label=i)
-
-        for i in problem.G.nodes():
-            for j in problem.G.nodes():
-                if i == j:
-                    continue
-                dqm.set_quadratic(
-                    i,
-                    j,
-                    {(c, c): ((-1) * problem.B[i, j]) for c in range(N_cases)},
+                    dqm.variables[xi_idx],
+                    [bias for _ in range(problem.cases + BIN_OFFSET)],
                 )
 
         return dqm

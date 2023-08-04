@@ -124,22 +124,28 @@ class Parser(ast.NodeVisitor):
 
 class Expression:
     def __init__(self, equation: sympy.core.Expr | dict) -> None:
-        if type(equation) == sympy.core.Expr:
-            self.polynomial: sympy.core.Expr = equation
+        if isinstance(equation, sympy.core.Expr):
+            self.polynomial: sympy.core.Expr | None = equation
             self.dictionary: dict = self.as_dict()
-        else:
-            self.polynomial: sympy.core.Expr = None
+        elif isinstance(equation, dict):
+            self.polynomial: sympy.core.Expr | None = None
             self.dictionary: dict = equation
+        else:
+            raise Exception(
+                f"Expression equation must be an instance of \
+                    sympy.core.Expr or dict, got of type: \
+                        {type(equation)} instead"
+            )
 
-    def as_dict(self) -> dict[VARIABLES, float]:
+    def as_dict(self) -> QUBO:
         if self.polynomial is not None:
             parser = Parser()
-            ast_tree = ast.parse(str(
-                sympy.expand(self.polynomial)))  # type: ignore[no-untyped-call]
+            ast_tree = ast.parse(
+                str(sympy.expand(self.polynomial))
+            )  # type: ignore[no-untyped-call]
             parser.visit(ast_tree)
-            return parser.polynomial_as_dict
-        else:
-            return self.dictionary
+            self.dictionary = parser.polynomial_as_dict
+        return self.dictionary
 
     def __repr__(self) -> str:
         return str(self.dictionary)
