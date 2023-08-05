@@ -163,7 +163,7 @@ class CommunityDetectionProblem(Problem):
         decoded_solution: dict = {}
 
         for variable, value in solution.items():
-            _, id = variable[0], int(variable[1:])
+            id = int(variable[1:])
             if value == ONE_HOT_VALUE:
                 case_value = id % self.cases
                 variable_id = id // self.cases
