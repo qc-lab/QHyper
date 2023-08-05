@@ -77,7 +77,7 @@ class CommunityDetectionProblem(Problem):
         in the graph
     """
 
-    def __init__(self, network_data: Network, N_communities: int = 2) -> None:
+    def __init__(self, network_data: Network, communities: int = 2) -> None:
         """
         Parameters
         ----------
@@ -109,15 +109,11 @@ class CommunityDetectionProblem(Problem):
         return sympy.symbols(f"s{id}")
 
     def _encode_discretes_to_one_hots(self) -> tuple[sympy.Symbol]:
-        one_hots: tuple[sympy.Symbol] = sympy.symbols(
-            " ".join(
-                [
-                    str(self._encode_discrete_to_one_hot(var, case_val))
-                    for var in self._get_discrete_variable_representation()
-                    for case_val in range(self.cases)
-                ]
-            )
-        )
+        one_hots: tuple[sympy.Symbol] = sympy.symbols( " ".join([
+                str(self._encode_discrete_to_one_hot(var, case_val))
+                for var in self._get_discrete_variable_representation()
+                for case_val in range(self.cases)
+        ]))
         return one_hots
 
     def iter_variables_cases(self) -> Iterable[Tuple[sympy.Symbol, ...]]:
@@ -145,7 +141,7 @@ class CommunityDetectionProblem(Problem):
 
         self.objective_function = Expression(equation)
 
-    def _set_one_hot_constraints(self, N_communities: int) -> None:
+    def _set_one_hot_constraints(self, communities: int) -> None:
         ONE_HOT_CONST = -1
         self.constraints: list[Expression] = []
         # In the case of 1-to-1 mapping between discrete
@@ -173,21 +169,17 @@ class CommunityDetectionProblem(Problem):
                 variable_id = id // self.cases
                 decoded_solution[variable_id] = case_value
 
-        decoded_solution = self.sort_decoded_solution(decoded_solution)
-        return decoded_solution
+        return self.sort_decoded_solution(decoded_solution)
 
     def sort_encoded_solution(self, encoded_solution: dict) -> dict:
-        keyorder = self.variables
-        solution_by_keyorder: dict = {
+        return {
             str(k): encoded_solution[str(k)]
-            for k in keyorder
+            for k in self.variables
             if str(k) in encoded_solution
         }
-        return solution_by_keyorder
 
     def sort_decoded_solution(self, decoded_solution: dict) -> dict:
         keyorder = [int(str(v)[len("x") :]) for v in self.variables]
-        decoded_solution_by_keyorder: dict = {
+        return {
             k: decoded_solution[k] for k in keyorder if k in decoded_solution
         }
-        return decoded_solution_by_keyorder

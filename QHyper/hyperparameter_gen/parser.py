@@ -132,9 +132,9 @@ class Expression:
             self.dictionary: dict = equation
         else:
             raise Exception(
-                f"Expression equation must be an instance of \
-                    sympy.core.Expr or dict, got of type: \
-                        {type(equation)} instead"
+                "Expression equation must be an instance of "
+                "sympy.core.Expr or dict, got of type: "
+                f"{type(equation)} instead"
             )
 
     def as_dict(self) -> QUBO:
