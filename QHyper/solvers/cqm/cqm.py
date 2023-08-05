@@ -10,7 +10,7 @@ from QHyper.solvers.base import Solver
 from QHyper.optimizers.base import Optimizer
 
 
-token = os.environ['DWAVE_API_TOKEN']
+DWAVE_API_TOKEN = os.environ['DWAVE_API_TOKEN']
 
 
 class CQM(Solver):
@@ -56,7 +56,7 @@ class CQM(Solver):
 
         converter = Converter()
         cqm = converter.to_cqm(self.problem)
-        sampler = LeapHybridCQMSampler(token=token)
+        sampler = LeapHybridCQMSampler(token=DWAVE_API_TOKEN)
         solutions = sampler.sample_cqm(cqm, self.time)
         correct_solutions = [
             s for s in solutions

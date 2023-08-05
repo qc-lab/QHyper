@@ -77,47 +77,43 @@ class CommunityDetectionProblem(Problem):
         in the graph
     """
 
-    def __init__(self, network_data: Network, N_communities: int = 2) -> None:
+    def __init__(self, network_data: Network, communities: int = 2) -> None:
         """
         Parameters
         ----------
         network_data: Network
             representation of a network with graph and modularity matrix
-        N_communities: int
+        communities: int
             number of communities into which the graph shall be divided
             (default 2)
         """
         self.G: nx.Graph = network_data.graph
         self.B: np.ndarray = network_data.modularity_matrix
-        if N_communities < 1:
+        if communities < 1:
             raise Exception(
                 "Number of communities must be greater than or equal to 1"
             )
 
-        self.cases: int = N_communities
+        self.cases: int = communities
         self.variables: tuple[
             sympy.Symbol
         ] = self._encode_discretes_to_one_hots()
         self._set_objective_function()
-        self._set_one_hot_constraints(N_communities)
+        self._set_one_hot_constraints(communities)
 
     def _encode_discrete_to_one_hot(
         self, discrete_variable: sympy.Symbol, case_value: int
     ) -> sympy.Symbol:
-        discrete_id = int(str(discrete_variable)[len("x") :])
+        discrete_id = int(str(discrete_variable)[1:])
         id = discrete_id * self.cases + case_value
         return sympy.symbols(f"s{id}")
 
     def _encode_discretes_to_one_hots(self) -> tuple[sympy.Symbol]:
-        one_hots: tuple[sympy.Symbol] = sympy.symbols(
-            " ".join(
-                [
-                    str(self._encode_discrete_to_one_hot(var, case_val))
-                    for var in self._get_discrete_variable_representation()
-                    for case_val in range(self.cases)
-                ]
-            )
-        )
+        one_hots: tuple[sympy.Symbol] = sympy.symbols(" ".join([
+            str(self._encode_discrete_to_one_hot(var, case_val))
+            for var in self._get_discrete_variable_representation()
+            for case_val in range(self.cases)
+        ]))
         return one_hots
 
     def iter_variables_cases(self) -> Iterable[Tuple[sympy.Symbol, ...]]:
@@ -145,12 +141,12 @@ class CommunityDetectionProblem(Problem):
 
         self.objective_function = Expression(equation)
 
-    def _set_one_hot_constraints(self, N_communities: int) -> None:
+    def _set_one_hot_constraints(self, communities: int) -> None:
         ONE_HOT_CONST = -1
         self.constraints: list[Expression] = []
         # In the case of 1-to-1 mapping between discrete
         # and binary variable values no one-hot constraints
-        if N_communities == ONE_HOT_CONST * -1:
+        if communities == ONE_HOT_CONST * -1:
             return
 
         dummies: Iterable[Tuple[sympy.Symbol, ...]]
@@ -167,27 +163,23 @@ class CommunityDetectionProblem(Problem):
         decoded_solution: dict = {}
 
         for variable, value in solution.items():
-            _, id = variable[0], int(variable[len("s") :])
+            _, id = variable[0], int(variable[1:])
             if value == ONE_HOT_VALUE:
                 case_value = id % self.cases
                 variable_id = id // self.cases
                 decoded_solution[variable_id] = case_value
 
-        decoded_solution = self.sort_decoded_solution(decoded_solution)
-        return decoded_solution
+        return self.sort_decoded_solution(decoded_solution)
 
     def sort_encoded_solution(self, encoded_solution: dict) -> dict:
-        keyorder = self.variables
-        solution_by_keyorder: dict = {
+        return {
             str(k): encoded_solution[str(k)]
-            for k in keyorder
+            for k in self.variables
             if str(k) in encoded_solution
         }
-        return solution_by_keyorder
 
     def sort_decoded_solution(self, decoded_solution: dict) -> dict:
-        keyorder = [int(str(v)[len("x") :]) for v in self.variables]
-        decoded_solution_by_keyorder: dict = {
+        keyorder = [int(str(v)[1:]) for v in self.variables]
+        return {
             k: decoded_solution[k] for k in keyorder if k in decoded_solution
         }
-        return decoded_solution_by_keyorder

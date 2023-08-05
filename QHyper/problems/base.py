@@ -2,8 +2,6 @@ from abc import ABC
 
 import sympy
 
-from typing import Any
-
 from QHyper.hyperparameter_gen.parser import Expression
 
 
@@ -33,6 +31,7 @@ class Problem(ABC):
         number of variable cases (values)
         (default 1 - denoting binary variable)
     """
+
     objective_function: Expression
     constraints: list[Expression]
     variables: tuple[sympy.Symbol]

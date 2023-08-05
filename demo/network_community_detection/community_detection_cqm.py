@@ -23,7 +23,7 @@ img_solution_path = f"{folder}/{name}_{solver}.png"
 resolution = 0.5
 
 problem = CommunityDetectionProblem(
-    network_data=KarateClubNetwork(resolution=resolution), N_communities=2
+    network_data=KarateClubNetwork(resolution=resolution), communities=2
 )
 
 cqm = CQM(problem, time=5)

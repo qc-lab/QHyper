@@ -1,7 +1,6 @@
 from typing import Any, cast
 
 import dimod
-import sympy
 from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
 from QHyper.hyperparameter_gen.parser import Expression
 from QHyper.problems.base import Problem
@@ -78,13 +77,13 @@ class Converter:
 
         BIN_OFFSET = 1 if problem.cases == 1 else 0
 
-        def binary_to_discrete(v: sympy.Symbol) -> sympy.Symbol:
-            id = int(str(v)[len("s") :])
+        def binary_to_discrete(v: str) -> str:
+            id = int(v[1:])
             discrete_id = id // problem.cases
-            return sympy.Symbol(f"x{discrete_id}")
+            return f"x{discrete_id}"
 
         variables_discrete = [
-            str(binary_to_discrete(v))
+            binary_to_discrete(str(v))
             for v in problem.variables[:: problem.cases]
         ]
         for var in variables_discrete:
@@ -94,10 +93,10 @@ class Converter:
         for vars, bias in problem.objective_function.as_dict().items():
             s_i, *s_j = vars
             x_i = binary_to_discrete(s_i)
-            xi_idx: int = cast(int, dqm.variables.index(str(x_i)))
+            xi_idx: int = cast(int, dqm.variables.index(x_i))
             if s_j:
                 x_j = binary_to_discrete(*s_j)
-                xj_idx: int = cast(int, dqm.variables.index(str(x_j)))
+                xj_idx: int = cast(int, dqm.variables.index(x_j))
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],

@@ -11,10 +11,7 @@ class MaxCutProblem(Problem):
         self.edges = edges
         self.variables = sympy.symbols(
             " ".join(
-                [
-                    f"x{i}"
-                    for i in range(max(v for edge in edges for v in edge))
-                ]
+                [f"x{i}" for i in range(max(v for edge in edges for v in edge))]
             )
         )
 
@@ -34,7 +31,7 @@ class MaxCutProblem(Problem):
         sum = 0
 
         for e in self.edges:
-            x_i, x_j = int(result[e[0]]), int(result[e[1]])
+            x_i, x_j = int(result[e[0] - 1]), int(result[e[1] - 1])
             sum += x_i * (1 - x_j) + x_j * (1 - x_i)
 
         return sum

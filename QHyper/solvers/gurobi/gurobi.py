@@ -21,7 +21,7 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
         self.problem: Problem = problem
 
     def solve(self, params_inits: dict[str, Any]) -> Any:
-        name = params_inits["name"] if "name" in params_inits else "name"
+        name = params_inits.get("name", "name")
         gpm = gp.Model(name)
         if "MIPGap" in params_inits:
             gpm.Params.MIPGap = params_inits["MIPGap"]

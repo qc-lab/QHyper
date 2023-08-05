@@ -17,7 +17,7 @@ solver = "dqm"
 resolution = 0.5
 
 problem = CommunityDetectionProblem(
-    KarateClubNetwork(resolution=resolution), N_communities=2
+    KarateClubNetwork(resolution=resolution), communities=2
 )
 
 dqm = DQM(problem, time=5)
@@ -25,7 +25,7 @@ sampleset = dqm.solve()
 sample = sampleset.first.sample
 
 communities = [
-    {int(c[len("x") :]) for c in comm}
+    {int(c[1:]) for c in comm}
     for comm in communities_from_sample(sample, problem.cases)
 ]
 modularity = nx_comm.modularity(
