@@ -1,3 +1,5 @@
+import os
+from dimod import ConstrainedQuadraticModel
 from dwave.system import LeapHybridCQMSampler
 
 from typing import Any, Optional
@@ -6,6 +8,9 @@ from QHyper.solvers.converter import Converter
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
 from QHyper.optimizers.base import Optimizer
+
+
+DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
 
 
 class CQM(Solver):
@@ -51,7 +56,7 @@ class CQM(Solver):
 
         converter = Converter()
         cqm = converter.to_cqm(self.problem)
-        sampler = LeapHybridCQMSampler()
+        sampler = LeapHybridCQMSampler(token=DWAVE_API_TOKEN)
         solutions = sampler.sample_cqm(cqm, self.time)
         correct_solutions = [
             s for s in solutions

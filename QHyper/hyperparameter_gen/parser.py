@@ -123,18 +123,32 @@ class Parser(ast.NodeVisitor):
 
 
 class Expression:
-    def __init__(self, polynomial: sympy.core.Expr) -> None:
-        self.polynomial: sympy.core.Expr = polynomial
+    def __init__(self, equation: sympy.core.Expr | dict) -> None:
+        if isinstance(equation, sympy.core.Expr):
+            self.polynomial: sympy.core.Expr | None = equation
+            self.dictionary: dict = self.as_dict()
+        elif isinstance(equation, dict):
+            self.polynomial: sympy.core.Expr | None = None
+            self.dictionary: dict = equation
+        else:
+            raise Exception(
+                "Expression equation must be an instance of "
+                "sympy.core.Expr or dict, got of type: "
+                f"{type(equation)} instead"
+            )
 
     def as_dict(self) -> QUBO:
-        parser = Parser()
-        ast_tree = ast.parse(str(
-            sympy.expand(self.polynomial)))  # type: ignore[no-untyped-call]
-        parser.visit(ast_tree)
-        return parser.polynomial_as_dict
+        if self.polynomial is not None:
+            parser = Parser()
+            ast_tree = ast.parse(
+                str(sympy.expand(self.polynomial))
+            )  # type: ignore[no-untyped-call]
+            parser.visit(ast_tree)
+            self.dictionary = parser.polynomial_as_dict
+        return self.dictionary
 
     def __repr__(self) -> str:
-        return str(self.polynomial)
+        return str(self.dictionary)
 
     # def as_dict_with_slacks(self):
     #     parser = Parser()
@@ -154,5 +168,15 @@ class Expression:
     #     else:
     #         raise Exception("Unimplemented")
 
-    def as_string(self) -> str:
-        return str(self.polynomial)
+    def as_polynomial(self) -> str:
+        if self.polynomial is not None:
+            return str(self.polynomial)
+        else:
+            polynomial = str()
+            for k in self.dictionary:
+                if self.dictionary[k] < 0:
+                    polynomial += "- "
+                polynomial += str(abs(self.dictionary[k])) + "*"
+                polynomial += "*".join(k)
+                polynomial += " "
+            return polynomial.rstrip()
