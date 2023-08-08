@@ -6,7 +6,7 @@ from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
 from QHyper.solvers.converter import Converter
 
-DWAVE_API_TOKEN = os.environ["DWAVE_API_TOKEN"]
+DWAVE_API_TOKEN = os.environ.get("DWAVE_API_TOKEN")
 
 
 class DQM(Solver):

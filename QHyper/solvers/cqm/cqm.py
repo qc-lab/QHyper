@@ -10,7 +10,7 @@ from QHyper.solvers.base import Solver
 from QHyper.optimizers.base import Optimizer
 
 
-DWAVE_API_TOKEN = os.environ['DWAVE_API_TOKEN']
+DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
 
 
 class CQM(Solver):

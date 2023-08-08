@@ -50,9 +50,9 @@ class VQA(Solver):
     def __init__(
             self,
             problem: Problem,
-            hyper_optimizer: Optimizer = None,
             pqc: PQC | str = "",
             optimizer: Optimizer | str = "",
+            hyper_optimizer: Optimizer = None,
             config: dict[str, dict[str, Any]] = {}
     ) -> None:
         self.problem = problem
