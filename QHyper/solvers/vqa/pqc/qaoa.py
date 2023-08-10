@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import pennylane as qml
 import numpy as np
+from scipy.sparse import csr_matrix
 
 import numpy.typing as npt
 from typing import Any, Callable, cast, Optional
@@ -35,7 +36,24 @@ class QAOA(PQC):
                 )
             result += tmp
         return result
+    
+    def _create_weight_free_hamiltonian(
+            self, problem: Problem) -> qml.Hamiltonian:
+        row = []
+        col = []
+        data = []
 
+        for i in range(2**len(problem.variables)):
+            row.append(i)
+            col.append(i)
+            data.append(problem.get_score(
+                format(i, 'b').zfill(len(problem.variables)),
+                penalty=0.1
+            ))
+        sparse_matrix = csr_matrix((data, (row, col)))
+        ham = qml.SparseHamiltonian(sparse_matrix, problem.variables)
+        return ham
+ 
     def _hadamard_layer(self, problem: Problem) -> None:
         for i in problem.variables:
             qml.Hadamard(str(i))
@@ -61,10 +79,13 @@ class QAOA(PQC):
         qubo = Converter.create_qubo(problem, weights)
         cost_operator = self._create_cost_operator(qubo)
 
-        @qml.qnode(self.dev)
+        @qml.qnode(self.dev, interface="autograd", diff_method="parameter-shift")
         def expval_circuit(params: npt.NDArray[np.float64]) -> float:
             self._circuit(problem, params, cost_operator)
-            return cast(float, qml.expval(cost_operator))
+            return cast(float, qml.expval(
+                cost_operator
+                # self._create_weight_free_hamiltonian(problem)
+            ))
 
         return cast(Callable[[npt.NDArray[np.float64]], float], expval_circuit)
 

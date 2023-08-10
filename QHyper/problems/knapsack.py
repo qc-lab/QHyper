@@ -142,13 +142,15 @@ class KnapsackProblem(Problem):
         # equation = equation
         self.constraints.append(Expression(equation))
 
-    def get_score(self, result: str) -> float:
+    def get_score(self, result: str, penalty: float = 0) -> float:
         """Returns score of the provided outcome in bits
 
         Parameters
         ----------
         result : str
             outcome as a string of zeros and ones
+        penalty : float
+            penalty for incorrect results (default 0)
 
         Returns
         -------
@@ -163,12 +165,12 @@ class KnapsackProblem(Problem):
                 sum += item.value
                 weight += item.weight
         if weight > self.knapsack.max_weight:
-            return 0
+            return penalty
 
         for i in range(self.knapsack.max_weight):
             if result[i + len(self.knapsack)] == '1' and i + 1 != weight:
-                return 0
+                return penalty
         if weight != 0 and result[weight + len(self.knapsack) - 1] != '1':
-            return 0
+            return penalty
 
         return -sum

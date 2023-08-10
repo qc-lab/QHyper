@@ -13,6 +13,20 @@ class WFEval(EvalFunc):
             const_params: list[float]
     ) -> float:
         score: float = 0
-        for result, prob in results.items():
-            score += prob * problem.get_score(result)
+
+        sorted_results = {
+            k: v for k, v in
+            sorted(
+                results.items(),
+                key=lambda item: item[1],
+                reverse=True
+            )[:40]
+        }
+
+        # print(sorted_results)
+        scaler = 1/sum([v for v in sorted_results.values()])
+        # print(scaler)
+
+        for result, prob in sorted_results.items():
+            score += scaler * prob * problem.get_score(result, self.penalty)
         return score

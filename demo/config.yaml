@@ -1,0 +1,11 @@
+solver:
+  type: vqa
+  args:
+    config:
+      optimizer:
+        type: qml
+        optimization_steps: 10
+      pqc:
+        type: qaoa
+        layers: 5
+        # penalty: 3

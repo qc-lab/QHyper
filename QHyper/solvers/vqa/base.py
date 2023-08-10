@@ -99,7 +99,10 @@ class VQA(Solver):
 
         return self.pqc.get_params_init_format(best_opt_args, best_hargs)
 
-    def evaluate(self, params_inits: dict[str, Any]) -> float:
+    def evaluate(
+            self, params_inits: dict[str, Any], print_results: bool = False
+    ) -> float:
         hyper_args = self.pqc.get_hopt_args(params_inits)
         opt_args = self.pqc.get_opt_args(params_inits)
-        return self.pqc.run_opt(self.problem, opt_args, hyper_args)
+        return self.pqc.run_opt(
+            self.problem, opt_args, hyper_args, print_results)

@@ -27,7 +27,7 @@ class MaxCutProblem(Problem):
 
         self.objective_function: Expression = Expression(equation)
 
-    def get_score(self, result: str) -> float | None:
+    def get_score(self, result: str) -> float:
         sum = 0
 
         for e in self.edges:

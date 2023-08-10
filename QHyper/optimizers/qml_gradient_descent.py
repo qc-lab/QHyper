@@ -22,8 +22,8 @@ class QmlGradientDescent(Optimizer):
 
     def __init__(
         self,
-        optimizer: qml.GradientDescentOptimizer,
-        optimization_steps: int
+        optimizer: qml.GradientDescentOptimizer = None,
+        optimization_steps: int = 200
     ) -> None:
         """
         Parameters
@@ -35,7 +35,9 @@ class QmlGradientDescent(Optimizer):
             number of optimization steps
         """
 
-        self.optimizer = optimizer
+        self.optimizer = optimizer if optimizer else qml.AdamOptimizer(
+            stepsize=0.005
+        ) 
         self.optimization_steps = optimization_steps
 
     def minimize(
@@ -59,6 +61,7 @@ class QmlGradientDescent(Optimizer):
             Returns tuple which contains params taht lead to the lowest value
             of the provided function and cost history
         """
+        print("qml")
 
         cost_history = []
         params = np.array(init, requires_grad=True)
@@ -67,4 +70,5 @@ class QmlGradientDescent(Optimizer):
         for _ in range(self.optimization_steps):
             params, cost = self.optimizer.step_and_cost(func, params)
             cost_history.append(cost)
+        print(f"cost history: {cost_history}") 
         return cost, params
