@@ -22,8 +22,8 @@ class QmlGradientDescent(Optimizer):
 
     def __init__(
         self,
-        optimizer: qml.GradientDescentOptimizer,
-        optimization_steps: int
+        optimizer: qml.GradientDescentOptimizer = None,
+        optimization_steps: int = 200
     ) -> None:
         """
         Parameters
@@ -35,7 +35,9 @@ class QmlGradientDescent(Optimizer):
             number of optimization steps
         """
 
-        self.optimizer = optimizer
+        self.optimizer = optimizer if optimizer else qml.AdamOptimizer(
+            stepsize=0.005
+        ) 
         self.optimization_steps = optimization_steps
 
     def minimize(

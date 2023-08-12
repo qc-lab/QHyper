@@ -47,6 +47,20 @@ class Converter:
         return results
 
     @staticmethod
+    def create_weight_free_qubo(problem: Problem) -> QUBO:
+        results: dict[VARIABLES, float] = {}
+
+        objective_function = Expression(problem.objective_function.polynomial)
+        for key, value in objective_function.as_dict().items():
+            if key in results:
+                results[key] += value
+            else:
+                results[key] = value
+        
+
+        return results
+
+    @staticmethod
     def to_cqm(problem: Problem) -> ConstrainedQuadraticModel:
         binary_polynomial = dimod.BinaryPolynomial(
             problem.objective_function.as_dict(), dimod.BINARY
