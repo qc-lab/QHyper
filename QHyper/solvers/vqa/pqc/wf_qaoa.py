@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import pennylane as qml
 import numpy as np
-from scipy.sparse import csr_array
 
 import numpy.typing as npt
 from typing import Callable, cast

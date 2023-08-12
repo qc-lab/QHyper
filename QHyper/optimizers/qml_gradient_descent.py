@@ -61,7 +61,6 @@ class QmlGradientDescent(Optimizer):
             Returns tuple which contains params taht lead to the lowest value
             of the provided function and cost history
         """
-        print("qml")
 
         cost_history = []
         params = np.array(init, requires_grad=True)
@@ -70,5 +69,4 @@ class QmlGradientDescent(Optimizer):
         for _ in range(self.optimization_steps):
             params, cost = self.optimizer.step_and_cost(func, params)
             cost_history.append(cost)
-        print(f"cost history: {cost_history}") 
         return cost, params

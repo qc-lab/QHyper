@@ -38,7 +38,7 @@ class Problem(ABC):
     name: str = ""
     cases: int = 1
 
-    def get_score(self, result: str) -> float:
+    def get_score(self, result: str, penalty: float = 0) -> float:
         """Returns score of the outcome provided as a binary string
 
         Necessary to evaluate results.

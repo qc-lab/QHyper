@@ -79,7 +79,7 @@ class QAOA(PQC):
         qubo = Converter.create_qubo(problem, weights)
         cost_operator = self._create_cost_operator(qubo)
 
-        @qml.qnode(self.dev, interface="autograd", diff_method="parameter-shift")
+        @qml.qnode(self.dev)
         def expval_circuit(params: npt.NDArray[np.float64]) -> float:
             self._circuit(problem, params, cost_operator)
             return cast(float, qml.expval(

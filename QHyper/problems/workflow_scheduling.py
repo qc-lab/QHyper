@@ -216,5 +216,5 @@ class WorkflowSchedulingProblem(Problem):
 
         return min_path_runtime, max_path_runtime
 
-    def get_score(self, result: str) -> float:
+    def get_score(self, result: str, penalty: float = 0) -> float:
         return 0
