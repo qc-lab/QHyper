@@ -11,3 +11,7 @@ paper
 
 .idea
 /.idea
+
+/build/
+/dist/
+*.egg-info/
