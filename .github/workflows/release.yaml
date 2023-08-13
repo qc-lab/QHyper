@@ -36,5 +36,5 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
       - name: Publish distribution 📦 to PyPI
-        if: contains(github.ref, 'dev') == false
+        if: ${{ !contains(github.ref, 'dev') }}
         uses: pypa/gh-action-pypi-publish@release/v1
