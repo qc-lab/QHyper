@@ -6,9 +6,10 @@ on:
       - 'v*' # Trigger on tags starting with 'v'
 
 jobs:
-  build:
+  pypi-test-build-and-publish:
     runs-on: ubuntu-latest
-
+    permissions:
+      id-token: write
     steps:
       - name: Check out code
         uses: actions/checkout@v2
