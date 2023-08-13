@@ -1,0 +1,38 @@
+name: Release to PyPI
+
+on:
+  push:
+    branches:
+      - 'main' # Trigger on main branch
+
+jobs:
+  pypi-test-build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+
+      - name: Build
+        run: |
+          python setup.py sdist bdist_wheel
+      
+      - name: Publish
+        run: |
+          if [[ -n "${GITHUB_REF}" && "${GITHUB_REF}" == "refs/tags/"* ]]; then
+            # Publish official version to PyPI
+            twine upload dist/*
+          else
+            # Publish to PyPI Test
+            twine upload --repository-url https://test.pypi.org/legacy/ dist/* --skip-existing
