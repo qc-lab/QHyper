@@ -36,3 +36,4 @@ jobs:
           else
             # Publish to PyPI Test
             twine upload --repository-url https://test.pypi.org/legacy/ dist/* --skip-existing
+          fi
