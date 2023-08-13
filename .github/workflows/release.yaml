@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - 'main' # Trigger on main branch
+    tags:
+      - '*'
 
 jobs:
   pypi-test-build-and-publish:
@@ -34,5 +36,5 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
       - name: Publish distribution 📦 to PyPI
-        if: startsWith(github.ref, 'refs/tags')
+        if: contains(github.ref, 'dev') == false
         uses: pypa/gh-action-pypi-publish@release/v1

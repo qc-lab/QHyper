@@ -15,7 +15,7 @@ def get_version():
         return tag
     except Exception as e:
         print("Error:", e)
-        return "dev"  # Default version if Git tag extraction fails
+        return "0.dev1"  # Default version if Git tag extraction fails
 
 
 DESCRIPTION = 'Quantum and classical problem solvers'
