@@ -1,9 +1,9 @@
-name: Release to TestPyPI
+name: Release to PyPI
 
 on:
   push:
-    tags:
-      - 'v*' # Trigger on tags starting with 'v'
+    branches:
+      - 'main' # Trigger on main branch
 
 jobs:
   pypi-test-build-and-publish:
@@ -29,6 +29,10 @@ jobs:
           python setup.py sdist bdist_wheel
       
       - name: Publish
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with: 
-          repository_url: https://test.pypi.org/legacy/
+        run: |
+          if [[ -n "${GITHUB_REF}" && "${GITHUB_REF}" == "refs/tags/"* ]]; then
+            # Publish official version to PyPI
+            twine upload dist/*
+          else
+            # Publish to PyPI Test
+            twine upload --repository-url https://test.pypi.org/legacy/ dist/* --skip-existing
