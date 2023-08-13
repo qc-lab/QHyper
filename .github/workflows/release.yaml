@@ -6,7 +6,7 @@ on:
       - '*'
 
 jobs:
-  pypi-test-build-and-publish:
+  pypi-build-and-publish:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -18,7 +18,7 @@ jobs:
         run: |
           tag_ref=${{ github.ref }}
           tag_name=${tag_ref#refs/tags/}
-          if [[ $(git branch --contains "$tag_ref" | grep -qxE 'main') ]]; then
+          if [[ $(git branch --contains "$tag_ref" | grep -qxE '. main') ]]; then
             echo "Tag $tag_name is on main branch"
           else
             echo "Tag $tag_name is not on main branch"
