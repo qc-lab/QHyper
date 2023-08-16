@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 import codecs
 import os
 import subprocess
+import re
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -12,7 +13,7 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 def get_version():
     try:
         tag = subprocess.check_output(["git", "describe", "--tags"]).strip().decode("utf-8")
-        return tag
+        return re.sub(r'^(test/|prod/)', '', tag)
     except Exception as e:
         print("Error:", e)
         return "0.dev1"  # Default version if Git tag extraction fails

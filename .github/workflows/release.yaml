@@ -3,7 +3,7 @@ name: Release to PyPI
 on:
   push:
     tags:
-      - '*'
+      - '**'
 
 jobs:
   pypi-build-and-publish:
@@ -13,17 +13,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-
-      - name: Ensure tag is on main branch
-        run: |
-          tag_ref=${{ github.ref }}
-          tag_name=${tag_ref#refs/tags/}
-          if [[ ! $(git branch --contains "$tag_ref" | grep -qxE '. main') ]]; then
-            echo "Tag $tag_name is on main branch"
-          else
-            echo "Tag $tag_name is not on main branch"
-            exit 1
-          fi
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -40,11 +29,12 @@ jobs:
           python setup.py sdist bdist_wheel
 
       - name: Publish distribution 📦 to Test PyPI
+        if: startsWith(github.ref, 'refs/tags/test/')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
           verbose: true
 
       - name: Publish distribution 📦 to PyPI
-        if: ${{ !contains(github.ref, 'dev') }}
+        if: startsWith(github.ref, 'refs/tags/prod/')
         uses: pypa/gh-action-pypi-publish@release/v1
