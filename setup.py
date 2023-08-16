@@ -13,7 +13,7 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 def get_version():
     try:
         tag = subprocess.check_output(["git", "describe", "--tags"]).strip().decode("utf-8")
-        return re.sub(r'^(test/|prod/)', '', tag)
+        return tag
     except Exception as e:
         print("Error:", e)
         return "0.dev1"  # Default version if Git tag extraction fails
