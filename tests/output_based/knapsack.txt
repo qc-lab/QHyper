@@ -1,0 +1,13 @@
+[Item(weight=1, value=2), Item(weight=1, value=2), Item(weight=1, value=1)]
+Variables used to describe objective functionand constraints: (x0, x1, x2, x3, x4)
+Objective function: {('x0',): -2, ('x1',): -2, ('x2',): -1}
+Constraints:
+    {('x3',): -1, ('x4',): -1, (): 1}
+    {('x0',): -1, ('x1',): -1, ('x2',): -1, ('x3',): 1, ('x4',): 2}
+Best params: {'angles': array([[0.97956903, 0.32168569, 0.29269012, 0.66326334, 1.67911454],
+       [1.06455741, 0.8406234 , 1.01144521, 0.58538025, 1.33905414]]), 'hyper_args': array([7.01563033, 8.32485755, 8.63078226])}
+Best results: -0.5637734152199887
+Params used for optimizer:
+[[0.97956903 0.32168569 0.29269012 0.66326334 1.67911454]
+ [1.06455741 0.8406234  1.01144521 0.58538025 1.33905414]],
+and params used for hyper optimizer: [7.01563033 8.32485755 8.63078226]
