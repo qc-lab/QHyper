@@ -3,7 +3,8 @@ name: Release to PyPI
 on:
   push:
     tags:
-      - '**'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'test/v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   pypi-build-and-publish:

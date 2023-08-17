@@ -14,7 +14,6 @@ def get_version():
     try:
         tag = subprocess.check_output(["git", "describe", "--tags"]).strip().decode("utf-8")
         tag = tag.replace('test/', '')
-        print(tag)
         return tag
     except Exception as e:
         print("Error:", e)
