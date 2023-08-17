@@ -1,4 +1,3 @@
-[Item(weight=1, value=2), Item(weight=1, value=2), Item(weight=1, value=1)]
 Variables used to describe objective functionand constraints: (x0, x1, x2, x3, x4)
 Objective function: {('x0',): -2, ('x1',): -2, ('x2',): -1}
 Constraints:
