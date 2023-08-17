@@ -1,19 +1,41 @@
-from QHyper.problems.knapsack import KnapsackProblem
 import numpy as np
+import argparse
+
+from QHyper.problems import KnapsackProblem, TSPProblem
 from QHyper.solvers import Solver
 
 
 np.random.seed(1244)
 
-if __name__ == "__main__":
-    problem = KnapsackProblem(max_weight=2, items=[(1, 2), (1, 2),(1, 1)])
-    print(problem.knapsack.items)
 
-    params_cofing = {
-        'angles': [[0.5]*5, [1]*5],
-        'hyper_args': [1, 2.5, 2.5],
-    }
-    hyper_optimizer_bounds = 3*[(1, 10)]
+def get_problem(problem_name):
+    if problem_name == 'knapsack':
+        problem = KnapsackProblem(max_weight=2, items=[(1, 2), (1, 2),(1, 1)])
+        params_cofing = {
+            'angles': [[0.5]*5, [1]*5],
+            'hyper_args': [1, 2.5, 2.5],
+        }
+        hyper_optimizer_bounds = 3*[(1, 10)]
+
+    elif problem_name == 'tsp':
+        problem = TSPProblem(
+            number_of_cities=3,
+        )
+        params_cofing = {
+            'angles': [[0.5]*5, [1]*5],
+            'hyper_args': [1, 2, 2, 2, 2],
+        }
+        hyper_optimizer_bounds = 5*[(1, 10)]
+    
+    return problem, params_cofing, hyper_optimizer_bounds
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("problem", type=str, help="Problem name")
+    args = parser.parse_args()
+
+    problem, params_cofing, hyper_optimizer_bounds = get_problem(args.problem)
 
     print(f"Variables used to describe objective function"
         f"and constraints: {problem.variables}")
@@ -35,7 +57,6 @@ if __name__ == "__main__":
             }
         },
     }
-
     tester = Solver.from_config(problem, tester_config)
 
     solver_config = {
