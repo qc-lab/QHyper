@@ -96,17 +96,15 @@ class CEM(Optimizer):
         """
         # wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
         _init = np.array(init)
-        mean = _init
-        cov = np.identity(len(_init))
+        mean = _init.flatten()
+        cov = np.identity(len(mean))
         best_hyperparams = _init
         best_score = func(_init)
-
-        for _ in range(1, self.epochs+1):
+        for _ in range(self.epochs):
             hyperparams = self._get_points(mean, cov)
-
             with mp.Pool(processes=self.processes) as p:
                 results = list(tqdm.tqdm(
-                    p.imap(func, hyperparams),
+                    p.imap(func, [h.reshape(_init.shape) for h in hyperparams]),
                     total=len(hyperparams),
                     disable=self.disable_tqdm
                 ))
@@ -121,7 +119,7 @@ class CEM(Optimizer):
             if reward < best_score:
                 best_hyperparams = best_hyperparams
                 best_score = reward
-
+            print(best_score)
             mean = np.mean(elite_weights, axis=0)
             cov = np.cov(np.stack((elite_weights), axis=1), bias=True)
 
