@@ -15,52 +15,35 @@ Welcome to QHyper's documentation!
 
 QHyper - a software framework for hybrid quantum-classical optimization.
 
-Introduction
-=================
+Introduction to qhyper Library
+==============================
 
-QHyper is a python library which main goal is to make easier conducting experiments.
-Focuses on quantum algorithms, allows also to use classical solvers.
+Welcome to the documentation for the **QHyper** library, a powerful tool designed
+to simplify the process of conducting experiments in the realm of quantum
+algorithms. The primary aim of qhyper is to provide a
+user-friendly framework that simplifies the execution of experiments, focusing on
+quantum algorithms while also allowing classical approaches.
 
-.. code-block:: python
+Key Features
+------------
 
-    >>> problem = KnapsackProblem(max_weight=2, items=[(1, 2), (1, 2), (1, 1)])
+- **Quantum Algorithm Emphasis:** QHyper is tailored for researchers and
+  developers interested in exploring quantum algorithms. It offers an environment
+  that facilitates the implementation of quantum-based solvers.
 
-    >>> params_config = {
-            'angels': [[0.5]*5, [1]*5],
-            'hyper_args': [1, 2.5, 2.5],
-        }
+- **Classical Solver Support:** While the focus is on quantum algorithms,
+  qhyper acknowledges the significance of classical methods. It enables the
+  seamless integration of classical solvers, ensuring a unified platform for
+  comparative experiments.
 
-    >>> config = {
-            'solver': {
-                'type': 'vqa',
-                'args': {
-                    'optimizer': {
-                        'type': 'scipy',
-                        'maxfun': 200,
-                    },
-                    'pqc': {
-                        'type': 'hqaoa',
-                        'layers': 5,
-                    },
-                }
-            },
-            'hyper_optimizer': {
-                'type': 'random',
-                'processes': 5,
-                'number_of_samples': 100,
-                'bounds': [[1, 10], [1, 10], [1, 10]]
-            }
-        }
+- **Modularity and Extensibility:** One of QHyper's core strengths is its design
+  for easy extensibility. Adding new solvers, algorithms, or problems is
+  straightforward, empowering users to contribute and customize the library to
+  suit their research needs.
 
-    >>> vqa = Solver.from_config(problem, config=config)
-
-    >>> vqa.solve(params_cofing)
-    {
-        'angles': array([0.20700558, 0.85908389, 0.58705246, 0.52192666, 0.7343595 ,
-                         0.98882406, 1.00509525, 1.0062573 , 0.9811152 , 1.12500301]),
-        'hyper_args': array([1.02005268, 2.10821942, 1.94148846, 2.14637279, 1.88565744])
-    }
-
+- **Simplified Experimentation:** With QHyper, the experimentation process is
+  made more accessible. Researchers can define, execute, and analyze experiments
+  efficiently, allowing them to focus on the insights derived from the results.
 
 
 Architecture
