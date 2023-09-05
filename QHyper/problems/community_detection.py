@@ -4,7 +4,7 @@ from typing import Any, Iterable, Tuple, cast
 import networkx as nx
 import numpy as np
 import sympy
-from QHyper.hyperparameter_gen.parser import Expression
+from QHyper.util import Expression
 from QHyper.problems.base import Problem
 from QHyper.util import VARIABLES
 from sympy.core.expr import Expr

@@ -2,7 +2,7 @@ from abc import ABC
 
 import sympy
 
-from QHyper.hyperparameter_gen.parser import Expression
+from QHyper.util import Expression
 
 
 class Problem(ABC):

@@ -1,12 +1,12 @@
 import itertools
 
-import numpy as np
 import sympy
+import numpy as np
 
 from typing import cast
 
+from QHyper.util import Expression
 from .base import Problem
-from ..hyperparameter_gen.parser import Expression
 
 
 class TSP:

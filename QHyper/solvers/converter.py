@@ -2,7 +2,7 @@ from typing import Any, cast
 
 import dimod
 from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
-from QHyper.hyperparameter_gen.parser import Expression
+from QHyper.util import Expression
 from QHyper.problems.base import Problem
 from QHyper.util import QUBO, VARIABLES
 
