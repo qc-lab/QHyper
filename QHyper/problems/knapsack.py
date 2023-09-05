@@ -5,7 +5,7 @@ from collections import namedtuple
 from typing import cast
 
 from .base import Problem
-from QHyper.hyperparameter_gen.parser import Expression
+from QHyper.util import Expression
 
 Item = namedtuple('Item', "weight value")
 

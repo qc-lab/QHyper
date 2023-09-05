@@ -14,7 +14,7 @@ from networkx.classes.reportviews import NodeView
 from sympy.core.expr import Expr
 from typing import cast
 
-from QHyper.hyperparameter_gen.parser import Expression
+from QHyper.util import Expression
 from .base import Problem
 
 

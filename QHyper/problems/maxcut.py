@@ -1,7 +1,7 @@
 from typing import cast
 
 import sympy
-from QHyper.hyperparameter_gen.parser import Expression
+from QHyper.util import Expression
 
 from .base import Problem
 
