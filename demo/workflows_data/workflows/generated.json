@@ -1,96 +1,100 @@
 {
-  "name": "Customdata-synthetic-instance",
-  "description": "Instance generated with WfCommons - https://wfcommons.org",
-  "createdAt": "2022-12-27T23:52:02.275170",
-  "schemaVersion": "1.3",
-  "author": {
-    "name": "jzawalska",
-    "email": "support@wfcommons.org"
-  },
-  "wms": {
-    "name": "WfCommons",
-    "version": "0.8",
-    "url": "https://docs.wfcommons.org/en/v0.8/"
-  },
-  "workflow": {
-    "executedAt": "20221228T005202+0100",
-    "makespan": 0,
-    "tasks": [
-      {
-        "name": "TaskType.COMPUTE_00000001",
-        "type": "compute",
-        "runtime": 8,
-        "command": {},
-        "parents": [],
-        "children": [
-          "TaskType.COMPUTE_00000002",
-          "TaskType.COMPUTE_00000004"
+    "name": "Customdata-synthetic-instance",
+    "description": "Instance generated with WfCommons - https://wfcommons.org",
+    "createdAt": "2022-12-27T23:52:02.275170",
+    "schemaVersion": "1.4",
+    "author": {
+        "name": "jzawalska",
+        "email": "support@wfcommons.org"
+    },
+    "wms": {
+        "name": "WfCommons",
+        "version": "0.8",
+        "url": "https://docs.wfcommons.org/en/v0.8/"
+    },
+    "workflow": {
+        "executedAt": "20221228T005202+0100",
+        "tasks": [
+            {
+                "name": "TaskType.COMPUTE_00000001",
+                "type": "compute",
+                "command": {},
+                "parents": [],
+                "children": [
+                    "TaskType.COMPUTE_00000002",
+                    "TaskType.COMPUTE_00000004"
+                ],
+                "files": [],
+                "cores": 1,
+                "id": "TaskType.COMPUTE_00000001",
+                "memory": 31411,
+                "machine": "default_machine",
+                "runtimeInSeconds": 8,
+                "memoryInBytes": 31411000
+            },
+            {
+                "name": "TaskType.COMPUTE_00000002",
+                "type": "compute",
+                "command": {},
+                "parents": [
+                    "TaskType.COMPUTE_00000001"
+                ],
+                "children": [
+                    "TaskType.COMPUTE_00000003"
+                ],
+                "files": [],
+                "cores": 1,
+                "id": "TaskType.COMPUTE_00000002",
+                "memory": 21438,
+                "machine": "default_machine",
+                "runtimeInSeconds": 4,
+                "memoryInBytes": 21438000
+            },
+            {
+                "name": "TaskType.COMPUTE_00000003",
+                "type": "compute",
+                "command": {},
+                "parents": [
+                    "TaskType.COMPUTE_00000002",
+                    "TaskType.COMPUTE_00000004"
+                ],
+                "children": [],
+                "files": [],
+                "cores": 1,
+                "id": "TaskType.COMPUTE_00000003",
+                "memory": 27474,
+                "machine": "default_machine",
+                "runtimeInSeconds": 7,
+                "memoryInBytes": 27474000
+            },
+            {
+                "name": "TaskType.COMPUTE_00000004",
+                "type": "compute",
+                "command": {},
+                "parents": [
+                    "TaskType.COMPUTE_00000001"
+                ],
+                "children": [
+                    "TaskType.COMPUTE_00000003"
+                ],
+                "files": [],
+                "cores": 1,
+                "id": "TaskType.COMPUTE_00000004",
+                "memory": 25222,
+                "machine": "default_machine",
+                "runtimeInSeconds": 10,
+                "memoryInBytes": 25222000
+            }
         ],
-        "files": [],
-        "cores": 1,
-        "id": "TaskType.COMPUTE_00000001",
-        "memory": 31411,
-        "machine": "default_machine"
-      },
-      {
-        "name": "TaskType.COMPUTE_00000002",
-        "type": "compute",
-        "runtime": 4,
-        "command": {},
-        "parents": [
-          "TaskType.COMPUTE_00000001"
+        "machines": [
+            {
+                "nodeName": "default_machine",
+                "cpu": {
+                    "count": 1,
+                    "speed": 1
+                }
+            }
         ],
-        "children": [
-          "TaskType.COMPUTE_00000003"
-        ],
-        "files": [],
-        "cores": 1,
-        "id": "TaskType.COMPUTE_00000002",
-        "memory": 21438,
-        "machine": "default_machine"
-      },
-      {
-        "name": "TaskType.COMPUTE_00000003",
-        "type": "compute",
-        "runtime": 7,
-        "command": {},
-        "parents": [
-          "TaskType.COMPUTE_00000002",
-          "TaskType.COMPUTE_00000004"
-        ],
-        "children": [],
-        "files": [],
-        "cores": 1,
-        "id": "TaskType.COMPUTE_00000003",
-        "memory": 27474,
-        "machine": "default_machine"
-      },
-      {
-        "name": "TaskType.COMPUTE_00000004",
-        "type": "compute",
-        "runtime": 10,
-        "command": {},
-        "parents": [
-          "TaskType.COMPUTE_00000001"
-        ],
-        "children": [
-          "TaskType.COMPUTE_00000003"
-        ],
-        "files": [],
-        "cores": 1,
-        "id": "TaskType.COMPUTE_00000004",
-        "memory": 25222,
-        "machine": "default_machine"
-      }
-    ],
-    "machines": [
-      {
-        "nodeName": "default_machine",
-        "cpu": {
-          "count": 1,
-          "speed": 1
-        }
-      }
-    ]
-  }
+        "makespanInSeconds": 0
+    }
 }
