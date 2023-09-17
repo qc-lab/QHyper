@@ -94,6 +94,7 @@ Contents
 
    Home <self>
    usage
+   contribution
    api
 
 
