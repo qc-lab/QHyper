@@ -53,7 +53,7 @@ Here are some key steps to get started:
 .. code-block:: python
 
     params_config = {
-        'angels': [[0.5]*5, [1]*5],
+        'angles': [[0.5]*5, [1]*5],
         'hyper_args': [1, 2.5, 2.5],
     }
 
@@ -62,7 +62,7 @@ Here are some key steps to get started:
 
 .. code-block:: python
 
-    config = {
+    solver_config = {
         'solver': {
             'type': 'vqa',
             'args': {
@@ -77,7 +77,7 @@ Here are some key steps to get started:
             }
         }
     }
-    vqa = Solver.from_config(problem, config=config)
+    vqa = Solver.from_config(problem, config=solver_config)
 
 
 5. **Execute solver:** Run your experiments using the solver on defined problem. Analyze the outcomes and gather insights from the results.

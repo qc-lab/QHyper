@@ -13,7 +13,7 @@ Focuses on quantum algorithms, allows also to use classical solvers.
 >>> problem = KnapsackProblem(max_weight=2, items=[(1, 2), (1, 2), (1, 1)])
 
 >>> params_config = {
-        'angels': [[0.5]*5, [1]*5],
+        'angles': [[0.5]*5, [1]*5],
         'hyper_args': [1, 2.5, 2.5],
     }
 
