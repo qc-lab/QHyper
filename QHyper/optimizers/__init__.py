@@ -6,7 +6,8 @@ from .cem import CEM
 from .qml_gradient_descent import QmlGradientDescent
 from .random import Random
 from .scipy_minimizer import ScipyOptimizer
-from .basinhopping import Basinhopping
+# from .basinhopping import Basinhopping
+from ._basinhopping import Basinhopping
 
 OPTIMIZERS_BY_NAME: dict[str, Type[Optimizer]] = {
     'scipy': ScipyOptimizer,

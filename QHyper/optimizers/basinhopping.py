@@ -70,7 +70,7 @@ class Basinhopping(Optimizer):
             A tuple containing the minimum function value and the corresponding optimal point.
         """
         result = basinhopping(
-            func, init.flatten(), niter=self.niter,
+            func, init.flatten(), niter=self.niter, disp=True,
             minimizer_kwargs={
                 'options': {'maxfun': self.maxfun},
                 'bounds': self.bounds
