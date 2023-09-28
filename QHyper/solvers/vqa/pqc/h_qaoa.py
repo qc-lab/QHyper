@@ -32,8 +32,9 @@ class HQAOA(QAOA):
         Callable[[list[float]], float]
             Returns function that takes angles and returns probabilities
         """
-        qubo = Converter.create_qubo(problem, weights)
-        cost_operator = self._create_cost_operator(qubo)
+        # qubo = Converter.create_qubo(problem, weights)
+        # cost_operator = self._create_cost_operator(qubo)
+        cost_operator = self.create_qubo(problem, weights)
 
         @qml.qnode(self.dev)
         def probability_circuit(params: npt.NDArray[np.float64]
