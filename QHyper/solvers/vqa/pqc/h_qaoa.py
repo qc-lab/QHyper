@@ -32,8 +32,6 @@ class HQAOA(QAOA):
         Callable[[list[float]], float]
             Returns function that takes angles and returns probabilities
         """
-        # qubo = Converter.create_qubo(problem, weights)
-        # cost_operator = self._create_cost_operator(qubo)
         cost_operator = self.create_qubo(problem, weights)
 
         @qml.qnode(self.dev)
@@ -54,7 +52,7 @@ class HQAOA(QAOA):
     ) -> float:
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
-        # const_params = params_config['weights']
+
         weights = list(opt_args[:1 + len(problem.constraints)])
         probs = self.get_probs_func(problem, list(weights))(
             opt_args[1 + len(problem.constraints):].reshape(2, -1))
