@@ -28,11 +28,10 @@ class Storage:
 
     def _add(self, minres):
         self.minres = minres
-        self.minres.x = np.copy(minres.x)
+        self.minres.params = np.copy(minres.params)
 
     def update(self, minres):
-        if minres.success and (minres.fun < self.minres.fun
-                               or not self.minres.success):
+        if minres.value < self.minres.value:
             self._add(minres)
             return True
         else:
@@ -80,13 +79,13 @@ class BasinHoppingRunner:
 
         # do initial minimization
         minres = minimizer(self.x)
-        print(minres)
+        print(minimizer)
         # if not minres.success:
         #     self.res.minimization_failures += 1
         #     if self.disp:
         #         print("warning: basinhopping: local minimization failure")
-        self.x = np.copy(minres.x)
-        self.energy = minres.fun
+        self.x = np.copy(minres.params)
+        self.energy = minres.value
         self.incumbent_minres = minres  # best minimize result found so far
         if self.disp:
             print("basinhopping step %d: f %g" % (self.nstep, self.energy))
@@ -114,8 +113,8 @@ class BasinHoppingRunner:
 
         # do a local minimization
         minres = self.minimizer(x_after_step)
-        x_after_quench = minres.x
-        energy_after_quench = minres.fun
+        x_after_quench = minres.params
+        energy_after_quench = minres.value
         if not minres.success:
             self.res.minimization_failures += 1
             if self.disp:
@@ -167,21 +166,21 @@ class BasinHoppingRunner:
         accept, minres = self._monte_carlo_step()
 
         if accept:
-            self.energy = minres.fun
-            self.x = np.copy(minres.x)
+            self.energy = minres.value
+            self.x = np.copy(minres.params)
             self.incumbent_minres = minres  # best minimize result found so far
             new_global_min = self.storage.update(minres)
 
         # print some information
         if self.disp:
-            self.print_report(minres.fun, accept)
+            self.print_report(minres.value, accept)
             if new_global_min:
                 print("found new global minimum on step %d with function"
                       " value %g" % (self.nstep, self.energy))
 
         # save some variables as BasinHoppingRunner attributes
-        self.xtrial = minres.x
-        self.energy_trial = minres.fun
+        self.xtrial = minres.params
+        self.energy_trial = minres.value
         self.accept = accept
 
         return new_global_min
@@ -191,7 +190,7 @@ class BasinHoppingRunner:
         minres = self.storage.get_lowest()
         print("basinhopping step %d: f %g trial_f %g accepted %d "
               " lowest_f %g" % (self.nstep, self.energy, energy_trial,
-                                accept, minres.fun))
+                                accept, minres.value))
 
 
 class AdaptiveStepsize:
@@ -730,7 +729,7 @@ class Basinhopping(Optimizer):
         # The wrapped minimizer is called once during construction of
         # BasinHoppingRunner, so run the callback
         if callable(callback):
-            callback(bh.storage.minres.x, bh.storage.minres.fun, True)
+            callback(bh.storage.minres.params, bh.storage.minres.value, True)
 
         # start main iteration loop
         count, i = 0, 0

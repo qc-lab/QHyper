@@ -37,22 +37,22 @@ class QAOA(PQC):
             result += tmp
         return result
     
-    def _create_weight_free_hamiltonian(
-            self, problem: Problem) -> qml.Hamiltonian:
-        row = []
-        col = []
-        data = []
+    # def _create_weight_free_hamiltonian(
+    #         self, problem: Problem) -> qml.Hamiltonian:
+    #     row = []
+    #     col = []
+    #     data = []
 
-        for i in range(2**len(problem.variables)):
-            row.append(i)
-            col.append(i)
-            data.append(problem.get_score(
-                format(i, 'b').zfill(len(problem.variables)),
-                penalty=0.1
-            ))
-        sparse_matrix = csr_matrix((data, (row, col)))
-        ham = qml.SparseHamiltonian(sparse_matrix, problem.variables)
-        return ham
+    #     for i in range(2**len(problem.variables)):
+    #         row.append(i)
+    #         col.append(i)
+    #         data.append(problem.get_score(
+    #             format(i, 'b').zfill(len(problem.variables)),
+    #             penalty=0.1
+    #         ))
+    #     sparse_matrix = csr_matrix((data, (row, col)))
+    #     ham = qml.SparseHamiltonian(sparse_matrix, problem.variables)
+    #     return ham
  
     def _hadamard_layer(self, problem: Problem) -> None:
         for i in problem.variables:
@@ -88,6 +88,33 @@ class QAOA(PQC):
             ))
 
         return cast(Callable[[npt.NDArray[np.float64]], float], expval_circuit)
+    
+    def get_probs_func(self, problem: Problem, weights: list[float]
+                       ) -> Callable[[npt.NDArray[np.float64]], list[float]]:
+        """Returns function that takes angles and returns probabilities
+
+        Parameters
+        ----------
+        weights : list[float]
+            weights for converting Problem to QUBO
+
+        Returns
+        -------
+        Callable[[list[float]], float]
+            Returns function that takes angles and returns probabilities
+        """
+        qubo = Converter.create_qubo(problem, weights)
+        cost_operator = self._create_cost_operator(qubo)
+
+        @qml.qnode(self.dev)
+        def probability_circuit(params: npt.NDArray[np.float64]
+                                ) -> list[float]:
+            self._circuit(problem, params, cost_operator)
+            return cast(list[float],
+                        qml.probs(wires=[str(x) for x in problem.variables]))
+
+        return cast(Callable[[npt.NDArray[np.float64]], list[float]],
+                    probability_circuit)
 
     def run_opt(
         self,
@@ -99,6 +126,21 @@ class QAOA(PQC):
             self.backend, wires=[str(x) for x in problem.variables])
         return self.get_expval_circuit(problem, list(hyper_args))(
             opt_args.reshape(2, -1))
+    
+    def run_with_probs(
+        self,
+        problem: Problem,
+        opt_args: npt.NDArray[np.float64],
+        hyper_args: npt.NDArray[np.float64]
+    ) -> dict[str, float]:
+        self.dev = qml.device(
+            self.backend, wires=[str(x) for x in problem.variables])
+        probs = self.get_probs_func(problem, list(hyper_args))(
+            opt_args.reshape(2, -1))
+        return {
+            format(result, 'b').zfill(len(problem.variables)): float(prob)
+            for result, prob in enumerate(probs)
+        }
 
     def get_opt_args(
         self,

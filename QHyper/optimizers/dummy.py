@@ -11,7 +11,7 @@ from .base import Optimizer, OptimizationResult
 class Dummy(Optimizer):
     def minimize(
             self, 
-            func: Callable[[npt.NDArray[npt.float64]], float], 
-            init: npt.NDArray[npt.float64]
+            func: Callable[[npt.NDArray[np.float64]], float], 
+            init: npt.NDArray[np.float64]
     ) -> OptimizationResult:
         return OptimizationResult(func(init), init)

@@ -5,16 +5,16 @@ import numpy.typing as npt
 
 from QHyper.problems.base import Problem
 
-from QHyper.optimizers import OPTIMIZERS_BY_NAME
-from QHyper.optimizers.base import Optimizer
+from QHyper.optimizers import OPTIMIZERS_BY_NAME, Dummy
+from QHyper.optimizers.base import Optimizer, OptimizationResult
 from .pqc.base import PQC
 
-from QHyper.solvers.base import Solver
+from QHyper.solvers.base import Solver, SolverResult
 from QHyper.solvers.vqa import PQC_BY_NAME
 
 
 @dataclass
-class OptWrapper:
+class LocalOptimizerFunction:
     pqc: PQC
     problem: Problem
     hyper_params: npt.NDArray[np.float64]
@@ -24,7 +24,7 @@ class OptWrapper:
 
 
 @dataclass
-class Wrapper:
+class GlobalOptimizerFunction:
     pqc: PQC
     problem: Problem
     optimizer: Optional[Optimizer]
@@ -32,27 +32,29 @@ class Wrapper:
 
     def __call__(self, hargs: npt.NDArray[np.float64]) -> float:
         opt_args = self.pqc.get_opt_args(self.params_config, hyper_args=hargs)
-        opt_wrapper = OptWrapper(self.pqc, self.problem, hargs)
+        opt_wrapper = LocalOptimizerFunction(self.pqc, self.problem, hargs)
 
         if self.optimizer:
-            value, _ = self.optimizer.minimize(opt_wrapper, opt_args)
+            res = self.optimizer.minimize(opt_wrapper, opt_args)
+            return res.value
         else:
             value = opt_wrapper(opt_args)
-        return value
+        return OptimizationResult(value, opt_args)
 
 
 @dataclass
 class VQA(Solver):
     problem: Problem
     pqc: PQC
-    optimizer: Optional[Optimizer]
+    optimizer: Optimizer = Dummy()
+    hyper_optimizer: Optimizer = Dummy()
 
     def __init__(
             self,
             problem: Problem,
             pqc: PQC | str = "",
             optimizer: Optimizer | str = "",
-            hyper_optimizer: Optimizer = None,
+            hyper_optimizer: Optimizer = Dummy(),
             config: dict[str, dict[str, Any]] = {}
     ) -> None:
         self.problem = problem
@@ -79,30 +81,27 @@ class VQA(Solver):
         else:
             self.optimizer = optimizer
 
-    def solve(self, params_inits: dict[str, Any]) -> Any:
+    def solve(self, params_inits: dict[str, Any]) -> SolverResult:
         hyper_args = self.pqc.get_hopt_args(params_inits)
-
-        if self.hyper_optimizer:
-            # TODO
-            wrapper = Wrapper(
-                self.pqc, self.problem, self.optimizer, params_inits)
-            _, best_hargs = self.hyper_optimizer.minimize(wrapper, hyper_args)
-        else:
-            best_hargs = hyper_args
+        wrapper = GlobalOptimizerFunction(
+            self.pqc, self.problem, self.optimizer, params_inits)
+        res = self.hyper_optimizer.minimize(wrapper, hyper_args)
+        best_hargs = res.params
 
         opt_args = self.pqc.get_opt_args(params_inits, hyper_args=best_hargs)
-        opt_wrapper = OptWrapper(self.pqc, self.problem, hyper_args)
-        if self.optimizer:
-            _, best_opt_args = self.optimizer.minimize(opt_wrapper, opt_args)
-        else:
-            best_opt_args = opt_args
+        opt_wrapper = LocalOptimizerFunction(self.pqc, self.problem, hyper_args)
+        res = self.optimizer.minimize(opt_wrapper, opt_args)
+        best_opt_args = res.params
 
-        return self.pqc.get_params_init_format(best_opt_args, best_hargs)
+        return SolverResult(
+            self.pqc.run_with_probs(self.problem, best_opt_args, best_hargs),
+            self.pqc.get_params_init_format(best_opt_args, best_hargs)
+        )
 
-    def evaluate(
-            self, params_inits: dict[str, Any], print_results: bool = False
-    ) -> float:
-        hyper_args = self.pqc.get_hopt_args(params_inits)
-        opt_args = self.pqc.get_opt_args(params_inits)
-        return self.pqc.run_opt(
-            self.problem, opt_args, hyper_args, print_results)
+    # def evaluate(
+    #         self, params_inits: dict[str, Any], print_results: bool = False
+    # ) -> float:
+    #     hyper_args = self.pqc.get_hopt_args(params_inits)
+    #     opt_args = self.pqc.get_opt_args(params_inits)
+    #     return self.pqc.run_opt(
+    #         self.problem, opt_args, hyper_args, print_results)

@@ -4,7 +4,7 @@ import numpy.typing as npt
 import pennylane as qml
 from pennylane import numpy as np
 
-from .base import Optimizer
+from .base import Optimizer, OptimizationResult
 
 
 class QmlGradientDescent(Optimizer):
@@ -44,7 +44,7 @@ class QmlGradientDescent(Optimizer):
         self,
         func: Callable[[npt.NDArray[np.float64]], float],
         init: npt.NDArray[np.float64]
-    ) -> tuple[float, npt.NDArray[np.float64]]:
+    ) -> OptimizationResult:
         """Returns params which lead to the lowest value of
             the provided function and cost history
 
@@ -69,4 +69,4 @@ class QmlGradientDescent(Optimizer):
         for _ in range(self.optimization_steps):
             params, cost = self.optimizer.step_and_cost(func, params)
             cost_history.append(cost)
-        return cost, params
+        return OptimizationResult(cost, params)
