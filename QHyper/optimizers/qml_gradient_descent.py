@@ -42,7 +42,7 @@ class QmlGradientDescent(Optimizer):
 
     def minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], float],
+        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
         init: npt.NDArray[np.float64]
     ) -> OptimizationResult:
         """Returns params which lead to the lowest value of

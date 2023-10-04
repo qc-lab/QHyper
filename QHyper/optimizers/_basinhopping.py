@@ -7,9 +7,10 @@ import inspect
 import scipy.optimize
 from scipy._lib._util import check_random_state
 
-from typing import Any
+from typing import Any, Callable
+import numpy.typing as npt
 
-from .base import Optimizer
+from .base import Optimizer, OptimizationResult
 
 __all__ = ['basinhopping']
 
@@ -371,10 +372,14 @@ class Basinhopping(Optimizer):
     ) -> None:
         self.niter = niter
 
-    def minimize(self, func, init, T=1.0, stepsize=0.5,
-                 minimizer_kwargs=None, take_step=None, accept_test=None,
-                 callback=None, interval=50, disp=False, niter_success=None,
-                 seed=None, *, target_accept_rate=0.5, stepwise_factor=0.9):
+    def minimize(
+            self, 
+            func: Callable[[npt.NDArray[np.float64]], OptimizationResult], 
+            init: npt.NDArray[np.float64], T=1.0, stepsize=0.5,
+            minimizer_kwargs=None, take_step=None, accept_test=None,
+            callback=None, interval=50, disp=False, niter_success=None,
+            seed=None, *, target_accept_rate=0.5, stepwise_factor=0.9
+    ) -> OptimizationResult:
         """Find the global minimum of a function using the basin-hopping algorithm.
 
         Basin-hopping is a two-phase method that combines a global stepping

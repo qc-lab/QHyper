@@ -6,10 +6,12 @@ import numpy.typing as npt
 from typing import Callable, cast
 
 from QHyper.problems.base import Problem
+from QHyper.optimizers import OptimizationResult
 
 from QHyper.solvers.vqa.pqc.qaoa import QAOA
 from QHyper.solvers.converter import Converter
-from QHyper.solvers.vqa.eval_funcs.wfeval import WFEval
+# from QHyper.solvers.vqa.eval_funcs.wfeval import WFEval
+from QHyper.util import weighted_avg_evaluation
 
 
 @dataclass
@@ -18,6 +20,7 @@ class WFQAOA(QAOA):
     penalty: float = 0
     mixer: str = "pl_x_mixer"
     backend: str = "default.qubit"
+    limit_results: int | None = None
 
     def get_probs_func(self, problem: Problem, weights: list[float]
                        ) -> Callable[[npt.NDArray[np.float64]], list[float]]:
@@ -52,7 +55,7 @@ class WFQAOA(QAOA):
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64],
         print_probabilities: bool = False
-    ) -> float:
+    ) -> OptimizationResult:
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
         probs = self.get_probs_func(problem, list(hyper_args))(
@@ -76,5 +79,8 @@ class WFQAOA(QAOA):
             for k, v in sorted_results.items():
                 print(f'{k}, {v:.3f}, {problem.get_score(k)}')
 
-        return WFEval(self.penalty).evaluate(
-            results_by_probabilites, problem, list(hyper_args))
+        result = weighted_avg_evaluation(
+            results_by_probabilites, problem.get_score, self.penalty,
+            limit_results=self.limit_results
+        )
+        return OptimizationResult(result, opt_args)

@@ -7,6 +7,7 @@ import numpy.typing as npt
 from typing import Any, Callable, cast, Optional
 
 from QHyper.problems.base import Problem
+from QHyper.optimizers import OptimizationResult
 
 from QHyper.solvers.vqa.pqc.base import PQC
 from QHyper.solvers.converter import QUBO, Converter
@@ -124,9 +125,10 @@ class QAOA(PQC):
     ) -> float:
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
-        return self.get_expval_circuit(problem, list(hyper_args))(
+        results = self.get_expval_circuit(problem, list(hyper_args))(
             opt_args.reshape(2, -1))
-    
+        return OptimizationResult(results, opt_args)
+
     def run_with_probs(
         self,
         problem: Problem,

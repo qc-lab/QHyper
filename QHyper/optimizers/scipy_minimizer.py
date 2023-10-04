@@ -29,7 +29,7 @@ class ScipyOptimizer(Optimizer):
 
     def minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], float],
+        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
         init: npt.NDArray[np.float64]
     ) -> OptimizationResult:
         """
@@ -51,7 +51,7 @@ class ScipyOptimizer(Optimizer):
             A tuple containing the minimum function value and the corresponding optimal point.
         """
         def wrapper(params: npt.NDArray[np.float64]) -> float:
-            return func(np.array(params).reshape(np.array(init).shape))
+            return func(np.array(params).reshape(np.array(init).shape)).value
 
         result = scipy.optimize.minimize(
             wrapper,

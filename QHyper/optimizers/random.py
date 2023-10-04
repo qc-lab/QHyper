@@ -41,7 +41,7 @@ class Random(Optimizer):
 
     def minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], float],
+        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
         init: npt.NDArray[np.float64]
     ) -> OptimizationResult:
         """Returns hyperparameters which lead to the lowest values
@@ -83,11 +83,8 @@ class Random(Optimizer):
                 total=self.number_of_samples,
                 disable=self.disable_tqdm
             ))
-
-        min_idx = np.argmin(results)
+        min_idx = np.argmin([result.value for result in results])
         return OptimizationResult(
-            value=results[min_idx],
-            params=hyperparams[min_idx]
+            value=results[min_idx].value,
+            params=hyperparams[min_idx],
         )
-        # return HyperOptimizerResults.from_solver_results(
-        #     results[min_idx], hyperparams[min_idx])

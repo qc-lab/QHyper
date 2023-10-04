@@ -15,12 +15,12 @@ class SolverResult:
 
     Attributes
     ----------
-    results_probabilities : dict[Any, float]
+    results_probabilities : dict[str, float]
         Dictionary with results and their probabilities.
     params : dict[Any, Any]
         Dictionary with the best parameters for the solver.
     """
-    results_probabilities: dict[Any, float]
+    results_probabilities: dict[str, float]
     params: dict[Any, Any]
 
 

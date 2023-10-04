@@ -5,6 +5,7 @@ import numpy.typing as npt
 from typing import Any, Optional
 
 from QHyper.problems.base import Problem
+from QHyper.optimizers import OptimizationResult
 
 
 PQCResults = tuple[dict[str, float], list[float]]
@@ -31,7 +32,7 @@ class PQC:
         problem: Problem,
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64]
-    ) -> float:
+    ) -> OptimizationResult:
         """
         Run optimization using the PQC.
 
