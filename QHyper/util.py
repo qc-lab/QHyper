@@ -217,3 +217,29 @@ def sort_solver_results(
             reverse=True
         )[:limit_results]
     }
+
+
+def add_evaluation_to_results(
+    results: dict[str, float],
+    score_function: Callable[[str, float], float],
+    penalty: float = 1,
+) -> dict[str, tuple[float, float]]:
+    """
+    Parameters
+    ----------
+    results : dict[str, float]
+        dictionary of results
+    score_function : Callable[[str, float], float]
+        function that receives result and penalty and returns score, probably
+        will be passed from Problem.get_score
+    
+    Returns
+    -------
+    dict[str, tuple[float, float]]
+        dictionary of results with scores
+    """
+    
+    return {
+        k: (v, score_function(k, penalty))
+        for k, v in results.items()
+    }

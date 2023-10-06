@@ -3,7 +3,7 @@ solver:
   args:
     config:
       optimizer:
-        type: qml
+        type: scipy
         optimization_steps: 10
       pqc:
         type: qaoa
