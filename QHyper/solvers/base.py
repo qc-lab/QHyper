@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 from QHyper.problems.base import Problem
 from QHyper.optimizers import OPTIMIZERS_BY_NAME
-from QHyper.optimizers.base import Optimizer
+from QHyper.optimizers import Optimizer
 
 
 @dataclass
@@ -37,7 +37,7 @@ class Solver:
     """
 
     problem: Problem
-    hyper_optimizer: Optimizer = None
+    hyper_optimizer: Optional[Optimizer] = None
 
     def __init__(self, problem: Problem, **kwargs: Any) -> None:
         pass

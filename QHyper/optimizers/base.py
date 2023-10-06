@@ -3,8 +3,6 @@ import dataclasses
 from abc import abstractmethod
 import numpy as np
 
-from typing import Optional
-
 import numpy.typing as npt
 from typing import Callable
 
@@ -24,29 +22,6 @@ class OptimizationResult:
 
     value: float
     params: npt.NDArray[np.float64]
-
-    # def __float__(self) -> float:
-    #     return self.value
-
-    # def __eq__(self, __value: object) -> bool:
-    #     if isinstance(__value, OptimizationResult):
-    #         return self.value == __value.value
-    #     return self.value == __value
-
-    # def __lt__(self, __value: object) -> bool:
-    #     if isinstance(__value, OptimizationResult):
-    #         return self.value < __value.value
-    #     return self.value < __value
-
-    # def __add__(self, __value: object) -> float:
-    #     if isinstance(__value, OptimizationResult):
-    #         return self.value + __value.value
-    #     return self.value + __value
-
-    # def __sub__(self, __value: object) -> float:
-    #     if isinstance(__value, OptimizationResult):
-    #         return self.value - __value.value
-    #     return self.value - __value
 
 
 class Optimizer:
