@@ -7,14 +7,14 @@ import numpy.typing as npt
 import numpy as np
 import tqdm
 
-from .base import Optimizer
+from .base import Optimizer, OptimizationResult
 
 
 @dataclass
 class CEM(Optimizer):
     bounds: npt.NDArray[np.float64]
-    epochs: int = 10
-    samples_per_epoch: int = 100
+    epochs: int = 2
+    samples_per_epoch: int = 4
     elite_frac: float = 0.1
     processes: int = mp.cpu_count()
     print_on_epochs: list[int] = field(default_factory=list)
@@ -48,16 +48,14 @@ class CEM(Optimizer):
     """
 
     def _get_points(
-            self,
-            mean: npt.NDArray[np.float64],
-            cov: npt.NDArray[np.float64]
+        self, mean: npt.NDArray[np.float64], cov: npt.NDArray[np.float64]
     ) -> list[npt.NDArray[np.float64]]:
         hyperparams: list[npt.NDArray[np.float64]] = []
         while len(hyperparams) < self.samples_per_epoch:
             point = np.random.multivariate_normal(mean, cov)
             if (
-                (self.bounds[:, 0] <= point).all()
-                and (point < self.bounds[:, 1]).all()
+                    (self.bounds[:, 0] <= point).all()
+                    and (point < self.bounds[:, 1]).all()
             ):
                 hyperparams.append(point)
 
@@ -65,9 +63,9 @@ class CEM(Optimizer):
 
     def minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], float],
-        init: npt.NDArray[np.float64]
-    ) -> tuple[float, npt.NDArray[np.float64]]:
+        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
+        init: npt.NDArray[np.float64],
+    ) -> OptimizationResult:
         """Returns hyperparameters which lead to the lowest values
             returned by optimizer
 
@@ -94,33 +92,30 @@ class CEM(Optimizer):
             hyperparameters which lead to the lowest values
             returned by the optimizer
         """
-        # wrapper = Wrapper(func_creator, optimizer, evaluation_func, init)
+
         _init = np.array(init)
         mean = _init.flatten()
         cov = np.identity(len(mean))
         best_hyperparams = _init
-        best_score = func(_init)
+        best_result = func(_init)
         for _ in range(self.epochs):
             hyperparams = self._get_points(mean, cov)
             with mp.Pool(processes=self.processes) as p:
                 results = list(tqdm.tqdm(
-                    p.imap(func, [h.reshape(_init.shape) for h in hyperparams]),
+                    p.imap(func,
+                           [h.reshape(_init.shape) for h in hyperparams]),
                     total=len(hyperparams),
-                    disable=self.disable_tqdm
+                    disable=self.disable_tqdm,
                 ))
+            elite_ids = np.array(
+                [x.value for x in results]).argsort()[:self.n_elite]
 
-            elite_idxs = np.array(results).argsort()[:self.n_elite]
+            elite_weights = [hyperparams[i].flatten() for i in elite_ids]
 
-            elite_weights = [hyperparams[i].flatten() for i in elite_idxs]
-
-            best_hyperparams = elite_weights[0].reshape(_init.shape)
-
-            reward = func(best_hyperparams)
-            if reward < best_score:
+            if results[elite_ids[0]].value < best_result.value:
                 best_hyperparams = best_hyperparams
-                best_score = reward
-            print(best_score)
+                best_result = results[elite_ids[0]]
             mean = np.mean(elite_weights, axis=0)
             cov = np.cov(np.stack((elite_weights), axis=1), bias=True)
 
-        return func(best_hyperparams), best_hyperparams
+        return OptimizationResult(best_result.value, best_hyperparams)
