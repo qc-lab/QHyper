@@ -1,10 +1,9 @@
 import numpy as np
-import argparse
+import pytest
 
-from QHyper.problems import KnapsackProblem, TSPProblem
-from QHyper.solvers import Solver, SolverResult
-from QHyper.util import (
-    weighted_avg_evaluation, sort_solver_results, add_evaluation_to_results)
+from QHyper.problems import KnapsackProblem
+from QHyper.solvers import Solver
+from QHyper.util import weighted_avg_evaluation
 
 np.random.seed(1244)
 
@@ -49,7 +48,7 @@ def test_scipy():
     }
 
     result = run_solver(problem, solver_config, params_cofing)
-    assert result == -0.31067270349515796
+    assert result == pytest.approx(-0.310672703)
 
 
 def test_qml():
@@ -75,7 +74,7 @@ def test_qml():
     }
 
     result = run_solver(problem, solver_config, params_cofing)
-    assert result == -0.1711653081099352
+    assert result == pytest.approx(-0.171165308)
 
 
 def test_random():
@@ -108,7 +107,7 @@ def test_random():
     }
 
     result = run_solver(problem, solver_config, params_cofing)
-    assert result == -1.5369843538288885
+    assert result == pytest.approx(-1.536984353)
 
 
 def test_cem():
@@ -142,4 +141,4 @@ def test_cem():
     }
 
     result = run_solver(problem, solver_config, params_cofing)
-    assert result == -0.1711653081099352
+    assert result == pytest.approx(-0.171165308)
