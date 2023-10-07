@@ -5,6 +5,7 @@ import numpy.typing as npt
 from typing import Any, Optional
 
 from QHyper.problems.base import Problem
+from QHyper.optimizers import OptimizationResult
 
 
 PQCResults = tuple[dict[str, float], list[float]]
@@ -31,7 +32,7 @@ class PQC:
         problem: Problem,
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64]
-    ) -> float:
+    ) -> OptimizationResult:
         """
         Run optimization using the PQC.
 
@@ -48,6 +49,32 @@ class PQC:
         -------
         float
             The result of the optimization.
+        """
+        ...
+    
+    @abstractmethod
+    def run_with_probs(
+        self,
+        problem: Problem,
+        opt_args: npt.NDArray[np.float64],
+        hyper_args: npt.NDArray[np.float64]
+    ) -> dict[str, float]:
+        """
+        Run optimization using the PQC and return probabilities.
+
+        Parameters
+        ----------
+        problem : Problem
+            The problem to be solved.
+        opt_args : npt.NDArray[np.float64]
+            Optimization arguments.
+        hyper_args : npt.NDArray[np.float64]
+            Hyperparameter optimization arguments.
+
+        Returns
+        -------
+        dict[str, float]
+            Probabilities of the results.
         """
         ...
 

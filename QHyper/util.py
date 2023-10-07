@@ -1,7 +1,7 @@
 import ast
 import sympy
 
-from typing import Union, cast, Any
+from typing import Union, cast, Any, Callable
 
 
 VARIABLES = Union[tuple[()], tuple[str], tuple[str, str], tuple[str, ...]]
@@ -182,3 +182,64 @@ class Expression:
                 polynomial += "*".join(k)
                 polynomial += " "
             return polynomial.rstrip()
+
+
+def weighted_avg_evaluation(
+    results: dict[str, float],
+    score_function: Callable[[str, float], float],
+    penalty: float = 0,
+    limit_results: int | None = None,
+    normalize: bool = True,
+) -> float:
+    score: float = 0
+
+    sorted_results = sort_solver_results(results, limit_results)
+    if normalize:
+        scaler = 1/sum([v for v in sorted_results.values()])
+    else:
+        scaler = 1
+
+    for result, prob in sorted_results.items():
+        score += scaler * prob * score_function(result, penalty)
+    return score
+
+
+def sort_solver_results(
+    results: dict[str, float],
+    limit_results: int | None = None,
+) -> dict[str, float]:
+    limit_results = limit_results or len(results)
+    return {
+        k: v for k, v in
+        sorted(
+            results.items(),
+            key=lambda item: item[1],
+            reverse=True
+        )[:limit_results]
+    }
+
+
+def add_evaluation_to_results(
+    results: dict[str, float],
+    score_function: Callable[[str, float], float],
+    penalty: float = 1,
+) -> dict[str, tuple[float, float]]:
+    """
+    Parameters
+    ----------
+    results : dict[str, float]
+        dictionary of results
+    score_function : Callable[[str, float], float]
+        function that receives result and penalty and returns score, probably
+        will be passed from Problem.get_score
+    
+    Returns
+    -------
+    dict[str, tuple[float, float]]
+        dictionary of results with scores
+    """
+    
+    return {
+        k: (v, score_function(k, penalty))
+        for k, v in results.items()
+    }

@@ -4,7 +4,7 @@ from typing import Optional, Callable
 import scipy
 import numpy as np
 
-from .base import Optimizer
+from .base import Optimizer, OptimizationResult
 
 
 class ScipyOptimizer(Optimizer):
@@ -29,9 +29,9 @@ class ScipyOptimizer(Optimizer):
 
     def minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], float],
+        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
         init: npt.NDArray[np.float64]
-    ) -> tuple[float, npt.NDArray[np.float64]]:
+    ) -> OptimizationResult:
         """
         Minimize the given function using the SciPy minimize.
 
@@ -51,7 +51,7 @@ class ScipyOptimizer(Optimizer):
             A tuple containing the minimum function value and the corresponding optimal point.
         """
         def wrapper(params: npt.NDArray[np.float64]) -> float:
-            return func(np.array(params).reshape(np.array(init).shape))
+            return func(np.array(params).reshape(np.array(init).shape)).value
 
         result = scipy.optimize.minimize(
             wrapper,
@@ -62,4 +62,4 @@ class ScipyOptimizer(Optimizer):
             ),
             options={'maxfun': self.maxfun}
         )
-        return result.fun, result.x.reshape(np.array(init).shape)
+        return OptimizationResult(result.fun, result.x.reshape(np.array(init).shape))

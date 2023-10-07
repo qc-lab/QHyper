@@ -19,7 +19,7 @@ class Converter:
         if len(weights) != len(problem.constraints) + 1:
             raise Exception(
                 f"Expected {len(problem.constraints)+1} weights, "
-                f"got {len(weights)}"
+                f"got {len(weights)} (weights: {weights}))"
             )
 
         objective_function = Expression(

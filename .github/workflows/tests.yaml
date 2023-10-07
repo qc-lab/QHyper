@@ -18,17 +18,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements/prod.txt
+        pip install -r requirements/tests.txt
 
-    - name: Copy tests
-      run: cp tests/tests.py .
-    
-    - name: Run knapsack test
+    - name: Run pytest tests
       run: |
-        python tests.py knapsack > actual_output.txt
-        diff -u tests/outputs/knapsack.txt actual_output.txt || (echo "::error::Output does not match expected." && exit 1)
-
-    - name: Run tsp test
-      run: |
-        python tests.py tsp > actual_output.txt
-        diff -u tests/outputs/tsp.txt actual_output.txt || (echo "::error::Output does not match expected." && exit 1)
+        pytest

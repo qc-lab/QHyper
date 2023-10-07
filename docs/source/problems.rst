@@ -20,3 +20,4 @@ Classes
    knapsack
    tsp
    workflow_scheduling
+   maxcut

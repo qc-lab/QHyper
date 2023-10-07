@@ -1,10 +1,27 @@
 from abc import abstractmethod
+from dataclasses import dataclass
 
 from typing import Any, Optional
 
 from QHyper.problems.base import Problem
 from QHyper.optimizers import OPTIMIZERS_BY_NAME
-from QHyper.optimizers.base import Optimizer
+from QHyper.optimizers import Optimizer
+
+
+@dataclass
+class SolverResult:
+    """
+    Class for storing results of the solver.
+
+    Attributes
+    ----------
+    results_probabilities : dict[str, float]
+        Dictionary with results and their probabilities.
+    params : dict[Any, Any]
+        Dictionary with the best parameters for the solver.
+    """
+    results_probabilities: dict[str, float]
+    params: dict[Any, Any]
 
 
 class Solver:
@@ -20,7 +37,7 @@ class Solver:
     """
 
     problem: Problem
-    hyper_optimizer: Optimizer = None
+    hyper_optimizer: Optional[Optimizer] = None
 
     def __init__(self, problem: Problem, **kwargs: Any) -> None:
         pass
@@ -70,7 +87,7 @@ class Solver:
     def solve(
             self,
             params_inits: dict[str, Any]
-    ) -> Any:
+    ) -> SolverResult:
         """
         Parameters
         ----------
@@ -79,8 +96,8 @@ class Solver:
 
         Returns
         -------
-        Any
-            The result of the solver.
+        SolverResult
+            Result of the solver.
         """
 
         ...

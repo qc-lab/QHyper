@@ -6,17 +6,20 @@ import numpy.typing as npt
 from typing import Any, Callable, cast, Optional
 
 from QHyper.problems.base import Problem
+from QHyper.optimizers import OptimizationResult
 
 from QHyper.solvers.vqa.pqc.qaoa import QAOA
 from QHyper.solvers.converter import Converter
-from QHyper.solvers.vqa.eval_funcs.wfeval import WFEval
+from QHyper.util import weighted_avg_evaluation
 
 
 @dataclass
 class HQAOA(QAOA):
     layers: int = 3
+    penalty: float = 0
     mixer: str = "pl_x_mixer"
     backend: str = "default.qubit"
+    limit_results: int | None = None
 
     def get_probs_func(self, problem: Problem, weights: list[float]
                        ) -> Callable[[npt.NDArray[np.float64]], list[float]]:
@@ -49,10 +52,10 @@ class HQAOA(QAOA):
         problem: Problem,
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64]
-    ) -> float:
+    ) -> OptimizationResult:
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
-
+ 
         weights = list(opt_args[:1 + len(problem.constraints)])
         probs = self.get_probs_func(problem, list(weights))(
             opt_args[1 + len(problem.constraints):].reshape(2, -1))
@@ -60,7 +63,27 @@ class HQAOA(QAOA):
             format(result, 'b').zfill(len(problem.variables)): float(prob)
             for result, prob in enumerate(probs)
         }
-        return WFEval().evaluate(results_by_probabilites, problem, weights)
+        result = weighted_avg_evaluation(
+            results_by_probabilites, problem.get_score, self.penalty,
+            limit_results=self.limit_results
+        )
+        return OptimizationResult(result, opt_args)
+
+    def run_with_probs(
+        self,
+        problem: Problem,
+        opt_args: npt.NDArray[np.float64],
+        hyper_args: npt.NDArray[np.float64]
+    ) -> dict[str, float]:
+        self.dev = qml.device(
+            self.backend, wires=[str(x) for x in problem.variables])
+        weights = list(opt_args[:1 + len(problem.constraints)])
+        probs = self.get_probs_func(problem, list(weights))(
+            opt_args[1 + len(problem.constraints):].reshape(2, -1))
+        return {
+            format(result, 'b').zfill(len(problem.variables)): float(prob)
+            for result, prob in enumerate(probs)
+        }   
 
     def get_opt_args(
         self,

@@ -1,6 +1,6 @@
 from typing import Type
 
-from .base import Solver
+from .base import Solver, SolverResult
 
 from .vqa.base import VQA
 from .gurobi.gurobi import Gurobi

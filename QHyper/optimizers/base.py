@@ -1,8 +1,27 @@
+import dataclasses
+
 from abc import abstractmethod
 import numpy as np
 
 import numpy.typing as npt
 from typing import Callable
+
+
+@dataclasses.dataclass
+class OptimizationResult:
+    """
+    Dataclass for storing the results of an optimization run.
+    
+    Attributes
+    ----------
+    value : float
+        The minimum function value found by the optimization algorithm.
+    params : numpy.ndarray
+        The optimal point found by the optimization algorithm.
+    """
+
+    value: float
+    params: npt.NDArray[np.float64]
 
 
 class Optimizer:
@@ -13,9 +32,9 @@ class Optimizer:
     @abstractmethod
     def minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], float],
+        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
         init: npt.NDArray[np.float64]
-    ) -> tuple[float, npt.NDArray[np.float64]]:
+    ) -> OptimizationResult:
         """
         Abstract method that minimizes the given function using the implemented optimization algorithm.
 

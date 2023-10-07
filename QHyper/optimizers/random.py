@@ -6,7 +6,7 @@ import numpy.typing as npt
 import numpy as np
 import tqdm
 
-from .base import Optimizer
+from .base import Optimizer, OptimizationResult
 
 
 @dataclass
@@ -41,9 +41,9 @@ class Random(Optimizer):
 
     def minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], float],
+        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
         init: npt.NDArray[np.float64]
-    ) -> tuple[float, npt.NDArray[np.float64]]:
+    ) -> OptimizationResult:
         """Returns hyperparameters which lead to the lowest values
             returned by the optimizer
 
@@ -76,15 +76,14 @@ class Random(Optimizer):
             * np.random.rand(self.number_of_samples, *hyperparams_init.shape)
             + self.bounds[:, 0])
 
-        # results = [func(hyperparam) for hyperparam in hyperparams]
         with mp.Pool(processes=self.processes) as p:
             results = list(tqdm.tqdm(
                 p.imap(func, hyperparams),
                 total=self.number_of_samples,
                 disable=self.disable_tqdm
             ))
-
-        min_idx = np.argmin(results)
-        return results[min_idx], hyperparams[min_idx]
-        # return HyperOptimizerResults.from_solver_results(
-        #     results[min_idx], hyperparams[min_idx])
+        min_idx = np.argmin([result.value for result in results])
+        return OptimizationResult(
+            value=results[min_idx].value,
+            params=hyperparams[min_idx],
+        )
