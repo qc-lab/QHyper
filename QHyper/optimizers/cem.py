@@ -13,8 +13,8 @@ from .base import Optimizer, OptimizationResult
 @dataclass
 class CEM(Optimizer):
     bounds: npt.NDArray[np.float64]
-    epochs: int = 2
-    samples_per_epoch: int = 4
+    epochs: int = 5
+    samples_per_epoch: int = 100
     elite_frac: float = 0.1
     processes: int = mp.cpu_count()
     print_on_epochs: list[int] = field(default_factory=list)
@@ -97,7 +97,7 @@ class CEM(Optimizer):
         mean = _init.flatten()
         cov = np.identity(len(mean))
         best_hyperparams = _init
-        best_result = func(_init)
+        best_result = None
         for _ in range(self.epochs):
             hyperparams = self._get_points(mean, cov)
             with mp.Pool(processes=self.processes) as p:
@@ -112,7 +112,9 @@ class CEM(Optimizer):
 
             elite_weights = [hyperparams[i].flatten() for i in elite_ids]
 
-            if results[elite_ids[0]].value < best_result.value:
+            if (best_result is None 
+                or results[elite_ids[0]].value < best_result.value
+            ):
                 best_hyperparams = best_hyperparams
                 best_result = results[elite_ids[0]]
             mean = np.mean(elite_weights, axis=0)

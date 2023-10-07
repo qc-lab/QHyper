@@ -66,13 +66,13 @@ class VQA(Solver):
 
         if isinstance(optimizer, str):
             if optimizer == "" and 'optimizer' not in config:
-                self.optimizer = None
+                self.optimizer = Dummy()
             else:
                 if optimizer == "":
                     optimizer = config['optimizer'].pop('type')
                 self.optimizer = OPTIMIZERS_BY_NAME[cast(str, optimizer)](
                     **config.get('optimizer', {}))
-        else:
+        elif isinstance(optimizer, Optimizer):
             self.optimizer = optimizer
 
     def solve(self, params_inits: dict[str, Any]) -> SolverResult:
