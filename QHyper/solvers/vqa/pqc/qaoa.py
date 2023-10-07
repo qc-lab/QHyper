@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import pennylane as qml
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -20,6 +20,14 @@ class QAOA(PQC):
     layers: int = 3
     backend: str = "default.qubit"
     mixer: str = 'pl_x_mixer'
+    qubo_cache: dict[tuple[float], qml.Hamiltonian] = field(
+        default_factory=dict)
+    
+    def create_qubo(self, problem: Problem, weights: list[float]) -> QUBO:
+        if tuple(weights) not in self.qubo_cache:
+            qubo = Converter.create_qubo(problem, weights)
+            self.qubo_cache[tuple(weights)] = self._create_cost_operator(qubo)
+        return self.qubo_cache[tuple(weights)]
 
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
         result = qml.Identity(0)
@@ -77,16 +85,12 @@ class QAOA(PQC):
 
     def get_expval_circuit(self, problem: Problem, weights: list[float]
                            ) -> Callable[[npt.NDArray[np.float64]], float]:
-        qubo = Converter.create_qubo(problem, weights)
-        cost_operator = self._create_cost_operator(qubo)
+        cost_operator = self.create_qubo(problem, weights)
 
         @qml.qnode(self.dev)
         def expval_circuit(params: npt.NDArray[np.float64]) -> float:
             self._circuit(problem, params, cost_operator)
-            return cast(float, qml.expval(
-                cost_operator
-                # self._create_weight_free_hamiltonian(problem)
-            ))
+            return cast(float, qml.expval(cost_operator))
 
         return cast(Callable[[npt.NDArray[np.float64]], float], expval_circuit)
     
