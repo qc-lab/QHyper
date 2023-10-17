@@ -9,8 +9,7 @@ from QHyper.problems.base import Problem
 from QHyper.optimizers import OptimizationResult
 
 from QHyper.solvers.vqa.pqc.qaoa import QAOA
-from QHyper.solvers.converter import Converter
-# from QHyper.solvers.vqa.eval_funcs.wfeval import WFEval
+
 from QHyper.util import weighted_avg_evaluation
 
 
@@ -59,7 +58,7 @@ class WFQAOA(QAOA):
             self.backend, wires=[str(x) for x in problem.variables])
         probs = self.get_probs_func(problem, list(hyper_args))(
             opt_args.reshape(2, -1))
-        
+
         if isinstance(probs, qml.numpy.numpy_boxes.ArrayBox):
             probs = probs._value
         results_by_probabilites = {

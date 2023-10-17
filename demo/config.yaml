@@ -1,16 +1,20 @@
 solver:
   type: vqa
-  args:
-    config:
-      optimizer:
-        type: scipy
-        optimization_steps: 10
-      pqc:
-        type: qaoa
-        layers: 5
-        # penalty: 3
-hyper_optimizer:
-  type: basinhopping
-  niter: 1
-  # maxfun: 10
-  # bounds: [[1, 10], [1, 10], [1, 10]]
+  optimizer:
+    type: scipy
+    optimization_steps: 10
+    # maxfun: 10
+  pqc:
+    type: qaoa
+    layers: 5
+    # penalty: 3
+  hyper_optimizer:
+    type: basinhopping
+    niter: 1
+    # bounds: [[1, 10], [1, 10], [1, 10]]
+problem:
+  type: knapsack
+  items: [
+    [1, 2], [1, 2], [1, 1]
+  ]
+  max_weight: 2

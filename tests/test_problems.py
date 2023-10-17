@@ -8,10 +8,10 @@ np.random.seed(1244)
 def test_knapsack():
     from QHyper.problems.knapsack import Item
 
-    problem = KnapsackProblem(max_weight=2, items=[(1, 2), (1, 2),(1, 1)])
+    problem = KnapsackProblem(max_weight=2, items=[(1, 2), (1, 2), (1, 1)])
 
     assert problem.knapsack.items == [
-        Item(weight=1, value=2), Item(weight=1, value=2), 
+        Item(weight=1, value=2), Item(weight=1, value=2),
         Item(weight=1, value=1)
     ]
 
@@ -19,7 +19,7 @@ def test_knapsack():
         ('x0',): -2, ('x1',): -2, ('x2',): -1}
 
     assert [constraint.as_dict() for constraint in problem.constraints] == [
-        {('x3',): -1, ('x4',): -1, (): 1},    
+        {('x3',): -1, ('x4',): -1, (): 1},
         {('x0',): -1, ('x1',): -1, ('x2',): -1, ('x3',): 1, ('x4',): 2}
     ]
 
@@ -54,5 +54,3 @@ def test_TSP():
         {('x2',): -1, ('x5',): -1, ('x8',): -1, (): 1},
         {('x6',): -1, ('x7',): -1, ('x8',): -1, (): 1},
     ]
-        
-

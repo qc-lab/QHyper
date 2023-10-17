@@ -1,6 +1,6 @@
 from typing import Type
 
-from .base import Optimizer, OptimizationResult
+from .base import Optimizer, OptimizationResult  # noqa: F401
 
 from .cem import CEM
 from .qml_gradient_descent import QmlGradientDescent

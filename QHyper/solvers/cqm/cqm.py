@@ -7,7 +7,6 @@ from typing import Any, Optional
 from QHyper.solvers.converter import Converter
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
-from QHyper.optimizers.base import Optimizer
 
 
 DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
@@ -15,7 +14,8 @@ DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
 
 class CQM(Solver):
     """
-    Class for solving a problem using the Constrained Quadratic Model (CQM) approach.
+    Class for solving a problem using the
+    Constrained Quadratic Model (CQM) approach.
 
     Attributes
     ----------

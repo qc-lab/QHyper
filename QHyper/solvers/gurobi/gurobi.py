@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 import gurobipy as gp
 from QHyper.problems.base import Problem
@@ -17,10 +17,14 @@ def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:
 
 
 class Gurobi(Solver):  # todo works only for quadratic expressions
-    def __init__(self, problem: Problem) -> None:
+    def __init__(self, problem: Problem,
+                 params_inits: Optional[dict[str, Any]] = None) -> None:
         self.problem: Problem = problem
+        self.params_inits: Optional[dict[str, Any]] = params_inits
 
-    def solve(self, params_inits: dict[str, Any]) -> Any:
+    def solve(self, params_inits: Optional[dict[str, Any]] = None) -> Any:
+        params_inits = params_inits or self.params_inits
+
         name = params_inits.get("name", "name")
         gpm = gp.Model(name)
         if "MIPGap" in params_inits:

@@ -11,7 +11,7 @@ from typing import Callable
 class OptimizationResult:
     """
     Dataclass for storing the results of an optimization run.
-    
+
     Attributes
     ----------
     value : float
@@ -36,7 +36,8 @@ class Optimizer:
         init: npt.NDArray[np.float64]
     ) -> OptimizationResult:
         """
-        Abstract method that minimizes the given function using the implemented optimization algorithm.
+        Abstract method that minimizes the given function using the
+        implemented optimization algorithm.
 
         Parameters
         ----------
@@ -48,7 +49,8 @@ class Optimizer:
         Returns
         -------
         tuple
-            A tuple containing the minimum function value and the corresponding optimal point.
+            A tuple containing the minimum function value and the
+            corresponding optimal point.
 
         Raises
         ------
