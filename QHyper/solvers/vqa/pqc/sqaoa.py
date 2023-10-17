@@ -92,10 +92,18 @@ class SQAOA(PQC):
            opt_args.reshape(2, -1))
        
         qubo = Converter.create_qubo(problem, list(hyper_args))
+        
         cost_operator = self._create_cost_operator(qubo)
-        for i in range(32):
-            print(bin(i), round(abs(qml.matrix(cost_operator)[i,i]),2))
+        
+        def get_score2(result):
+            x = np.array(list(np.binary_repr(result,5)),dtype=int)
+            print(x)
+            return 2 * x[0] + 5 * x[1]+ x[0] * x[1] +  (x[0] + x[1] -1)*(x[0] + x[1] -1)+1.2*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])
 
+        for i in range(32):
+           #print(format(i, '#0{}b'.format(7)), round(abs(qml.matrix(cost_operator)[i,i]),2))
+            print(bin(i)[2:].zfill(5),round(abs(qml.matrix(cost_operator)[i,i]),2), get_score2(i))
+            
         @qml.qnode(self.dev)
         def expval_circuit(params):
            self._circuit(problem,params,cost_operator) 

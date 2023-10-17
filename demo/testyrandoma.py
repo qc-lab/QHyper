@@ -2,7 +2,12 @@ import numpy as np
 import sympy
 from sympy.core.expr import Expr
 import sys
-sys.path.append(".\\QHyper\\")
+#import os
+#print(os.getcwd())
+#sys.path.append("C:\\Users\\kzaja\\Documents\\mariusz\\qhyper\\QHyper\\")
+sys.path.append(".")
+
+
 from QHyper.problems.base import Problem
 from QHyper.util import Expression
     
@@ -47,7 +52,8 @@ class SimpleProblem(Problem):
             return 2 * x[0] + 5 * x[1]+ x[0] * x[1]
        # print(x,penalty)
         return penalty
-
+    
+    
 
 problem = SimpleProblem()
 
