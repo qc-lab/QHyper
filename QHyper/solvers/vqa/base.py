@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import numpy as np
-from typing import Any, cast
+from typing import Any, Optional
 import numpy.typing as npt
 
 from QHyper.problems.base import Problem
@@ -9,8 +9,8 @@ from QHyper.optimizers import (
     OPTIMIZERS_BY_NAME, Dummy, Optimizer, OptimizationResult)
 from .pqc.base import PQC
 
-from QHyper.solvers.base import Solver, SolverResult
-from QHyper.solvers.vqa import PQC_BY_NAME
+from QHyper.solvers.base import Solver, SolverResult, SolverConfigException
+from QHyper.solvers.vqa.pqc import PQC_BY_NAME
 
 
 @dataclass
@@ -20,7 +20,7 @@ class LocalOptimizerFunction:
     hyper_params: npt.NDArray[np.float64]
 
     def __call__(self, args: npt.NDArray[np.float64]) -> OptimizationResult:
-        return self.pqc.run_opt(self.problem, args, self.hyper_params) 
+        return self.pqc.run_opt(self.problem, args, self.hyper_params)
 
 
 @dataclass
@@ -42,40 +42,50 @@ class VQA(Solver):
     pqc: PQC
     optimizer: Optimizer = Dummy()
     hyper_optimizer: Optimizer | None = None
+    params_inits: Optional[dict[str, Any]] = None
 
-    def __init__(
-            self,
-            problem: Problem,
-            pqc: PQC | str = "",
-            optimizer: Optimizer | str = "",
-            hyper_optimizer: Optimizer | None = None,
-            config: dict[str, dict[str, Any]] = {}
-    ) -> None:
-        self.problem = problem
-        self.hyper_optimizer = hyper_optimizer
+    @classmethod
+    def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'VQA':
+        try:
+            error_msg = "PQC configuration was not provided"
+            pqc_config = config.pop('pqc')
+            error_msg = "PQC type was not provided"
+            pqc_type = pqc_config.pop('type')
+            error_msg = f"There is no {pqc_type} PQC type"
+            pqc = PQC_BY_NAME[pqc_type](**pqc_config)
+        except KeyError:
+            raise SolverConfigException(error_msg)
 
-        if isinstance(pqc, str):
-            if pqc == "":
-                try:
-                    pqc = config['pqc'].pop('type')
-                except KeyError:
-                    raise Exception("Configuration for PQC was not provided")
-            self.pqc = PQC_BY_NAME[cast(str, pqc)](**config.get('pqc', {}))
+        if not (optimizer_config := config.pop('optimizer', None)):
+            optimizer = Dummy()
+        elif not (optimizer_type := optimizer_config.pop('type', None)):
+            raise SolverConfigException("Optimizer type was not provided")
+        elif not (optimizer_class := OPTIMIZERS_BY_NAME.get(
+                optimizer_type, None)):
+            raise SolverConfigException(
+                f"There is no {optimizer_type} optimizer type")
         else:
-            self.pqc = pqc
+            optimizer = optimizer_class(**optimizer_config)
 
-        if isinstance(optimizer, str):
-            if optimizer == "" and 'optimizer' not in config:
-                self.optimizer = Dummy()
-            else:
-                if optimizer == "":
-                    optimizer = config['optimizer'].pop('type')
-                self.optimizer = OPTIMIZERS_BY_NAME[cast(str, optimizer)](
-                    **config.get('optimizer', {}))
-        elif isinstance(optimizer, Optimizer):
-            self.optimizer = optimizer
+        if not (hyper_optimizer_config := config.pop('hyper_optimizer', None)):
+            hyper_optimizer = None
+        elif not (hyper_optimizer_type := hyper_optimizer_config.pop(
+                'type', None)):
+            raise SolverConfigException(
+                "Hyper optimizer type was not provided")
+        elif not (hyper_optimizer_class := OPTIMIZERS_BY_NAME.get(
+                hyper_optimizer_type, None)):
+            raise SolverConfigException(
+                f"There is no {hyper_optimizer_type} hyper optimizer type")
+        else:
+            hyper_optimizer = hyper_optimizer_class(**hyper_optimizer_config)
 
-    def solve(self, params_inits: dict[str, Any]) -> SolverResult:
+        params_inits = config.pop('params_inits', None)
+
+        return cls(problem, pqc, optimizer, hyper_optimizer, params_inits)
+
+    def solve(self, params_inits: dict[str, Any] = None) -> SolverResult:
+        params_inits = params_inits or self.params_inits
         hyper_args = self.pqc.get_hopt_args(params_inits)
 
         if self.hyper_optimizer:
@@ -85,7 +95,7 @@ class VQA(Solver):
             best_hargs = res.params
         else:
             best_hargs = hyper_args
-        
+
         opt_args = self.pqc.get_opt_args(params_inits, hyper_args=best_hargs)
         opt_wrapper = LocalOptimizerFunction(
                 self.pqc, self.problem, best_hargs)

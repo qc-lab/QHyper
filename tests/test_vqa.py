@@ -1,47 +1,48 @@
 import numpy as np
-import argparse
 
-from QHyper.problems import KnapsackProblem
-from QHyper.solvers import Solver
+from QHyper.solvers import solver_from_config
 
 np.random.seed(1244)
 
 
-def get_problem():
-    problem = KnapsackProblem(max_weight=2, items=[(1, 2), (1, 2),(1, 1)])
-    params_cofing = {
+def get_problem_config():
+    problem_config = {
+        "type": "knapsack",
+        "max_weight": 2,
+        "items": [(1, 2), (1, 2), (1, 1)]
+    }
+
+    params_config = {
         'angles': [[0.5]*3, [1]*3],
         'hyper_args': [1, 2.5, 2.5],
     }
     hyper_optimizer_bounds = 3*[(1, 10)]
- 
-    return problem, params_cofing, hyper_optimizer_bounds
+
+    return problem_config, params_config, hyper_optimizer_bounds
 
 
-def run_solver(problem, solver_config, params_config):
-    vqa = Solver.from_config(problem, solver_config) 
-    return vqa.solve(params_config)
+def run_solver(solver_config):
+    vqa = solver_from_config(solver_config)
+    return vqa.solve(None)
 
 
 def test_qaoa():
-    problem, params_cofing, _ = get_problem()
+    problem_config, params_config, _ = get_problem_config()
 
     solver_config = {
         "solver": {
             "type": "vqa",
-            "args": {
-                "config": {
-                    "pqc": {
-                        "type": "qaoa",
-                        "layers": 3,
-                        "backend": "default.qubit",
-                    }
-                }
-            }
-        }
+            "pqc": {
+                "type": "qaoa",
+                "layers": 3,
+                "backend": "default.qubit",
+            },
+            "params_inits": params_config,
+        },
+        "problem": problem_config
     }
 
-    solver_results = run_solver(problem, solver_config, params_cofing)
+    solver_results = run_solver(solver_config)
     assert solver_results.results_probabilities == {
         '00000': 0.05214763286171284,
         '00001': 0.047456206684648256,
@@ -79,26 +80,24 @@ def test_qaoa():
 
 
 def test_wfqaoa():
-    problem, params_cofing, _ = get_problem()
+    problem_config, params_config, _ = get_problem_config()
 
     solver_config = {
         "solver": {
             "type": "vqa",
-            "args": {
-                "config": {
-                    "pqc": {
-                        "type": "wfqaoa",
-                        "layers": 3,
-                        "limit_results": 10,
-                        "penalty": 2,
-                        "backend": "default.qubit",
-                    }
-                }
-            }
-        }
+            "pqc": {
+                "type": "wfqaoa",
+                "layers": 3,
+                "limit_results": 10,
+                "penalty": 2,
+                "backend": "default.qubit",
+            },
+            "params_inits": params_config,
+        },
+        "problem": problem_config
     }
 
-    solver_results = run_solver(problem, solver_config, params_cofing)
+    solver_results = run_solver(solver_config)
     assert solver_results.results_probabilities == {
         '00000': 0.05214763286171284,
         '00001': 0.047456206684648256,
@@ -136,26 +135,24 @@ def test_wfqaoa():
 
 
 def test_hqaoa():
-    problem, params_cofing, _ = get_problem()
+    problem_config, params_config, _ = get_problem_config()
 
     solver_config = {
         "solver": {
             "type": "vqa",
-            "args": {
-                "config": {
-                    "pqc": {
-                        "type": "hqaoa",
-                        "layers": 3,
-                        "limit_results": 10,
-                        "penalty": 2,
-                        "backend": "default.qubit",
-                    }
-                }
-            }
-        }
+            "pqc": {
+                "type": "hqaoa",
+                "layers": 3,
+                "limit_results": 10,
+                "penalty": 2,
+                "backend": "default.qubit",
+            },
+            "params_inits": params_config,
+        },
+        "problem": problem_config
     }
 
-    solver_results = run_solver(problem, solver_config, params_cofing)
+    solver_results = run_solver(solver_config)
     assert solver_results.results_probabilities == {
         '00000': 0.05214763286171284,
         '00001': 0.047456206684648256,

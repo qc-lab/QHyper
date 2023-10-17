@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 import pennylane as qml
 import numpy as np
-from scipy.sparse import csr_matrix
 
 import numpy.typing as npt
 from typing import Any, Callable, cast, Optional
@@ -22,7 +21,7 @@ class QAOA(PQC):
     mixer: str = 'pl_x_mixer'
     qubo_cache: dict[tuple[float], qml.Hamiltonian] = field(
         default_factory=dict)
-    
+
     def create_qubo(self, problem: Problem, weights: list[float]) -> QUBO:
         if tuple(weights) not in self.qubo_cache:
             qubo = Converter.create_qubo(problem, weights)
@@ -45,7 +44,7 @@ class QAOA(PQC):
                 )
             result += tmp
         return result
-    
+
     # def _create_weight_free_hamiltonian(
     #         self, problem: Problem) -> qml.Hamiltonian:
     #     row = []
@@ -62,7 +61,7 @@ class QAOA(PQC):
     #     sparse_matrix = csr_matrix((data, (row, col)))
     #     ham = qml.SparseHamiltonian(sparse_matrix, problem.variables)
     #     return ham
- 
+
     def _hadamard_layer(self, problem: Problem) -> None:
         for i in problem.variables:
             qml.Hadamard(str(i))
@@ -93,7 +92,7 @@ class QAOA(PQC):
             return cast(float, qml.expval(cost_operator))
 
         return cast(Callable[[npt.NDArray[np.float64]], float], expval_circuit)
-    
+
     def get_probs_func(self, problem: Problem, weights: list[float]
                        ) -> Callable[[npt.NDArray[np.float64]], list[float]]:
         """Returns function that takes angles and returns probabilities

@@ -232,13 +232,13 @@ def add_evaluation_to_results(
     score_function : Callable[[str, float], float]
         function that receives result and penalty and returns score, probably
         will be passed from Problem.get_score
-    
+
     Returns
     -------
     dict[str, tuple[float, float]]
         dictionary of results with scores
     """
-    
+
     return {
         k: (v, score_function(k, penalty))
         for k, v in results.items()
