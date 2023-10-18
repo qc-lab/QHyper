@@ -92,16 +92,36 @@ solver_config2 = {
         
     }
 }
+solver_config3= {
+    "solver": {
+        "type": "vqa",
+        "args": {
+            "config": {
+                "pqc": {
+                    "type": "qaoa",
+                    "layers": 5,
+                },
+                'optimizer': {
+                    'type': 'scipy',
+                    'maxfun': 450,
+                },
+            }
+        }
+        
+    }
+}
 
 vqa2 = Solver.from_config(problem, solver_config2)
+vqa3 = Solver.from_config(problem, solver_config3)
 params_config = {
-        'angles': [[0.5]*5, [0.7]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
+        'angles': [[0.4]*5, [0.7]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
        # 'hyper_args': [1, 1, 1], #  those are the alpha values from [1]
-       'hyper_args': [1, 1, 1.2]
+       'hyper_args': [1, 3.5, 1.5]
     }
 
 if __name__ == '__main__': 
-    best_params = vqa2.evaluate(params_config)
+    #best_params = vqa2.evaluate(params_config)
+    best_params = vqa3.solve(params_config)
     print(f"Best params: {best_params}")
     
    #best_params=tester.solve(best_params)
