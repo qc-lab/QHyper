@@ -15,7 +15,7 @@ class Converter:
     @staticmethod
     def create_qubo(problem: Problem, weights: list[float]) -> QUBO:
         results: dict[VARIABLES, float] = {}
-
+        print("WAGI",weights)
         if len(weights) != len(problem.constraints) + 1:
             raise Exception(
                 f"Expected {len(problem.constraints)+1} weights, "

@@ -95,7 +95,7 @@ tester_config = {
 }
 
 tester = VQA(problem, config=tester_config)
-solver_config = {
+solver_config2 = {
     'pqc': {
         'type': 'qaoa',
         'layers': 5,
@@ -106,9 +106,15 @@ solver_config = {
         'maxfun': 1,
     },
 }
+solver_config = {
+    'pqc': {
+        'type': 'sqaoa',
+        'layers': 5
+    }
+}
 vqa = VQA(problem, config=solver_config)
 
-best_params = vqa.solve(params_cofing)
+best_params = vqa.evaluate(params_cofing)
 print(f"Best params: {best_params}")
 
 best_results = tester.evaluate(best_params, print_results=True)

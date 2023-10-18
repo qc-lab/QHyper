@@ -120,8 +120,8 @@ params_config = {
     }
 
 if __name__ == '__main__': 
-    #best_params = vqa2.evaluate(params_config)
-    best_params = vqa3.solve(params_config)
+    best_params = vqa2.evaluate(params_config)
+    #best_params = vqa3.solve(params_config)
     print(f"Best params: {best_params}")
     
    #best_params=tester.solve(best_params)

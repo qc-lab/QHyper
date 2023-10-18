@@ -21,6 +21,7 @@ class SQAOA(PQC):
     mixer: str = 'pl_x_mixer'
 
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
+        print(qubo)
         result = qml.Identity(0)
         for variables, coeff in qubo.items():
             if not variables:
@@ -35,6 +36,7 @@ class SQAOA(PQC):
                     - 0.5 * qml.PauliZ(str(variables[1]))
                 )
             result += tmp
+        print(result,"\n")
         return result
     
    
@@ -93,28 +95,38 @@ class SQAOA(PQC):
        
         qubo = Converter.create_qubo(problem, list(hyper_args))
         
-        cost_operator = self._create_cost_operator(qubo)
         
+        cost_operator = self._create_cost_operator(qubo)
+        bits=5
         def get_score2(result):
-            x = np.array(list(np.binary_repr(result,5)),dtype=int)
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
            # print(x)
-            return 2 * x[0] + 5 * x[1]+ x[0] * x[1] +  (x[0] + x[1] -1)*(x[0] + x[1] -1)+1.2*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])
+            return 2 * x[0] + 5 * x[1]+ x[0] * x[1] + 3.5* (x[0] + x[1] -1)*(x[0] + x[1] -1)+1.5*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])
+            #return 37.89186033670198*((x[0] + x[1] + x[2] - 1)*(x[0] + x[1] + x[2] - 1)+(x[3] + x[4] + x[5] - 1)*(x[3] + x[4] + x[5] - 1)+(x[6] + x[7] + x[8] - 1)*(x[6] + x[7] + x[8] - 1))+(6.0*x[0] + 8.0*x[1] + 8.0*x[2] + 3.0*x[3] + 4.0*x[4] + 4.0*x[5] + 12.0*x[6] + 16.0*x[7] + 16.0*x[8])+15.536726433137282*(13- 6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])  + 3.61604208771982*(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8] - 13)*(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8] - 13)
         def check_cost(result):
-            x = np.array(list(np.binary_repr(result,5)),dtype=int)
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
+            #return 6.0*x[0] + 8.0*x[1] + 8.0*x[2] + 3.0*x[3] + 4.0*x[4] + 4.0*x[5] + 12.0*x[6] + 16.0*x[7] + 16.0*x[8]
             return 2 * x[0] + 5 * x[1]+ x[0] * x[1] 
         
         def check_const1(result):
-            x = np.array(list(np.binary_repr(result,5)),dtype=int)
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
+            #return x[0] + x[1] + x[2] == 1 and x[3] + x[4] + x[5] == 1 and x[6] + x[7] + x[8] == 1
+            
             return  x[0] + x[1] -1 == 0 
         def check_const2(result):
-            x = np.array(list(np.binary_repr(result,5)),dtype=int)
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
+            #return  6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8] <= 13
             return 5 * x[0] + 2 * x[1] <= 5
         def check_const3(result):
-            x = np.array(list(np.binary_repr(result,5)),dtype=int)
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
+           # print(x)
+            #print("czas=",6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])
+          #  print(15.536726433137282*13+3.61604208771982*(-13)*(-13))
+            #return 15.536726433137282*(13- 6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])  + 3.61604208771982*(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8] - 13)*(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8] - 13)
             return 5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4] == 0
-       # for i in range(32):
+        for i in range(32):
            #print(format(i, '#0{}b'.format(7)), round(abs(qml.matrix(cost_operator)[i,i]),2))
-           # print(round(abs(qml.matrix(cost_operator)[i,i]),2),"b"+bin(i)[2:].zfill(5), check_cost(i),check_const1(i),check_const2(i),check_const3(i))
+           print(round(abs(qml.matrix(cost_operator)[i,i]),2),"b"+bin(i)[2:].zfill(bits), get_score2(i),check_cost(i),check_const1(i),check_const2(i),check_const3(i))
             
         @qml.qnode(self.dev)
         def expval_circuit(params):
@@ -124,7 +136,7 @@ class SQAOA(PQC):
         
         opt = qml.QNGOptimizer(0.02)
         params = np.array(opt_args, requires_grad=True)
-        for ind in range(200):
+        for ind in range(0):
             params, cost = opt.step_and_cost(expval_circuit,params)
             print(ind, " ", cost,"\n")    
             
