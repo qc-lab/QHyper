@@ -51,7 +51,7 @@ class PQC:
             The result of the optimization.
         """
         ...
-    
+
     @abstractmethod
     def run_with_probs(
         self,
