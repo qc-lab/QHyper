@@ -26,17 +26,17 @@ class SimpleProblem(Problem):
                                     + ' '.join([f'x{i+2}' for i in range(len(self.slack_coefficients))]))
         self._set_objective_function()
         self._set_constraints()
-        
+      
     def _set_objective_function(self) -> None:
         C_f = 2 * self.variables[0] + 5 * self.variables[1] + self.variables[0] * self.variables[1]
         self.objective_function = Expression(C_f)
         
     def _set_constraints(self):
         K_f1 = self.variables[0] + self.variables[1] - 1
-        
+       
         K_f2 = 5 * self.variables[0] + 2 * self.variables[1] 
         for i, coefficient in enumerate(self.slack_coefficients):
-           K_f2 += - coefficient * self.variables[i+2]
+          K_f2 += - coefficient * self.variables[i+2]
         #self.constraints = [Expression(K_f1)]    
         self.constraints = [Expression(K_f1), Expression(K_f2)]
     
@@ -115,8 +115,8 @@ vqa2 = Solver.from_config(problem, solver_config2)
 vqa3 = Solver.from_config(problem, solver_config3)
 params_config = {
         'angles': [[0.4]*5, [0.7]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
-       # 'hyper_args': [1, 1, 1], #  those are the alpha values from [1]
-       'hyper_args': [1, 3.5, 1.5]
+        #'hyper_args': [1, 1, 1], #  those are the alpha values from [1]
+        'hyper_args': [1, 3.5, 1.5]
     }
 
 if __name__ == '__main__': 
