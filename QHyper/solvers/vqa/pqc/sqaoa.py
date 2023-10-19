@@ -21,7 +21,7 @@ class SQAOA(PQC):
     mixer: str = 'pl_x_mixer'
     offset=0;
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
-        print(qubo)
+        #print(qubo)
         result = qml.Identity(0)-qml.Identity(0)
         for variables, coeff in qubo.items():
             if not variables:
@@ -37,8 +37,8 @@ class SQAOA(PQC):
                     - 0.5 * qml.PauliZ(str(variables[1]))
                 )
             result += tmp
-        print(result,"\n")
-        print("qubo offset",self.offset,"\n")
+       # print(result,"\n")
+        #print("qubo offset",self.offset,"\n")
         return result
     
    
@@ -136,9 +136,9 @@ class SQAOA(PQC):
                     + 38.61604208771982*(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))
                     *(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])))
             #return 5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4] == 0
-        for i in range(np.power(2, bits)):
+        #for i in range(np.power(2, bits)):
            #print(format(i, '#0{}b'.format(7)), round(abs(qml.matrix(cost_operator)[i,i]),2))
-           print(round(np.real(qml.matrix(cost_operator)[i,i]),2),"b"+bin(i)[2:].zfill(bits), get_score2(i),check_cost(i),check_const1(i),check_const2(i),check_const3(i))
+          # print(round(np.real(qml.matrix(cost_operator)[i,i]),2),"b"+bin(i)[2:].zfill(bits), get_score2(i),check_cost(i),check_const1(i),check_const2(i),check_const3(i))
             
         @qml.qnode(self.dev)
         def expval_circuit(params):
@@ -146,9 +146,9 @@ class SQAOA(PQC):
            return qml.expval(
                cost_operator)
         
-        opt = qml.QNGOptimizer(0.02)
+        opt = qml.QNGOptimizer(0.001)
         params = np.array(opt_args, requires_grad=True)
-        for ind in range(0):
+        for ind in range(10):
             params, cost = opt.step_and_cost(expval_circuit,params)
             print(ind, " ", cost,"\n")    
             

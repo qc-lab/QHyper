@@ -103,7 +103,7 @@ solver_config2 = {
     },
      'optimizer': {
         'type': 'scipy',
-        'maxfun': 1,
+        'maxfun': 600,
     },
 }
 solver_config = {
@@ -113,7 +113,7 @@ solver_config = {
     }
 }
 vqa = VQA(problem, config=solver_config)
-
+# dla QNG trzeba użyć evaluate(), a nie solve() bo tak jest zaszyte w sqaoa
 best_params = vqa.evaluate(params_cofing)
 print(f"Best params: {best_params}")
 
