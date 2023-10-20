@@ -43,6 +43,13 @@ import sys
  #       [-1.56181706e+03, -8.12321247e+02, -7.48882825e+02,
  #        -3.70198523e+02, -3.36499142e+02]]
 # -6166
+# kolejne 50 krokow po 0.000045
+#[[ 9.18987677e-05, -1.27983815e-04,  3.17661254e-05,
+ #        -2.56654725e-04,  2.80454257e-05],
+ #       [-1.56178634e+03, -8.12363445e+02, -7.48859205e+02,
+  #       -3.70209701e+02, -3.36500719e+02]]
+#-6216.606172225855
+
 
 #dla [0.1e-3]*5, [0.5]*5]30+50+50 QNG przy kroku 0.00001
 # wtedy wychodzi:
@@ -128,10 +135,10 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
     
 params_cofing = {
-         'angles':  [[ 6.32993528e-05, -8.86137488e-05,  2.55910170e-05,
-         -1.48442690e-04,  4.33636820e-05],
-        [-1.56191307e+03, -8.12274500e+02, -7.48885446e+02,
-         -3.70175938e+02, -3.36523168e+02]],
+         'angles':  [[ 9.18987677e-05, -1.27983815e-04,  3.17661254e-05,
+         -2.56654725e-04,  2.80454257e-05],
+        [-1.56178634e+03, -8.12363445e+02, -7.48859205e+02,
+         -3.70209701e+02, -3.36500719e+02]],
        # 'angles': [[0.1e-7]*5, [0.1e-7]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
         'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function 
                           # we also have the deadline in the linear form (as of now it needs to be implemented this way due to QHyper limitations)
