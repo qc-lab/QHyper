@@ -150,11 +150,8 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
     
 params_cofing = {
-         'angles': [[ 9.25684227e-05, -1.35907087e-04,  3.24829762e-05, -2.91983883e-04,
-   2.51372741e-05],
- [-1.56179252e+03, -8.12404117e+02, -7.48815195e+02, -3.70208783e+02,
-  -3.36510138e+02]],
-       # 'angles': [[0.1e-7]*5, [0.1e-7]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
+        
+        'angles': [[0.1e-13]*5, [0.1e-13]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
         'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function 
                           # we also have the deadline in the linear form (as of now it needs to be implemented this way due to QHyper limitations)
                           # the weight for the actual cost function is set there. THIS WILL NOT WORK WELL WITH HYPER-QAOA.
