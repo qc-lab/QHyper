@@ -146,9 +146,9 @@ class SQAOA(PQC):
            return qml.expval(
                cost_operator)
         
-        opt = qml.QNGOptimizer(0.00002)
+        opt = qml.QNGOptimizer(0.00004)
         params = np.array(opt_args, requires_grad=True)
-        for ind in range(8):
+        for ind in range(50):
             params, cost = opt.step_and_cost(expval_circuit,params)
             print(ind, " ", cost," ", params,"\n")    
             
