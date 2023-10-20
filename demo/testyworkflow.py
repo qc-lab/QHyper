@@ -22,6 +22,17 @@ import sys
 #000100001, 0.006, 0
 #000100100, 0.006, 0
 #000001001, 0.006, 0
+
+ # po kolejnych 7 kroków  po 0.00005
+ #[[ 2.96529440e-05 -4.55437245e-05  3.37496506e-05 -6.31195925e-05
+ #  4.83633630e-05]
+ #[-1.56203575e+03 -8.12349384e+02 -7.48893468e+02 -3.70059336e+02
+ # -3.36474434e+02]]
+ # -5872.691880258778 
+ 
+ 
+
+
 #dla [0.1e-3]*5, [0.5]*5]30+50+50 QNG przy kroku 0.00001
 # wtedy wychodzi:
 #Best params: {'angles': tensor([[ 8.31146019e-05,  1.57348810e-04,  1.34276443e-06,
@@ -106,8 +117,10 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
     
 params_cofing = {
-         'angles': [[ 2.90348277e-5, -3.64824242e-5,  3.46917217e-5, -5.43960632e-5, 4.48874418e-5],
-            [-1.56210092e+3, -8.12399321e+2, -7.48907278e+2, -3.70022896e+2,-3.36433279e+2]],
+         'angles': [[ 2.96529440e-5, -4.55437245e-5,  3.37496506e-5, -6.31195925e-5,
+   4.83633630e-5],
+ [-1.56203575e+3, -8.12349384e+2, -7.48893468e+2, -3.70059336e+2,
+  -3.36474434e+2]],
         
        # 'angles': [[0.1e-7]*5, [0.1e-7]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
         'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function 
