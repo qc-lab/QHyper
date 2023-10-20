@@ -2,7 +2,13 @@ import numpy as np
 import sympy
 from sympy.core.expr import Expr
 import sys
-#30+50+50
+#dla [0.1e-3]*5, [0.5]*5]30+50+50 QNG przy kroku 0.00001
+# wtedy wychodzi:
+#Best params: {'angles': tensor([[ 8.31146019e-05,  1.57348810e-04,  1.34276443e-06,
+  #        1.23770996e-04, -2.58713482e-05],
+ #       [ 8.97996738e-01,  5.73017878e-01,  5.97425600e-01,
+ #         6.27467574e-01,  6.78818295e-01]]
+ #srednia z H: -5849.607816442087, dalej schodzi już b. powoli 
 #import os
 #print(os.getcwd())
 #sys.path.append("C:\\Users\\kzaja\\Documents\\mariusz\\qhyper\\QHyper\\")
@@ -80,10 +86,14 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
     
 params_cofing = {
-        'angles': [[ float("8.22442893e-05"),  float("1.48987137e-04"),  float("7.11491687e-06"),  float("1.16069533e-04"),
-  float("-2.24514270e-05")],[float("8.69996975e-01"),  float("5.72783285e-01"),  float("5.99257146e-01"),  float("6.07831829e-01"),
-   float("6.90278700e-01")]],
-       # 'angles': [[0.1e-3]*5, [0.5]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
+         'angles': [[ 3.01802149e-5, -2.96978888e-5,  3.63643112e-5,
+         -5.16468548e-5,  3.49334697e-5],
+        [-1.56217877e+3, -8.12462911e+2, -7.48954477e+2,
+         -3.69992396e+2, -3.36382973e+2]],
+        #'angles': [[ float("3.01802149e-05"),  float("2.96978888e-05"),  float("1.34276443e-06"),  float("1.23770996e-04"),
+ # float("-2.58713482e-05")],[float("8.97996738e-01"),  float("5.73017878e-01"),  float("5.97425600e-01"),  float("6.27467574e-01"),
+  # float(" 6.78818295e-01")]],
+       # 'angles': [[0.1e-7]*5, [0.1e-7]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
         'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function 
                           # we also have the deadline in the linear form (as of now it needs to be implemented this way due to QHyper limitations)
                           # the weight for the actual cost function is set there. THIS WILL NOT WORK WELL WITH HYPER-QAOA.
