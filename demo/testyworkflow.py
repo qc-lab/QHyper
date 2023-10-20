@@ -90,9 +90,7 @@ params_cofing = {
          -5.16468548e-5,  3.49334697e-5],
         [-1.56217877e+3, -8.12462911e+2, -7.48954477e+2,
          -3.69992396e+2, -3.36382973e+2]],
-        #'angles': [[ float("3.01802149e-05"),  float("2.96978888e-05"),  float("1.34276443e-06"),  float("1.23770996e-04"),
- # float("-2.58713482e-05")],[float("8.97996738e-01"),  float("5.73017878e-01"),  float("5.97425600e-01"),  float("6.27467574e-01"),
-  # float(" 6.78818295e-01")]],
+        
        # 'angles': [[0.1e-7]*5, [0.1e-7]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
         'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function 
                           # we also have the deadline in the linear form (as of now it needs to be implemented this way due to QHyper limitations)
