@@ -83,13 +83,15 @@ import sys
  # -5849.607816442087 
 sys.path.append(".")
 
-
-hyper_params = {'cost_function_weight': 1.0, # weight for: cost function 
-                'encoding_machine_1_weight': 37.89186033670198, # weight for: (x[0] + x[1] + x[2] - 1)**2
-                'encoding_machine_2_weight': 37.89186033670198, # weight for: (x[3] + x[4] + x[5] - 1)**2
-                'encoding_machine_3_weight': 37.89186033670198, # weight for: (x[6] + x[7] + x[8] - 1)**2
-                'deadline_linear_form_weight': 15.536726433137282, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
-                'deadline_quadratic_form_weight': 38.61604208771982} # weight for: deadline constraint - quadratic form
+#waga machine 37.89186033670198
+#machine_weight=37.89186033670198
+machine_weight=20
+hyper_params = {'cost_function_weight': 1, # weight for: cost function 
+                'encoding_machine_1_weight': machine_weight, # weight for: (x[0] + x[1] + x[2] - 1)**2
+                'encoding_machine_2_weight': machine_weight, # weight for: (x[3] + x[4] + x[5] - 1)**2
+                'encoding_machine_3_weight': machine_weight, # weight for: (x[6] + x[7] + x[8] - 1)**2
+                'deadline_linear_form_weight': 1, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
+                'deadline_quadratic_form_weight': 2} # weight for: deadline constraint - quadratic form
 
 import numpy as np
 import sympy
@@ -109,6 +111,7 @@ class SimpleWorkflowProblem(Problem):
         self._set_constraints()
         
     def _set_objective_function(self) -> None:
+        
         C_f = 6.0*self.variables[0] + 8.0*self.variables[1] + 8.0*self.variables[2] + 3.0*self.variables[3] + 4.0*self.variables[4] + 4.0*self.variables[5] + 12.0*self.variables[6] + 16.0*self.variables[7] + 16.0*self.variables[8]
         
 
@@ -150,8 +153,12 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
     
 params_cofing = {
-        
-        'angles': [[0.1e-13]*5, [0.1e-13]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
+        'angles':[[-1.43459701e-03, -1.47325761e-03,  5.56290405e-04 , 4.64987641e-04,
+   7.43239425e-04],
+ [-5.96096294e+01, -8.39779655e-01, -8.82070729e-01, -4.96231336e-01,
+  -5.13406907e-01]],
+
+       # 'angles': [[0.1e-13]*5, [0.1e-13]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
         'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function 
                           # we also have the deadline in the linear form (as of now it needs to be implemented this way due to QHyper limitations)
                           # the weight for the actual cost function is set there. THIS WILL NOT WORK WELL WITH HYPER-QAOA.

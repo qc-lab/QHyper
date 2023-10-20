@@ -26,6 +26,7 @@ class SQAOA(PQC):
         for variables, coeff in qubo.items():
             if not variables:
                 self.offset=coeff
+                result+= coeff *qml.Identity(0)
                 continue
             tmp = coeff * (
                 0.5 * qml.Identity(str(variables[0]))
@@ -100,18 +101,25 @@ class SQAOA(PQC):
         
         cost_operator = self._create_cost_operator(qubo)
         bits=9
+        machine_weight=20
+        hyper_params = {'cost_function_weight': 1, # weight for: cost function 
+                'encoding_machine_1_weight': machine_weight, # weight for: (x[0] + x[1] + x[2] - 1)**2
+                'encoding_machine_2_weight': machine_weight, # weight for: (x[3] + x[4] + x[5] - 1)**2
+                'encoding_machine_3_weight': machine_weight, # weight for: (x[6] + x[7] + x[8] - 1)**2
+                'deadline_linear_form_weight': 1, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
+                'deadline_quadratic_form_weight': 2} # weight for: deadline constraint - quadratic form
         def get_score2(result):
             x = np.array(list(np.binary_repr(result,bits)),dtype=int)
            # print(x)
            # return -self.offset+2 * x[0] + 5 * x[1]+ x[0] * x[1] + 3.5* (x[0] + x[1] -1)*(x[0] + x[1] -1)+1.5*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])
             return (
-                    -self.offset
-                    +37.89186033670198*((x[0] + x[1] + x[2] - 1)*(x[0] + x[1] + x[2] - 1)
+                   # -self.offset
+                    +machine_weight*((x[0] + x[1] + x[2] - 1)*(x[0] + x[1] + x[2] - 1)
                                         +(x[3] + x[4] + x[5] - 1)*(x[3] + x[4] + x[5] - 1)
                                         +(x[6] + x[7] + x[8] - 1)*(x[6] + x[7] + x[8] - 1))
-                    +(6.0*x[0] + 8.0*x[1] + 8.0*x[2] + 3.0*x[3] + 4.0*x[4] + 4.0*x[5] + 12.0*x[6] + 16.0*x[7] + 16.0*x[8])
-                    +15.536726433137282*(13- (6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))  
-                    + 38.61604208771982*(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))
+                    +hyper_params['cost_function_weight']*(6.0*x[0] + 8.0*x[1] + 8.0*x[2] + 3.0*x[3] + 4.0*x[4] + 4.0*x[5] + 12.0*x[6] + 16.0*x[7] + 16.0*x[8])
+                    +hyper_params['deadline_linear_form_weight']*(13- (6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))  
+                    +hyper_params['deadline_quadratic_form_weight']*(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))
                     *(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])))
         def check_cost(result):
             x = np.array(list(np.binary_repr(result,bits)),dtype=int)
@@ -132,13 +140,21 @@ class SQAOA(PQC):
            # print(x)
             #print("czas=",6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])
           #  print(15.536726433137282*13+3.61604208771982*(-13)*(-13))
-            return (+15.536726433137282*(13- (6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))  
-                    + 38.61604208771982*(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))
+            return (+hyper_params['deadline_linear_form_weight']*(13- (6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))  
+                    + hyper_params['deadline_quadratic_form_weight']*(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))
                     *(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])))
+        
+        def check_linear(result):
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
+        
+            return (13- (6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])) 
+        def check_quadratic(result): 
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
+            return (13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))*(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))
             #return 5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4] == 0
-        #for i in range(np.power(2, bits)):
+       # for i in range(np.power(2, bits)):
            #print(format(i, '#0{}b'.format(7)), round(abs(qml.matrix(cost_operator)[i,i]),2))
-          # print(round(np.real(qml.matrix(cost_operator)[i,i]),2),"b"+bin(i)[2:].zfill(bits), get_score2(i),check_cost(i),check_const1(i),check_const2(i),check_const3(i))
+          #  print(round(np.real(qml.matrix(cost_operator)[i,i]),2),"b"+bin(i)[2:].zfill(bits), get_score2(i),check_cost(i),check_const1(i),check_const2(i),check_const3(i),check_linear(i),check_quadratic(i))
             
         @qml.qnode(self.dev)
         def expval_circuit(params):
@@ -146,9 +162,9 @@ class SQAOA(PQC):
            return qml.expval(
                cost_operator)
         
-        opt = qml.QNGOptimizer(0.00001)
+        opt = qml.QNGOptimizer(0.00045)
         params = np.array(opt_args, requires_grad=True)
-        for ind in range(50):
+        for ind in range(0):
             params, cost = opt.step_and_cost(expval_circuit,params)
             print(ind, " ", cost," ", params,"\n")    
             
