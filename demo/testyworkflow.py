@@ -106,10 +106,10 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
     
 params_cofing = {
-         'angles': [[ 3.01802149e-5, -2.96978888e-5,  3.63643112e-5,
-         -5.16468548e-5,  3.49334697e-5],
-        [-1.56217877e+3, -8.12462911e+2, -7.48954477e+2,
-         -3.69992396e+2, -3.36382973e+2]],
+         'angles': [[ 2.90348277e-5, -3.64824242e-5,  3.46917217e-5, -5.43960632e-5,
+   4.48874418e-5],
+ [-1.56210092e+3, -8.12399321e+2, -7.48907278e+2, -3.70022896e+2,
+  -3.36433279e+2]],
         
        # 'angles': [[0.1e-7]*5, [0.1e-7]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
         'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function 
