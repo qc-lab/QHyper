@@ -139,3 +139,34 @@ def test_cem():
 
     result = run_solver(solver_config)
     assert result == pytest.approx(-0.171165308)
+
+
+def test_grid():
+    problem_config, params_config, hyperoptimizer_bounds = get_problem_config()
+
+    solver_config = {
+        "solver": {
+            "type": "vqa",
+            "pqc": {
+                "type": "qaoa",
+                "layers": 5,
+                "backend": "default.qubit",
+            },
+            "optimizer": {
+                "type": "qml",
+                "optimization_steps": 10
+            },
+            "hyper_optimizer": {
+                "type": "grid",
+                "processes": 1,
+                "steps": [8, 7, 6],
+                "bounds": hyperoptimizer_bounds,
+                "disable_tqdm": False
+            },
+            "params_inits": params_config,
+        },
+        "problem": problem_config
+    }
+
+    result = run_solver(solver_config)
+    assert result == pytest.approx(-1.014492067)
