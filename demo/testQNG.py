@@ -13,7 +13,8 @@ def circuit(params):
     # V0(theta0, theta1): Parametrized layer 0
     qml.RZ(params[0],wires=0)
     qml.RX(params[1],wires=0)
-
+ #   qml.RZ(params[2],wires=0)
+ #   qml.RX(params[3],wires=0)
    
    
     return qml.expval(qml.PauliZ(0))
