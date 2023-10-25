@@ -1,7 +1,7 @@
 import pennylane as qml
 from pennylane import numpy as np
 
-dev = qml.device("lightning.qubit", wires=1)
+dev = qml.device("default.qubit", wires=1)
 
 
 @qml.qnode(dev, interface="autograd")
