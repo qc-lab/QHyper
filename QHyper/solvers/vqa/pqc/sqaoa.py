@@ -13,11 +13,14 @@ from QHyper.solvers.converter import QUBO, Converter
 
 from .mixers import MIXERS_BY_NAME
 
-
 @dataclass
 class SQAOA(PQC):
     layers: int = 3
-    backend: str = "default.qubit"
+    #backend: str = "default.qubit"
+    backend= "lightning.qubit"
+    #backend="lightning.gpu"
+    #backend="default.qubit"
+    #backend="rigetti.wavefunction"
     mixer: str = 'pl_x_mixer'
     offset=0;
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
@@ -63,7 +66,8 @@ class SQAOA(PQC):
 
         self._hadamard_layer(problem)
         qml.layer(qaoa_layer, self.layers, params[0], params[1])
-
+    
+ 
     def get_expval_circuit(self, problem: Problem, weights: list[float]
                            ):
         qubo = Converter.create_qubo(problem, weights)
@@ -80,7 +84,7 @@ class SQAOA(PQC):
                 cost_operator
                 # self._create_weight_free_hamiltonian(problem)
             )
-
+      
         return  expval_circuit
 
     def run_opt(

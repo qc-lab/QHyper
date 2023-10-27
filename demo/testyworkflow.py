@@ -2,6 +2,7 @@ import numpy as np
 import sympy
 from sympy.core.expr import Expr
 import sys
+import os
 
 
 sys.path.append("..")
