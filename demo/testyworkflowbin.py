@@ -36,18 +36,32 @@ class SimpleWorkflowProblem(Problem):
     def _set_objective_function(self) -> None:
         
         C_f = 6.0*(1-self.variables[0])*(1-self.variables[1]) 
-        + 8.0*(1-self.variables[0])*(1-self.variables[1])  
+        + 8.0*(1-self.variables[0])*(self.variables[1])  
         + 8.0*(self.variables[0])*(1-self.variables[1]) 
-        + 3.0*(1-self.variables[0])*(self.variables[1])  
-        + 4.0*self.variables[4] 
-        + 4.0*self.variables[5] 
-        + 12.0*self.variables[6] 
-        + 16.0*self.variables[7] 
-        + 16.0*self.variables[8]
+        + 2.0*(self.variables[0])*(self.variables[1])  
+        + 3.0*(1-self.variables[2])*(1-self.variables[3]) 
+        + 4.0*(1-self.variables[2])*(self.variables[3])  
+        + 4.0*(self.variables[2])*(1-self.variables[3]) 
+        + 1.0*(self.variables[2])*(self.variables[3])
+        + 12.0*(1-self.variables[4])*(1-self.variables[5]) 
+        + 16.0*(1-self.variables[4])*(self.variables[5])  
+        + 16.0*(self.variables[4])*(1-self.variables[5]) 
+        + 4.0*(self.variables[4])*(self.variables[5])  
         
+        deadline_aux=6.0*(1-self.variables[0])*(1-self.variables[1]) 
+        + 2.0*(1-self.variables[0])*(self.variables[1])  
+        + 4.0*(self.variables[0])*(1-self.variables[1]) 
+        + 16.0*(self.variables[0])*(self.variables[1])  
+        + 3.0*(1-self.variables[2])*(1-self.variables[3]) 
+        + 1.0*(1-self.variables[2])*(self.variables[3])  
+        + 2.0*(self.variables[2])*(1-self.variables[3]) 
+        + 8.0*(self.variables[2])*(self.variables[3])
+        + 12.0*(1-self.variables[4])*(1-self.variables[5]) 
+        + 4.0*(1-self.variables[4])*(self.variables[5])  
+        + 8.0*(self.variables[4])*(1-self.variables[5]) 
+        + 32.0*(self.variables[4])*(self.variables[5])  
 
-        K_f4_linear = deadline - (6*self.variables[0] + 2*self.variables[1] + 4*self.variables[2] + 3*self.variables[3] +
-                            1*self.variables[4] + 2*self.variables[5] + 12*self.variables[6] + 4*self.variables[7] + 8*self.variables[8])
+        K_f4_linear = deadline - deadline_aux
                 
         self.objective_function = Expression(hyper_params['cost_function_weight'] * C_f + hyper_params['deadline_linear_form_weight'] *  K_f4_linear)
         
