@@ -35,7 +35,7 @@ class SimpleWorkflowProblem(Problem):
         
     def _set_objective_function(self) -> None:
         
-        C_f = 6.0*(1-self.variables[0])*(1-self.variables[1]) 
+        C_f = (6.0*(1-self.variables[0])*(1-self.variables[1]) 
         + 8.0*(1-self.variables[0])*(self.variables[1])  
         + 8.0*(self.variables[0])*(1-self.variables[1]) 
         + 2.0*(self.variables[0])*(self.variables[1])  
@@ -46,46 +46,73 @@ class SimpleWorkflowProblem(Problem):
         + 12.0*(1-self.variables[4])*(1-self.variables[5]) 
         + 16.0*(1-self.variables[4])*(self.variables[5])  
         + 16.0*(self.variables[4])*(1-self.variables[5]) 
-        + 4.0*(self.variables[4])*(self.variables[5])  
+        + 4.0*(self.variables[4])*(self.variables[5])  )
         
-        deadline_aux=6.0*(1-self.variables[0])*(1-self.variables[1]) 
-        + 2.0*(1-self.variables[0])*(self.variables[1])  
-        + 4.0*(self.variables[0])*(1-self.variables[1]) 
-        + 16.0*(self.variables[0])*(self.variables[1])  
+        self.deadline_aux=(6.0*(1-self.variables[0])*(1-self.variables[1]) 
+       # + 2.0*(1-self.variables[0])*(self.variables[1])  
+      #  + 4.0*(self.variables[0])*(1-self.variables[1]) 
+       # + 16.0*(self.variables[0])*(self.variables[1])  
         + 3.0*(1-self.variables[2])*(1-self.variables[3]) 
-        + 1.0*(1-self.variables[2])*(self.variables[3])  
-        + 2.0*(self.variables[2])*(1-self.variables[3]) 
-        + 8.0*(self.variables[2])*(self.variables[3])
-        + 12.0*(1-self.variables[4])*(1-self.variables[5]) 
-        + 4.0*(1-self.variables[4])*(self.variables[5])  
-        + 8.0*(self.variables[4])*(1-self.variables[5]) 
-        + 32.0*(self.variables[4])*(self.variables[5])  
+        #+ 1.0*(1-self.variables[2])*(self.variables[3])  
+       # + 2.0*(self.variables[2])*(1-self.variables[3]) 
+       # + 8.0*(self.variables[2])*(self.variables[3])
+        + 12.0*(1-self.variables[4])*(1-self.variables[5]) )
+       # + 4.0*(1-self.variables[4])*(self.variables[5])  
+       # + 8.0*(self.variables[4])*(1-self.variables[5]) 
+       # + 32.0*(self.variables[4])*(self.variables[5])  )
 
-        K_f4_linear = deadline - deadline_aux
-                
-        self.objective_function = Expression(hyper_params['cost_function_weight'] * C_f + hyper_params['deadline_linear_form_weight'] *  K_f4_linear)
+        K_f4_linear = deadline - self.deadline_aux
+        K_f4_squared=K_f4_linear**2
+        K_f4_squared1=sympy.expand(K_f4_squared)
+
+        print(K_f4_squared1, "\n\n")
+          
+        for i in range(6):
+            K_f4_squared1=K_f4_squared1.subs(self.variables[i]**2, self.variables[i])
+            print(K_f4_squared1,"\n\n")  
+        
+        print(K_f4_squared1)     
+        self.objective_function = (Expression(hyper_params['cost_function_weight'] * C_f 
+                                              + hyper_params['deadline_linear_form_weight'] *  K_f4_linear)
+                                   + hyper_params['deadline_quadratic_form_weight'] * K_f4_linear**2)
         
     def _set_constraints(self):
-        K_f1 = self.variables[0] + self.variables[1] + self.variables[2] - 1
-        K_f2 = self.variables[3] + self.variables[4] + self.variables[5] - 1
-        K_f3 = self.variables[6] + self.variables[7] + self.variables[8] - 1
+       # print(self.deadline_aux)
 
-        K_f4_squared = deadline - (6*self.variables[0] + 2*self.variables[1] + 4*self.variables[2] + 3*self.variables[3] +
-                            1*self.variables[4] + 2*self.variables[5] + 12*self.variables[6] + 4*self.variables[7] + 8*self.variables[8])
-
+        
+      
             
-        self.constraints = [Expression(K_f1), Expression(K_f2), Expression(K_f3), Expression(K_f4_squared)]
+        self.constraints = []
     
     def get_score(self, result, penalty=0):
         
         x = [int(val) for val in result]
     
-        if (x[0] + x[1] + x[2] == 1 and 
-            x[3] + x[4] + x[5] == 1 and 
-            x[6] + x[7] + x[8] == 1 and 
-            6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8] <= 13):
+        if (6.0*(1.0-x[0])*(1-x[1]) 
+        + 2.0*(1.0-x[0])*(x[1])  
+        + 4.0*(x[0])*(1.0-x[1]) 
+        + 16.0*(x[0])*(x[1])  
+        + 3.0*(1.0-x[2])*(1.0-x[3]) 
+        + 1.0*(1.0-x[2])*(x[3])  
+        + 2.0*(x[2])*(1.0-x[3]) 
+        + 8.0*(x[2])*(x[3])
+        + 12.0*(1.0-x[4])*(1.0-x[5]) 
+        + 4.0*(1.0-x[4])*(x[5])  
+        + 8.0*(x[4])*(1.0-x[5]) 
+        + 32.0*(x[4])*(x[5]) <=13 ):
             
-            return 6.0*x[0] + 8.0*x[1] + 8.0*x[2] + 3.0*x[3] + 4.0*x[4] + 4.0*x[5] + 12.0*x[6] + 16.0*x[7] + 16.0*x[8]
+            return (6.0*(1.0-x[0])*(1.0-x[1]) 
+        + 8.0*(1.0-x[0])*(x[1])  
+        + 8.0*(x[0])*(1.0-x[1]) 
+        + 2.0*(x[0])*(x[1])  
+        + 3.0*(1.0-x[2])*(1.0-x[3]) 
+        + 4.0*(1.0-x[2])*(x[3])  
+        + 4.0*(x[2])*(1.0-x[3]) 
+        + 1.0*(x[2])*(x[3])
+        + 12.0*(1.0-x[4])*(1.0-x[5]) 
+        + 16.0*(1.0-x[4])*(x[5])  
+        + 16.0*(x[4])*(1.0-x[5]) 
+        + 4.0*(x[4])*(x[5]) ) 
         
         return penalty
     
@@ -108,9 +135,7 @@ params_cofing = {
                           # we also have the deadline in the linear form (as of now it needs to be implemented this way due to QHyper limitations)
                           # the weight for the actual cost function is set there. THIS WILL NOT WORK WELL WITH HYPER-QAOA.
                           
-                       hyper_params['encoding_machine_1_weight'], 
-                       hyper_params['encoding_machine_2_weight'], 
-                       hyper_params['encoding_machine_3_weight'], 
+                   
                        hyper_params['deadline_quadratic_form_weight']],
     }
 # Simple quantum circuit without optimzers will be used to test the results
