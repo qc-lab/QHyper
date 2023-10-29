@@ -96,5 +96,6 @@ Contents
    usage
    contribution
    api
+   changelog
 
 

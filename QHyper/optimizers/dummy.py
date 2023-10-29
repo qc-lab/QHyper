@@ -10,9 +10,8 @@ from .base import Optimizer, OptimizationResult
 @dataclass
 class Dummy(Optimizer):
     def minimize(
-            self, 
-            func: Callable[[npt.NDArray[np.float64]], OptimizationResult], 
+            self,
+            func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
             init: npt.NDArray[np.float64]
     ) -> OptimizationResult:
-        result = func(init)
-        return OptimizationResult(result.value, init)
+        return func(init)

@@ -25,7 +25,7 @@ def get_problem_config():
 
 def run_solver(solver_config):
     vqa = solver_from_config(solver_config)
-    results = vqa.solve(None)
+    results = vqa.solve()
     return weighted_avg_evaluation(
         results.results_probabilities, vqa.problem.get_score, 0)
 
@@ -68,6 +68,30 @@ def test_qml():
             "optimizer": {
                 "type": "qml",
                 "optimization_steps": 10
+            },
+            "params_inits": params_config,
+        },
+        "problem": problem_config
+    }
+
+    result = run_solver(solver_config)
+    assert result == pytest.approx(-0.171165308)
+
+
+def test_qml_qaoa():
+    problem_config, params_config, _ = get_problem_config()
+
+    solver_config = {
+        "solver": {
+            "type": "vqa",
+            "pqc": {
+                "type": "qml_qaoa",
+                "layers": 5,
+                "backend": "default.qubit",
+                "optimizer": "adam",
+                "optimizer_args": {
+                    "optimization_steps": 10
+                }
             },
             "params_inits": params_config,
         },

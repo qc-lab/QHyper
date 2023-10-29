@@ -9,7 +9,6 @@ from QHyper.problems.base import Problem
 from QHyper.optimizers import OptimizationResult
 
 from QHyper.solvers.vqa.pqc.qaoa import QAOA
-from QHyper.solvers.converter import Converter
 from QHyper.util import weighted_avg_evaluation
 
 
@@ -55,7 +54,7 @@ class HQAOA(QAOA):
     ) -> OptimizationResult:
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
- 
+
         weights = list(opt_args[:1 + len(problem.constraints)])
         probs = self.get_probs_func(problem, list(weights))(
             opt_args[1 + len(problem.constraints):].reshape(2, -1))
@@ -83,7 +82,7 @@ class HQAOA(QAOA):
         return {
             format(result, 'b').zfill(len(problem.variables)): float(prob)
             for result, prob in enumerate(probs)
-        }   
+        }
 
     def get_opt_args(
         self,
