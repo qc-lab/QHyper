@@ -21,6 +21,7 @@ class QAOA(PQC):
     mixer: str = 'pl_x_mixer'
     qubo_cache: dict[tuple[float], qml.Hamiltonian] = field(
         default_factory=dict)
+    dev: qml.Device | None = None
 
     def create_qubo(self, problem: Problem, weights: list[float]) -> QUBO:
         if tuple(weights) not in self.qubo_cache:
