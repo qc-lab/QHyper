@@ -49,32 +49,32 @@ class SimpleWorkflowProblem(Problem):
         + 4.0*(self.variables[4])*(self.variables[5])  )
         
         self.deadline_aux=(6.0*(1-self.variables[0])*(1-self.variables[1]) 
-       # + 2.0*(1-self.variables[0])*(self.variables[1])  
-      #  + 4.0*(self.variables[0])*(1-self.variables[1]) 
-       # + 16.0*(self.variables[0])*(self.variables[1])  
+       + 2.0*(1-self.variables[0])*(self.variables[1])  
+        + 4.0*(self.variables[0])*(1-self.variables[1]) 
+        + 16.0*(self.variables[0])*(self.variables[1])  
         + 3.0*(1-self.variables[2])*(1-self.variables[3]) 
-        #+ 1.0*(1-self.variables[2])*(self.variables[3])  
-       # + 2.0*(self.variables[2])*(1-self.variables[3]) 
-       # + 8.0*(self.variables[2])*(self.variables[3])
-        + 12.0*(1-self.variables[4])*(1-self.variables[5]) )
-       # + 4.0*(1-self.variables[4])*(self.variables[5])  
-       # + 8.0*(self.variables[4])*(1-self.variables[5]) 
-       # + 32.0*(self.variables[4])*(self.variables[5])  )
+        + 1.0*(1-self.variables[2])*(self.variables[3])  
+        + 2.0*(self.variables[2])*(1-self.variables[3]) 
+        + 8.0*(self.variables[2])*(self.variables[3])
+        + 12.0*(1-self.variables[4])*(1-self.variables[5]) 
+        + 4.0*(1-self.variables[4])*(self.variables[5])  
+        + 8.0*(self.variables[4])*(1-self.variables[5]) 
+        + 32.0*(self.variables[4])*(self.variables[5])  )
 
         K_f4_linear = deadline - self.deadline_aux
         K_f4_squared=K_f4_linear**2
         K_f4_squared1=sympy.expand(K_f4_squared)
 
-        print(K_f4_squared1, "\n\n")
+       # print(K_f4_squared1, "\n\n")
           
         for i in range(6):
             K_f4_squared1=K_f4_squared1.subs(self.variables[i]**2, self.variables[i])
-            print(K_f4_squared1,"\n\n")  
+        print(K_f4_squared1,"\n\n")  
         
         print(K_f4_squared1)     
         self.objective_function = (Expression(hyper_params['cost_function_weight'] * C_f 
-                                              + hyper_params['deadline_linear_form_weight'] *  K_f4_linear)
-                                   + hyper_params['deadline_quadratic_form_weight'] * K_f4_linear**2)
+                                              + hyper_params['deadline_linear_form_weight'] *  K_f4_linear
+                                   + hyper_params['deadline_quadratic_form_weight'] * K_f4_linear**2))
         
     def _set_constraints(self):
        # print(self.deadline_aux)
@@ -136,7 +136,7 @@ params_cofing = {
                           # the weight for the actual cost function is set there. THIS WILL NOT WORK WELL WITH HYPER-QAOA.
                           
                    
-                       hyper_params['deadline_quadratic_form_weight']],
+                       ],
     }
 # Simple quantum circuit without optimzers will be used to test the results
 # WF-QAOA is choosen becasue this PQC has most suitable evaluation function
