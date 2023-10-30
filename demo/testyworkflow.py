@@ -122,8 +122,9 @@ solver_config = {
 vqa = VQA(problem, config=solver_config)
 # dla QNG trzeba użyć evaluate(), a nie solve() bo tak jest zaszyte w sqaoa
 #best_params = vqa.evaluate(params_cofing)
-best_params = vqa.evaluate(params_cofing)
+best_params, history = vqa.evaluate(params_cofing)
 print(f"Best params: {best_params}")
+print(history)
 
 best_results = tester.evaluate(best_params, print_results=True)
 print(f"Best results: {best_results}")

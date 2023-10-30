@@ -168,12 +168,14 @@ class SQAOA(PQC):
         
         opt = qml.QNGOptimizer(0.00045)
         params = np.array(opt_args, requires_grad=True)
-        for ind in range(50):
+        history=pandas
+        for ind in range(3):
            # print(qml.metric_tensor(expval_circuit, approx="diag")(params))
             params, cost = opt.step_and_cost(expval_circuit,params)
+            history.append([cost,params])
             print(ind, " ", cost," ", params,"\n")    
             
-        return self.get_params_init_format(params, hyper_args)
+        return self.get_params_init_format(params, hyper_args), history
 
       
 

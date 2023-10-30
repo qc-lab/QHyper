@@ -101,7 +101,7 @@ class VQA(Solver):
 
     def evaluate(
             self, params_inits: dict[str, Any], print_results: bool = False
-    ) -> float:
+    ):
         hyper_args = self.pqc.get_hopt_args(params_inits)
         opt_args = self.pqc.get_opt_args(params_inits)
         return self.pqc.run_opt(
