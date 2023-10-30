@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import pennylane as qml
+import pandas as pd
 from pennylane import numpy as np
 from scipy.sparse import csr_matrix
 
@@ -168,11 +169,13 @@ class SQAOA(PQC):
         
         opt = qml.QNGOptimizer(0.00045)
         params = np.array(opt_args, requires_grad=True)
-        history=pandas
+        
+        history=pd.dataframe()
         for ind in range(3):
            # print(qml.metric_tensor(expval_circuit, approx="diag")(params))
             params, cost = opt.step_and_cost(expval_circuit,params)
-            history.append([cost,params])
+            history.append(ind,cost,params)
+            print (history)
             print(ind, " ", cost," ", params,"\n")    
             
         return self.get_params_init_format(params, hyper_args), history
