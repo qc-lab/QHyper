@@ -24,7 +24,7 @@ class SQAOA(PQC):
     mixer: str = 'pl_x_mixer'
     offset=0;
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
-        #print(qubo)
+        print(qubo)
         result = qml.Identity(0)-qml.Identity(0)
         for variables, coeff in qubo.items():
             if not variables:
@@ -35,13 +35,15 @@ class SQAOA(PQC):
                 0.5 * qml.Identity(str(variables[0]))
                 - 0.5 * qml.PauliZ(str(variables[0]))
             )
-            if len(variables) == 2 and variables[0] != variables[1]:
+            ind=1
+            while ind < len(variables) and variables[0] != variables[1]:
                 tmp = tmp @ (
-                    0.5 * qml.Identity(str(variables[1]))
-                    - 0.5 * qml.PauliZ(str(variables[1]))
+                    0.5 * qml.Identity(str(variables[ind]))
+                    - 0.5 * qml.PauliZ(str(variables[ind]))
                 )
+                ind=ind+1   
             result += tmp
-       # print(result,"\n")
+        print(result,"\n")
         #print("qubo offset",self.offset,"\n")
         return result
     
