@@ -7,12 +7,14 @@ from .pqc.h_qaoa import HQAOA
 from .pqc.qaoa import QAOA
 from .pqc.wf_qaoa import WFQAOA
 from .pqc.sqaoa import SQAOA
+from .pqc.hoboqaoa import HOBOQAOA
 
 PQC_BY_NAME: dict[str, Type[PQC]] = {
     'hqaoa': HQAOA,
     'qaoa': QAOA,
     'wfqaoa': WFQAOA,
-    'sqaoa': SQAOA
+    'sqaoa': SQAOA,
+    'hoboqaoa': HOBOQAOA
 }
 
 # # === Evaluation functions ===

@@ -14,7 +14,7 @@ from QHyper.solvers.converter import QUBO, Converter
 from .mixers import MIXERS_BY_NAME
 
 @dataclass
-class SQAOA(PQC):
+class HOBOQAOA(PQC):
     layers: int = 3
     #backend: str = "default.qubit"
     backend= "lightning.qubit"
