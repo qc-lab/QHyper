@@ -16,8 +16,8 @@ from .mixers import MIXERS_BY_NAME
 @dataclass
 class SQAOA(PQC):
     layers: int = 3
-    #backend: str = "default.qubit"
-    backend= "lightning.qubit"
+    backend: str = "default.qubit"
+   # backend= "lightning.qubit"
     #backend="lightning.gpu"
     #backend="default.qubit"
     #backend="rigetti.wavefunction"
