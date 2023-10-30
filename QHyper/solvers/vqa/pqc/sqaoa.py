@@ -170,15 +170,14 @@ class SQAOA(PQC):
         opt = qml.QNGOptimizer(0.00045)
         params = np.array(opt_args, requires_grad=True)
         
-        history=pd.dataframe()
-        for ind in range(3):
+        history=[]
+        for step_no in range(50):
            # print(qml.metric_tensor(expval_circuit, approx="diag")(params))
             params, cost = opt.step_and_cost(expval_circuit,params)
-            history.append(ind,cost,params)
-            print (history)
-            print(ind, " ", cost," ", params,"\n")    
+            history.append([step_no+1,cost,params])
+            print(step_no, " ", cost," ", params,"\n")    
             
-        return self.get_params_init_format(params, hyper_args), history
+        return self.get_params_init_format(params, hyper_args), pd.DataFrame(history,columns=['step_no', 'cost', 'params'])
 
       
 

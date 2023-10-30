@@ -125,6 +125,7 @@ vqa = VQA(problem, config=solver_config)
 best_params, history = vqa.evaluate(params_cofing)
 print(f"Best params: {best_params}")
 print(history)
+history.plot(x='step_no', y='cost', kind="scatter")
 
 best_results = tester.evaluate(best_params, print_results=True)
 print(f"Best results: {best_results}")
