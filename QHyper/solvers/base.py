@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from typing import Any, Optional
 
@@ -22,9 +22,14 @@ class SolverResult:
         Dictionary with results and their probabilities.
     params : dict[Any, Any]
         Dictionary with the best parameters for the solver.
+    history : list[list[float]]
+        History of the solver. Each element of the list represents the values
+        of the objective function at each iteration - there can be multiple
+        results per each iteration (epoch).
     """
     results_probabilities: dict[str, float]
     params: dict[Any, Any]
+    history: list[list[float]] = field(default_factory=list)
 
 
 class Solver:

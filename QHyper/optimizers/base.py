@@ -18,10 +18,15 @@ class OptimizationResult:
         The minimum function value found by the optimization algorithm.
     params : numpy.ndarray
         The optimal point found by the optimization algorithm.
+    history : list[list[float]]
+        The history of the optimization algorithm. Each element of the list
+        represents the values of the objective function at each
+        iteration - there can be multiple results per each iteration (epoch).
     """
 
     value: float
     params: npt.NDArray[np.float64]
+    history: list[list[float]] = dataclasses.field(default_factory=list)
 
 
 class Optimizer:

@@ -103,5 +103,6 @@ class VQA(Solver):
 
         return SolverResult(
             self.pqc.run_with_probs(self.problem, opt_res.params, best_hargs),
-            self.pqc.get_params_init_format(opt_res.params, best_hargs)
+            self.pqc.get_params_init_format(opt_res.params, best_hargs),
+            opt_res.history,
         )

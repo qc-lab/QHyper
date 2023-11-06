@@ -99,9 +99,9 @@ class QmlGradientDescent(Optimizer):
             self.optimizer.reset()
         for _ in range(self.optimization_steps):
             params, cost = self.optimizer.step_and_cost(wrapper, params)
-            cost_history.append(cost)
+            cost_history.append([float(cost)])
 
-        return OptimizationResult(cost, params)
+        return OptimizationResult(cost, params, cost_history)
 
     def minimize_expval_func(
             self, func: qml.QNode, init: npt.NDArray[np.float64]
@@ -113,6 +113,6 @@ class QmlGradientDescent(Optimizer):
             self.optimizer.reset()
         for _ in range(self.optimization_steps):
             params, cost = self.optimizer.step_and_cost(func, params)
-            cost_history.append(cost)
+            cost_history.append([float(cost)])
 
-        return OptimizationResult(cost, params)
+        return OptimizationResult(cost, params, cost_history)

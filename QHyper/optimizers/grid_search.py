@@ -64,8 +64,10 @@ class GridSearch(Optimizer):
                 disable=self.disable_tqdm
             ))
         min_idx = np.argmin([result.value for result in results])
+        history = [[result.value for result in results]]
 
         return OptimizationResult(
             value=results[min_idx].value,
             params=hyperparams[min_idx],
+            history=history
         )
