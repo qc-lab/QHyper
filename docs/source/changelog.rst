@@ -1,5 +1,9 @@
-Change Log
-==========
+Changelog
+=========
+
+2023-11-06
+----------
+- Add history to SolverResult and OptimizerResult
 
 2023-10-29
 ----------
