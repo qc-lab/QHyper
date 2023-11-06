@@ -16,8 +16,8 @@ class ScipyOptimizer(Optimizer):
     maxfun : int
         Maximum number of function evaluations.
     bounds : list[tuple[float, float]] or None
-        A list of tuples specifying the lower and upper bounds for each dimension of the search space,
-        or None if no bounds are provided.
+        A list of tuples specifying the lower and upper bounds for each
+        dimension of the search space, or None if no bounds are provided.
     """
     def __init__(
             self,
@@ -39,8 +39,8 @@ class ScipyOptimizer(Optimizer):
         ----------
         func : callable
             The objective function to be minimized.
-            The function should take a single argument, which is a NumPy array of type np.float64,
-            and return a float value.
+            The function should take a single argument, which is a NumPy array
+            of type np.float64, and return a float value.
         init : numpy.ndarray
             The initial point for the optimization algorithm.
             The array should have dtype np.float64.
@@ -48,7 +48,8 @@ class ScipyOptimizer(Optimizer):
         Returns
         -------
         tuple
-            A tuple containing the minimum function value and the corresponding optimal point.
+            A tuple containing the minimum function value and the
+            corresponding optimal point.
         """
         def wrapper(params: npt.NDArray[np.float64]) -> float:
             return func(np.array(params).reshape(np.array(init).shape)).value
@@ -62,4 +63,5 @@ class ScipyOptimizer(Optimizer):
             ),
             options={'maxfun': self.maxfun}
         )
-        return OptimizationResult(result.fun, result.x.reshape(np.array(init).shape))
+        return OptimizationResult(
+            result.fun, result.x.reshape(np.array(init).shape))

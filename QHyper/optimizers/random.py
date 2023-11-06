@@ -83,7 +83,9 @@ class Random(Optimizer):
                 disable=self.disable_tqdm
             ))
         min_idx = np.argmin([result.value for result in results])
+
         return OptimizationResult(
             value=results[min_idx].value,
             params=hyperparams[min_idx],
+            history=[[result.value for result in results]],
         )
