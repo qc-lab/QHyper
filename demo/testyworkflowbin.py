@@ -162,7 +162,7 @@ solver_config2 = {
 }
 solver_config = {
     'pqc': {
-        'type': 'sqaoa',
+        'type': 'hoboqaoa',
         'layers': 5
     }
 }

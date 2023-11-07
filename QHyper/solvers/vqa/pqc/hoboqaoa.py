@@ -17,34 +17,33 @@ from .mixers import MIXERS_BY_NAME
 class HOBOQAOA(PQC):
     layers: int = 3
     #backend: str = "default.qubit"
-    backend= "lightning.qubit"
+    #backend= "lightning.qubit"
     #backend="lightning.gpu"
-    #backend="default.qubit"
+    backend="default.qubit"
     #backend="rigetti.wavefunction"
     mixer: str = 'pl_x_mixer'
     offset=0;
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
-        print(qubo)
-        result = qml.Identity(0)-qml.Identity(0)
+        print("jestem tutaj")
+        result = qml.Identity(0) * 0.0
         for variables, coeff in qubo.items():
             if not variables:
-                self.offset=coeff
                 result+= coeff *qml.Identity(0)
                 continue
             tmp = coeff * (
                 0.5 * qml.Identity(str(variables[0]))
                 - 0.5 * qml.PauliZ(str(variables[0]))
             )
-            ind=1
-            while ind < len(variables) and variables[0] != variables[1]:
+            used = set()
+            for variable in variables[1:]:
+                if variable in used:
+                    continue
+                used.add(variable)
                 tmp = tmp @ (
-                    0.5 * qml.Identity(str(variables[ind]))
-                    - 0.5 * qml.PauliZ(str(variables[ind]))
+                    0.5 * qml.Identity(str(variable))
+                    - 0.5 * qml.PauliZ(str(variable))
                 )
-                ind=ind+1   
             result += tmp
-        print(result,"\n")
-        #print("qubo offset",self.offset,"\n")
         return result
     
    

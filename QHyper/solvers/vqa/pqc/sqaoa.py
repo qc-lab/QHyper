@@ -30,7 +30,7 @@ class SQAOA(PQC):
         for variables, coeff in qubo.items():
             if not variables:
                 self.offset=coeff
-              #  result+= coeff *qml.Identity(0)
+                result+= coeff *qml.Identity(0)
                 continue
             tmp = coeff * (
                 0.5 * qml.Identity(str(variables[0]))
