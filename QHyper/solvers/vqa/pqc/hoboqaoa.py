@@ -27,6 +27,7 @@ class HOBOQAOA(PQC):
         print("jestem tutaj")
         result = qml.Identity(0) * 0.0
         for variables, coeff in qubo.items():
+            print(variables)
             if not variables:
                 result+= coeff *qml.Identity(0)
                 continue
@@ -35,7 +36,9 @@ class HOBOQAOA(PQC):
                 - 0.5 * qml.PauliZ(str(variables[0]))
             )
             used = set()
+            used.add(variables[0])
             for variable in variables[1:]:
+                print(variable)
                 if variable in used:
                     continue
                 used.add(variable)
