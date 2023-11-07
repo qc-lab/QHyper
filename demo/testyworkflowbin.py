@@ -6,15 +6,10 @@ import sys
 
 sys.path.append(".")
 
-#waga machine 37.89186033670198
-#machine_weight=37.89186033670198
-machine_weight=20
+
 hyper_params = {'cost_function_weight': 1, # weight for: cost function 
-                'encoding_machine_1_weight': machine_weight, # weight for: (x[0] + x[1] + x[2] - 1)**2
-                'encoding_machine_2_weight': machine_weight, # weight for: (x[3] + x[4] + x[5] - 1)**2
-                'encoding_machine_3_weight': machine_weight, # weight for: (x[6] + x[7] + x[8] - 1)**2
-                'deadline_linear_form_weight': 1, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
-                'deadline_quadratic_form_weight': 2} # weight for: deadline constraint - quadratic form
+               'deadline_linear_form_weight': -1, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
+                'deadline_quadratic_form_weight': 0.17} # weight for: deadline constraint - quadratic form
 
 import numpy as np
 import sympy

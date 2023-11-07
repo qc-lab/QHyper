@@ -74,7 +74,6 @@ class HOBOQAOA(PQC):
                            ):
         qubo = Converter.create_qubo(problem, weights)
         cost_operator = self._create_cost_operator(qubo)
-        print("w get_expval_circuit ",problem.variables)
         @qml.qnode(self.dev)
         def expval_circuit(params: npt.NDArray[np.float64]):
             self._circuit(problem, params, cost_operator)
@@ -95,8 +94,7 @@ class HOBOQAOA(PQC):
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64],
         print_results: bool = False
-    ):   
-        print("problem variables ", problem.variables)    
+    ):    
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
         self.get_expval_circuit(problem, list(hyper_args))(
@@ -106,61 +104,106 @@ class HOBOQAOA(PQC):
         
         
         cost_operator = self._create_cost_operator(qubo)
-        bits=9
+        bits=6
         machine_weight=20
         hyper_params = {'cost_function_weight': 1, # weight for: cost function 
-                'encoding_machine_1_weight': machine_weight, # weight for: (x[0] + x[1] + x[2] - 1)**2
-                'encoding_machine_2_weight': machine_weight, # weight for: (x[3] + x[4] + x[5] - 1)**2
-                'encoding_machine_3_weight': machine_weight, # weight for: (x[6] + x[7] + x[8] - 1)**2
-                'deadline_linear_form_weight': 1, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
-                'deadline_quadratic_form_weight': 2} # weight for: deadline constraint - quadratic form
-        def get_score2(result):
-            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
-           # print(x)
-           # return -self.offset+2 * x[0] + 5 * x[1]+ x[0] * x[1] + 3.5* (x[0] + x[1] -1)*(x[0] + x[1] -1)+1.5*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])*(5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4])
-            return (
-                   # -self.offset
-                    +machine_weight*((x[0] + x[1] + x[2] - 1)*(x[0] + x[1] + x[2] - 1)
-                                        +(x[3] + x[4] + x[5] - 1)*(x[3] + x[4] + x[5] - 1)
-                                        +(x[6] + x[7] + x[8] - 1)*(x[6] + x[7] + x[8] - 1))
-                    +hyper_params['cost_function_weight']*(6.0*x[0] + 8.0*x[1] + 8.0*x[2] + 3.0*x[3] + 4.0*x[4] + 4.0*x[5] + 12.0*x[6] + 16.0*x[7] + 16.0*x[8])
-                    +hyper_params['deadline_linear_form_weight']*(13- (6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))  
-                    +hyper_params['deadline_quadratic_form_weight']*(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))
-                    *(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])))
-        def check_cost(result):
-            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
-            return 6.0*x[0] + 8.0*x[1] + 8.0*x[2] + 3.0*x[3] + 4.0*x[4] + 4.0*x[5] + 12.0*x[6] + 16.0*x[7] + 16.0*x[8]
-            #return 2 * x[0] + 5 * x[1]+ x[0] * x[1] 
+               'deadline_linear_form_weight': -1, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
+                'deadline_quadratic_form_weight': 0.17} # weight for: deadline constraint - quadratic form
         
-        def check_const1(result):
+        def get_deadline(result):
             x = np.array(list(np.binary_repr(result,bits)),dtype=int)
-            return x[0] + x[1] + x[2] == 1 and x[3] + x[4] + x[5] == 1 and x[6] + x[7] + x[8] == 1
+            return (6.0*(1.0-x[0])*(1-x[1]) 
+        + 2.0*(1.0-x[0])*(x[1])  
+        + 4.0*(x[0])*(1.0-x[1]) 
+        + 16.0*(x[0])*(x[1])  
+        + 3.0*(1.0-x[2])*(1.0-x[3]) 
+        + 1.0*(1.0-x[2])*(x[3])  
+        + 2.0*(x[2])*(1.0-x[3]) 
+        + 8.0*(x[2])*(x[3])
+        + 12.0*(1.0-x[4])*(1.0-x[5]) 
+        + 4.0*(1.0-x[4])*(x[5])  
+        + 8.0*(x[4])*(1.0-x[5]) 
+        + 32.0*(x[4])*(x[5]))
+        def get_full_f(result):
+           
+            return (  
+                    hyper_params['cost_function_weight']*get_cost(i)
+                    +hyper_params['deadline_linear_form_weight']*get_linear(i)  
+                    + hyper_params['deadline_quadratic_form_weight']*get_quadratic(i)
+                    )
+        
+        def get_cost(result):
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
+            return (6.0*(1.0-x[0])*(1.0-x[1]) 
+        + 8.0*(1.0-x[0])*(x[1])  
+        + 8.0*(x[0])*(1.0-x[1]) 
+        + 2.0*(x[0])*(x[1])  
+        + 3.0*(1.0-x[2])*(1.0-x[3]) 
+        + 4.0*(1.0-x[2])*(x[3])  
+        + 4.0*(x[2])*(1.0-x[3]) 
+        + 1.0*(x[2])*(x[3])
+        + 12.0*(1.0-x[4])*(1.0-x[5]) 
+        + 16.0*(1.0-x[4])*(x[5])  
+        + 16.0*(x[4])*(1.0-x[5]) 
+        + 4.0*(x[4])*(x[5]) )
+       
+        
+    
+        def check_deadline(result):
+            return (get_deadline(result) <=13 )
+         
+        def get_unc_pen(result):
+            return (+hyper_params['deadline_linear_form_weight']*get_linear(i)  
+                    + hyper_params['deadline_quadratic_form_weight']*get_quadratic(i))
+       
+        
+        def get_linear(result):
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
+        
+            return (13- 
+                    (6.0*(1.0-x[0])*(1-x[1]) 
+        + 2.0*(1.0-x[0])*(x[1])  
+        + 4.0*(x[0])*(1.0-x[1]) 
+        + 16.0*(x[0])*(x[1])  
+        + 3.0*(1.0-x[2])*(1.0-x[3]) 
+        + 1.0*(1.0-x[2])*(x[3])  
+        + 2.0*(x[2])*(1.0-x[3]) 
+        + 8.0*(x[2])*(x[3])
+        + 12.0*(1.0-x[4])*(1.0-x[5]) 
+        + 4.0*(1.0-x[4])*(x[5])  
+        + 8.0*(x[4])*(1.0-x[5]) 
+        + 32.0*(x[4])*(x[5])))
+                    
+                    
+        def get_quadratic(result): 
+            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
+            return  (13- 
+                    (6.0*(1.0-x[0])*(1-x[1]) 
+        + 2.0*(1.0-x[0])*(x[1])  
+        + 4.0*(x[0])*(1.0-x[1]) 
+        + 16.0*(x[0])*(x[1])  
+        + 3.0*(1.0-x[2])*(1.0-x[3]) 
+        + 1.0*(1.0-x[2])*(x[3])  
+        + 2.0*(x[2])*(1.0-x[3]) 
+        + 8.0*(x[2])*(x[3])
+        + 12.0*(1.0-x[4])*(1.0-x[5]) 
+        + 4.0*(1.0-x[4])*(x[5])  
+        + 8.0*(x[4])*(1.0-x[5]) 
+        + 32.0*(x[4])*(x[5])))**2
             
-            #return  x[0] + x[1] -1 == 0 
-        def check_const2(result):
-            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
-            return  6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8] <= 13
-            #return 5 * x[0] + 2 * x[1] <= 5
-        def check_const3(result):
-            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
-           # print(x)
-            #print("czas=",6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])
-          #  print(15.536726433137282*13+3.61604208771982*(-13)*(-13))
-            return (+hyper_params['deadline_linear_form_weight']*(13- (6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))  
-                    + hyper_params['deadline_quadratic_form_weight']*(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))
-                    *(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])))
-        
-        def check_linear(result):
-            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
-        
-            return (13- (6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8])) 
-        def check_quadratic(result): 
-            x = np.array(list(np.binary_repr(result,bits)),dtype=int)
-            return (13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))*(13-(6*x[0] + 2*x[1] + 4*x[2] + 3*x[3] + 1*x[4] + 2*x[5] + 12*x[6] + 4*x[7] + 8*x[8]))
-            #return 5*x[0] + 2*x[1] - x[2] - 2*x[3] - 2*x[4] == 0
-       # for i in range(np.power(2, bits)):
+          
+        for i in range(np.power(2, bits)):
            #print(format(i, '#0{}b'.format(7)), round(abs(qml.matrix(cost_operator)[i,i]),2))
-          #  print(round(np.real(qml.matrix(cost_operator)[i,i]),2),"b"+bin(i)[2:].zfill(bits), get_score2(i),check_cost(i),check_const1(i),check_const2(i),check_const3(i),check_linear(i),check_quadratic(i))
+            print(round(np.real(qml.matrix(cost_operator)[i,i]),2),
+                  "b"+bin(i)[2:].zfill(bits),
+                  get_full_f(i),
+                  get_cost(i), 
+                  check_deadline(i),
+                  get_deadline(i),
+                  get_linear(i),
+                  get_quadratic(i),
+                  get_unc_pen(i))
+                  #get_score2(i),check_cost(i),check_const1(i),check_const2(i),check_const3(i),check_linear(i),check_quadratic(i))
             
         @qml.qnode(self.dev)
         def expval_circuit(params):
