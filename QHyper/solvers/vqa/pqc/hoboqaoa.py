@@ -24,10 +24,9 @@ class HOBOQAOA(PQC):
     mixer: str = 'pl_x_mixer'
     offset=0;
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
-        print("jestem tutaj")
-        result = qml.Identity(0) * 0.0
+       # print("jestem tutaj")
+        result = qml.Identity(0) - qml.Identity(0)
         for variables, coeff in qubo.items():
-            print(variables)
             if not variables:
                 result+= coeff *qml.Identity(0)
                 continue
@@ -38,7 +37,6 @@ class HOBOQAOA(PQC):
             used = set()
             used.add(variables[0])
             for variable in variables[1:]:
-                print(variable)
                 if variable in used:
                     continue
                 used.add(variable)
@@ -76,7 +74,7 @@ class HOBOQAOA(PQC):
                            ):
         qubo = Converter.create_qubo(problem, weights)
         cost_operator = self._create_cost_operator(qubo)
-
+        print("w get_expval_circuit ",problem.variables)
         @qml.qnode(self.dev)
         def expval_circuit(params: npt.NDArray[np.float64]):
             self._circuit(problem, params, cost_operator)
@@ -98,9 +96,9 @@ class HOBOQAOA(PQC):
         hyper_args: npt.NDArray[np.float64],
         print_results: bool = False
     ):   
-            
+        print("problem variables ", problem.variables)    
         self.dev = qml.device(
-           self.backend, wires=[str(x) for x in problem.variables])
+            self.backend, wires=[str(x) for x in problem.variables])
         self.get_expval_circuit(problem, list(hyper_args))(
            opt_args.reshape(2, -1))
        
