@@ -1,6 +1,10 @@
 Changelog
 =========
 
+2023-11-08
+----------
+- Allow to pass any keyword arguments to SciPy optimizer
+
 2023-11-06
 ----------
 - Add history to SolverResult and OptimizerResult

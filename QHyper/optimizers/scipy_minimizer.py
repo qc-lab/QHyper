@@ -1,5 +1,5 @@
 import numpy.typing as npt
-from typing import Optional, Callable
+from typing import Optional, Callable, Any
 
 import scipy
 import numpy as np
@@ -18,14 +18,19 @@ class ScipyOptimizer(Optimizer):
     bounds : list[tuple[float, float]] or None
         A list of tuples specifying the lower and upper bounds for each
         dimension of the search space, or None if no bounds are provided.
+    optimizer_kwargs : dict[str, Any]
+        Additional keyword arguments for the SciPy minimizer.
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     """
     def __init__(
             self,
             maxfun: int,
-            bounds: Optional[list[tuple[float, float]]] = None
+            bounds: Optional[list[tuple[float, float]]] = None,
+            optimizer_kwargs: dict[str, Any] = {}
     ) -> None:
         self.maxfun = maxfun
         self.bounds = bounds
+        self.optimizer_kwargs = optimizer_kwargs
 
     def minimize(
         self,
@@ -54,6 +59,11 @@ class ScipyOptimizer(Optimizer):
         def wrapper(params: npt.NDArray[np.float64]) -> float:
             return func(np.array(params).reshape(np.array(init).shape)).value
 
+        if 'options' not in self.optimizer_kwargs:
+            self.optimizer_kwargs['options'] = {}
+        if 'maxfun' not in self.optimizer_kwargs['options']:
+            self.optimizer_kwargs['options']['maxfun'] = self.maxfun
+
         result = scipy.optimize.minimize(
             wrapper,
             np.array(init).flatten(),
@@ -61,7 +71,7 @@ class ScipyOptimizer(Optimizer):
                 self.bounds if self.bounds is not None
                 else [(0, 2*np.pi)]*len(np.array(init).flatten())
             ),
-            options={'maxfun': self.maxfun}
+            **self.optimizer_kwargs
         )
         return OptimizationResult(
             result.fun, result.x.reshape(np.array(init).shape))
