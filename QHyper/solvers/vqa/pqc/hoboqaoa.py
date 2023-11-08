@@ -211,7 +211,7 @@ class HOBOQAOA(PQC):
            return qml.expval(
                cost_operator)
         
-        opt = qml.QNGOptimizer(0.0004)
+        opt = qml.QNGOptimizer(0.0001)
         params = np.array(opt_args, requires_grad=True)
         for ind in range(50):
            # print(qml.metric_tensor(expval_circuit, approx="diag")(params))
