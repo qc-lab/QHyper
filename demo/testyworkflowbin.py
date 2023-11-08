@@ -120,10 +120,10 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
     
 params_cofing = {
-        'angles': [[ 3.23810485e-04,  3.89068182e-04,  4.08362541e-04,
-          2.18136406e-04,  3.91692476e-04,  3.01205096e-04],
-        [-2.51645530e+02, -1.22816763e+02, -1.20555243e+02,
-         -9.45352537e+01, -9.88528753e+01, -8.19648493e+01]],
+        'angles': [[ 3.32218567e-04,  4.36990451e-04,  4.60280056e-04,  3.59311678e-04,
+   6.10156177e-04,  2.83730392e-04],
+ [-2.51669266e+02, -1.22843810e+02, -1.20527168e+02, -9.44917264e+01,
+  -9.88626409e+01, -8.19869055e+01]],
 
         #'angles': [[0.1e-13]*6, [np.pi/2]*6], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
         'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function 
