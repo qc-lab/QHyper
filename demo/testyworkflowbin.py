@@ -8,8 +8,8 @@ sys.path.append(".")
 
 
 hyper_params = {'cost_function_weight': 1, # weight for: cost function 
-               'deadline_linear_form_weight': -1, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
-                'deadline_quadratic_form_weight': 0.17} # weight for: deadline constraint - quadratic form
+               'deadline_linear_form_weight': -2, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
+                'deadline_quadratic_form_weight': 2} # weight for: deadline constraint - quadratic form
 
 import numpy as np
 import sympy
@@ -125,7 +125,7 @@ params_cofing = {
       #  [-5.95883641e+01, -8.44669790e-01, -8.87181353e-01,
       #   -5.11625786e-01, -5.02607625e-01]],
 
-        'angles': [[0.1e-13]*5, [np.pi/2]*5], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
+        'angles': [[0.1e-13]*6, [np.pi/2]*6], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
         'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function 
                           # we also have the deadline in the linear form (as of now it needs to be implemented this way due to QHyper limitations)
                           # the weight for the actual cost function is set there. THIS WILL NOT WORK WELL WITH HYPER-QAOA.
@@ -139,7 +139,7 @@ from QHyper.solvers.vqa.base import VQA
 tester_config = {
     'pqc': {
         'type': 'wfqaoa',
-        'layers': 5,
+        'layers': 6,
     }
 }
 
@@ -158,7 +158,7 @@ solver_config2 = {
 solver_config = {
     'pqc': {
         'type': 'hoboqaoa',
-        'layers': 5
+        'layers': 6
     }
 }
 vqa = VQA(problem, config=solver_config)
