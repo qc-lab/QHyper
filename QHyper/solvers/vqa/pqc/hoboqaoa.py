@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import pennylane as qml
 from pennylane import numpy as np
 from scipy.sparse import csr_matrix
-
+import pandas as pd
 import numpy.typing as npt
 from typing import Any, Callable, cast, Optional
 
@@ -192,17 +192,17 @@ class HOBOQAOA(PQC):
         + 32.0*(x[4])*(x[5])))**2
             
           
-        for i in range(np.power(2, bits)):
+     #  for i in range(np.power(2, bits)):
            #print(format(i, '#0{}b'.format(7)), round(abs(qml.matrix(cost_operator)[i,i]),2))
-            print(round(np.real(qml.matrix(cost_operator)[i,i]),2),
-                  "b"+bin(i)[2:].zfill(bits),
-                  get_full_f(i),
-                  get_cost(i), 
-                  check_deadline(i),
-                  get_deadline(i),
-                  get_linear(i),
-                  get_quadratic(i),
-                  get_unc_pen(i))
+        #    print(round(np.real(qml.matrix(cost_operator)[i,i]),2),
+          #        "b"+bin(i)[2:].zfill(bits),
+          #        get_full_f(i),
+          #        get_cost(i), 
+          #        check_deadline(i),
+          #        get_deadline(i),
+          #        get_linear(i),
+          #        get_quadratic(i),
+          #        get_unc_pen(i))
                   #get_score2(i),check_cost(i),check_const1(i),check_const2(i),check_const3(i),check_linear(i),check_quadratic(i))
             
         @qml.qnode(self.dev)
@@ -213,12 +213,15 @@ class HOBOQAOA(PQC):
         
         opt = qml.QNGOptimizer(0.0001)
         params = np.array(opt_args, requires_grad=True)
-        for ind in range(50):
+        history=[]
+        for step_no in range(50):
            # print(qml.metric_tensor(expval_circuit, approx="diag")(params))
             params, cost = opt.step_and_cost(expval_circuit,params)
-            print(ind, " ", cost," ", params,"\n")    
+            history.append([step_no+1,cost,params])
+            print(step_no+1, " ", cost," ", params,"\n")    
             
-        return self.get_params_init_format(params, hyper_args)
+        return self.get_params_init_format(params, hyper_args), pd.DataFrame(history,columns=['step_no', 'cost', 'params'])
+        
 
       
 
