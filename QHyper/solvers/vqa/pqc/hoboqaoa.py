@@ -106,9 +106,9 @@ class HOBOQAOA(PQC):
         cost_operator = self._create_cost_operator(qubo)
         bits=6
         machine_weight=20
-        hyper_params = {'cost_function_weight': 1, # weight for: cost function 
-               'deadline_linear_form_weight': -2, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
-                'deadline_quadratic_form_weight': 2} # weight for: deadline constraint - quadratic form
+        hyper_params = {'cost_function_weight': 10, # weight for: cost function 
+               'deadline_linear_form_weight': -20, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
+                'deadline_quadratic_form_weight': 20} # weight for: deadline constraint - quadratic form
         
         def get_deadline(result):
             x = np.array(list(np.binary_repr(result,bits)),dtype=int)

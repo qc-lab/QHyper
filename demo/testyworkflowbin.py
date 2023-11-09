@@ -7,9 +7,9 @@ import sys
 sys.path.append(".")
 
 
-hyper_params = {'cost_function_weight': 1, # weight for: cost function 
-               'deadline_linear_form_weight': -2, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
-                'deadline_quadratic_form_weight': 2} # weight for: deadline constraint - quadratic form
+hyper_params = {'cost_function_weight': 10, # weight for: cost function 
+               'deadline_linear_form_weight': -20, # weight for: deadline constraint - linear form (-- this is from the unbalanced penalization approach)
+                'deadline_quadratic_form_weight': 20} # weight for: deadline constraint - quadratic form
 
 import numpy as np
 import sympy
@@ -64,9 +64,9 @@ class SimpleWorkflowProblem(Problem):
           
         for i in range(6):
             K_f4_squared1=K_f4_squared1.subs(self.variables[i]**2, self.variables[i])
-        print(K_f4_squared1,"\n\n")  
+       # print(K_f4_squared1,"\n\n")  
         
-        print(K_f4_squared1)     
+       # print(K_f4_squared1)     
         self.objective_function = (Expression(hyper_params['cost_function_weight'] * C_f 
                                               + hyper_params['deadline_linear_form_weight'] *  K_f4_linear
                                    + hyper_params['deadline_quadratic_form_weight'] * K_f4_linear**2))
@@ -164,7 +164,8 @@ solver_config = {
 vqa = VQA(problem, config=solver_config)
 # dla QNG trzeba użyć evaluate(), a nie solve() bo tak jest zaszyte w sqaoa
 #best_params = vqa.evaluate(params_cofing)
-best_params = vqa.evaluate(params_cofing)
+best_params, history = vqa.evaluate(params_cofing)
+history.to_csv("historia.csv")
 print(f"Best params: {best_params}")
 
 best_results = tester.evaluate(best_params, print_results=True)
