@@ -1,156 +1,188 @@
+from _ast import Compare
 import ast
 import sympy
 
 from typing import Union, cast, Any, Callable
+from enum import Enum
+from dataclasses import dataclass, field
 
 
 VARIABLES = Union[tuple[()], tuple[str], tuple[str, str], tuple[str, ...]]
 QUBO = dict[VARIABLES, float]
 
+@dataclass
+class Component:
+    """Represents a mathematical component with separated variables from the numerical coefficient.
+    For example, Component(['x1', 'x2'], 2) represents 2 * 'x1' * 'x2'.
+    
+    Attributes:
+    ----------
+    variables : A list of variables. 
+    coefficient : The coefficient.
+    """
+    variables: list[str] = field(default_factory=list)
+    coefficient: int = field(default=1)
+        
+    def add_variable(self, variable: str) -> None:
+        self.variables.append(variable)
+    
+    def set_coefficient(self, new_coefficient: int) -> None:
+        self.coefficient = new_coefficient
 
-# TODO slack_coefficients is dict[str, Any] and num_slack is int
-# def calc_slack_coefficients(constant: int) -> dict[str, int]:
-#     num_slack = int(np.floor(np.log2(constant)))
-#     slack_coefficients = {f's{j}': 2 ** j for j in range(num_slack)}
-#     if constant - 2 ** num_slack >= 0:
-#         slack_coefficients[num_slack] = constant - 2 ** num_slack + 1
-#     return slack_coefficients
 
 
 class Parser(ast.NodeVisitor):
     def __init__(self) -> None:
         self.polynomial_as_dict: QUBO = {}
 
-    # todo make sure it is a single expression
-    def visit_Expr(self, node: ast.Expr) -> Any:
-        visit_value = self.visit(node.value)
+    def visit_Expr(self, node: ast.Expr) -> None:
+        visited = self.visit(node.value)
 
-        if isinstance(visit_value, list):
-            for i in cast(list[tuple[VARIABLES, float]], visit_value):
-                self.polynomial_as_dict[tuple(i[0])] = i[1]
-        elif isinstance(visit_value, str):
-            # expression consisting of a single variable name
-            self.polynomial_as_dict[(visit_value,)] = 1
-        elif isinstance(visit_value, (int, float)):
-            # expression consisting of a single numerical value
-            self.polynomial_as_dict[()] = visit_value
+        if isinstance(visited, Component):
+            self.polynomial_as_dict[tuple(visited.variables)] = visited.coefficient
+        elif isinstance(visited, list):
+            for component in visited:
+                self.polynomial_as_dict[tuple(component.variables)] = component.coefficient
         else:
-            raise Exception
+            raise Exception("TBD")
+            
 
-    def visit_BinOp(self, node: ast.BinOp) -> Any:
+    def visit_Constant(self, node: ast.Constant) -> Component:
+        return Component(coefficient=node.value)
+        # return Component([], node.value)
 
-        left = self.visit(node.left)
-        right = self.visit(node.right)
+    def visit_Name(self, node: ast.Name) -> Component:
+        return Component(variables=[node.id])
+        # return Component([node.id], 1)
 
+    def visit_BinOp(self, node: ast.BinOp) -> Component | list[Component]:
+        lhs = self.visit(node.left)
+        rhs = self.visit(node.right)
+  
         if isinstance(node.op, ast.Add):
-            return self.tmp(left, right)
+            return self.combine_components(lhs, rhs)
 
         if isinstance(node.op, ast.Sub):
-            return self.tmp(left, right, multiplier=-1)
+            return self.combine_components(lhs, rhs, is_subtraction=True)
 
         if isinstance(node.op, ast.Mult):
-            if isinstance(left, list):
-                variable, constant = left[0]
-            else:
-                variable, constant = [], 1
-                if isinstance(left, str):
-                    variable.append(left)
-                elif isinstance(left, (int, float)):
-                    constant *= left
-
-            if isinstance(right, str):
-                variable.append(right)
-            elif isinstance(right, (int, float)):
-                constant *= right
-            elif isinstance(right, list):
-                # todo - check that!!! only in the case of powers:
-                variable += right[0][0]
-            return [[variable, constant]]
+            return Component(lhs.variables + rhs.variables, lhs.coefficient * rhs.coefficient)
 
         if isinstance(node.op, ast.Pow):
-            node.left = cast(ast.Name, node.left)
-            node.right = cast(ast.Constant, node.right)
-            return [[[node.left.id for _ in range(node.right.value)], 1]]
+            return Component([node.left.id for _ in range(node.right.value)], 1) #todo is it really 1?
 
-    def visit_UnaryOp(self, node: ast.UnaryOp) -> Any:
-        operand = self.visit(node.operand)
+
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> Any: #todo what it really returns?
+        lhs = self.visit(node.operand)
+
         if isinstance(node.op, ast.USub):
-            if isinstance(operand, (int, float)):
-                return [[[], -operand]]
-            elif isinstance(operand, list):
-                operand[0][1] = -1 * operand[0][1]
-                return operand
-            else:  # is there any exception case?
-                return [[[operand], -1]]
+            previous_coefficient = lhs.coefficient
+            lhs.set_coefficient(-1 * previous_coefficient)
+            return lhs
 
-        if isinstance(node.op, ast.UAdd):
-            return operand
+        if isinstance(node.op, ast.UAdd): #TODO - check if it is needed
+            return lhs
 
-    def visit_Constant(self, node: ast.Constant) -> Any:
-        return node.value
-
-    def visit_Name(self, node: ast.Name) -> Any:
-        return node.id
 
     @staticmethod
-    def tmp(left: Any, right: Any, multiplier: int = 1) -> list[Any]:
+    def combine_components(left: Component | list[Component], right: Component | list[Component], 
+            is_subtraction: bool = False) -> list[Component]:
 
-        if isinstance(left, list):
-            if isinstance(right, list):
-                # todo not sure if right should be modifed if it is static
-                right[0][1] = multiplier * right[0][1]
-                return left + right
-            elif isinstance(right, (int, float)):
-                return left + [[[], multiplier * right]]
-            elif isinstance(right, str):
-                return left + [[[right], multiplier]]
-        elif isinstance(right, list):
-            right[0][1] = multiplier * right[0][1]
-            if isinstance(left, str):
-                return [[[left], 1]] + right
-            if isinstance(left, (int, float)):
-                return [[[], left]] + right
-        elif isinstance(right, (int, float)):
-            right *= multiplier
-            if isinstance(left, str):
-                return [[[left], 1]] + [[[], right]]
-            if isinstance(left, (int, float)):
-                return [[[], left]] + [[[], right]]
-        elif isinstance(right, str):
-            if isinstance(left, str):
-                return [[[left], 1]] + [[[right], multiplier]]
-            if isinstance(left, (int, float)):
-                return [[[], left]] + [[[right], multiplier]]
-        raise Exception
+        if is_subtraction:
+            right.set_coefficient(-1 * right.get_coefficient())
 
-
-class Expression:
-    def __init__(self, equation: sympy.core.Expr | dict) -> None:
-        if isinstance(equation, sympy.core.Expr):
-            self.polynomial: sympy.core.Expr | None = equation
-            self.dictionary: dict = self.as_dict()
-        elif isinstance(equation, dict):
-            self.polynomial: sympy.core.Expr | None = None
-            self.dictionary: dict = equation
+        if isinstance(left, Component) and isinstance(right, Component):
+            return [left, right]
+        elif isinstance(left, list) and isinstance(right, Component):
+            return left + [right]
+        elif isinstance(left, list) and isinstance(right, list):
+            return left + right
         else:
-            raise Exception(
-                "Expression equation must be an instance of "
-                "sympy.core.Expr or dict, got of type: "
-                f"{type(equation)} instead"
-            )
+            raise Exception("TBD")
 
-    def as_dict(self) -> QUBO:
-        if self.polynomial is not None:
-            parser = Parser()
-            ast_tree = ast.parse(
-                str(sympy.expand(self.polynomial))
-            )  # type: ignore[no-untyped-call]
-            parser.visit(ast_tree)
-            self.dictionary = parser.polynomial_as_dict
-        return self.dictionary
+
+
+# class Expression:
+    # dict
+    # EQ GE LE  
+
+            
+class Operator(Enum):
+    EQ = "=="
+    GE = ">="
+    LE = "<="
+            
+
+class Constraint:
+    def __init__(self, lhs, rhs, operator):
+        """ For now, we assume that the constraint is in the form of: number >= sum of something"""
+        self.lhs: int | float = lhs
+        self.rhs: QUBO = rhs
+        self.operator: Operator = operator # for now it is only GE: number >= some polynomial without constants
+        
+    def setup(self,):
+        ...
+        
+
+            
+class Expression:
+    def __init__(self, operator: Operator = Operator.EQ) -> None:
+        self.dictionary: dict = {}
+        self.operator: Operator = operator
+        
+        
+        def set_operator(new_operator: Operator) -> None:
+            self.operator = new_operator
+            
+        def as_dict(self) -> QUBO:
+            if self.polynomial is not None:
+                parser = Parser()
+                ast_tree = ast.parse(
+                    str(sympy.expand(self.polynomial))
+                )  # type: ignore[no-untyped-call]
+                parser.visit(ast_tree)
+                self.dictionary = parser.polynomial_as_dict
+            return self.dictionary
 
     def __repr__(self) -> str:
         return str(self.dictionary)
+
+            
+                       
+# class Expression:
+#     def __init__(self, equation: sympy.core.Expr | sympy.core.Rel | dict) -> None:
+#         if isinstance(equation, sympy.core.Expr):
+#             self.polynomial: sympy.core.Expr | None = equation
+#             self.dictionary: dict = self.as_dict()
+#         # elif isinstance(equation, sympy.core.relational.LessThan):
+#         #     self.polynomial: sympy.core.Expr | None = sympy.simplify(constraint_eq.lhs - constraint_eq.rhs)
+#         #     self.dictionary: dict = self.as_dict()
+#         # elif isinstance(equation, sympy.core.relational.GreaterThan):
+#         #     self.polynomial: sympy.core.Expr | None = sympy.simplify((-1) * (constraint_eq.lhs - constraint_eq.rhs))
+#         #     self.dictionary: dict = self.as_dict()
+
+#         elif isinstance(equation, dict):
+#             self.polynomial: sympy.core.Expr | None = None
+#             self.dictionary: dict = equation
+#         else:
+#             raise Exception(
+#                 "Expression equation must be an instance of "
+#                 "sympy.core.Expr or dict, got of type: "
+#                 f"{type(equation)} instead"
+#             )
+
+#     def as_dict(self) -> QUBO:
+#         if self.polynomial is not None:
+#             parser = Parser()
+#             ast_tree = ast.parse(
+#                 str(sympy.expand(self.polynomial))
+#             )  # type: ignore[no-untyped-call]
+#             parser.visit(ast_tree)
+#             self.dictionary = parser.polynomial_as_dict
+#         return self.dictionary
+
+#     def __repr__(self) -> str:
+#         return str(self.dictionary)
 
     # def as_dict_with_slacks(self):
     #     parser = Parser()
@@ -170,18 +202,18 @@ class Expression:
     #     else:
     #         raise Exception("Unimplemented")
 
-    def as_polynomial(self) -> str:
-        if self.polynomial is not None:
-            return str(self.polynomial)
-        else:
-            polynomial = str()
-            for k in self.dictionary:
-                if self.dictionary[k] < 0:
-                    polynomial += "- "
-                polynomial += str(abs(self.dictionary[k])) + "*"
-                polynomial += "*".join(k)
-                polynomial += " "
-            return polynomial.rstrip()
+    # def as_polynomial(self) -> str:
+    #     if self.polynomial is not None:
+    #         return str(self.polynomial)
+    #     else:
+    #         polynomial = str()
+    #         for k in self.dictionary:
+    #             if self.dictionary[k] < 0:
+    #                 polynomial += "- "
+    #             polynomial += str(abs(self.dictionary[k])) + "*"
+    #             polynomial += "*".join(k)
+    #             polynomial += " "
+    #         return polynomial.rstrip()
 
 
 def weighted_avg_evaluation(
@@ -243,3 +275,4 @@ def add_evaluation_to_results(
         k: (v, score_function(k, penalty))
         for k, v in results.items()
     }
+

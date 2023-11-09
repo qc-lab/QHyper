@@ -4,11 +4,22 @@ import dimod
 from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
 from QHyper.util import Expression
 from QHyper.problems.base import Problem
-from QHyper.util import QUBO, VARIABLES
+from QHyper.util import QUBO, VARIABLES, Constraint
+import numpy as np
 
 
 def dict_to_list(my_dict: QUBO) -> list[tuple[Any, ...]]:
     return [tuple([*key, val]) for key, val in my_dict.items()]
+
+# TODO slack_coefficients is dict[str, Any] and num_slack is int
+# def calc_slack_coefficients(constant: int) -> dict[str, int]:
+#     num_slack = int(np.floor(np.log2(constant)))
+#     slack_coefficients = {f's{j}': 2 ** j for j in range(num_slack)}
+#     if constant - 2 ** num_slack >= 0:
+#         slack_coefficients[num_slack] = constant - 2 ** num_slack + 1
+#     return slack_coefficients 
+def multiply_dicts(dict_1: dict[str, float], dict_2: dict[str, float]) -> dict[str, float]:
+    return {tuple(key_1 + key_2): value_1 * value_2 for (key_1, value_1) in dict_1.items() for (key_2, value_2) in dict_2.items()}
 
 
 class Converter:
@@ -45,6 +56,28 @@ class Converter:
                     results[key] = value
 
         return results
+    
+    @staticmethod
+    def calc_slack_coefficients(constant: int) -> list[int]:
+        num_slack = int(np.floor(np.log2(constant)))
+        slack_coefficients = [2 ** j for j in range(num_slack)]
+        if constant - 2 ** num_slack >= 0:
+            slack_coefficients.append(constant - 2 ** num_slack + 1)
+        return slack_coefficients
+    
+    def use_slacks(constraint: Constraint):
+
+        if constraint.rhs <= 0 or not isinstance(constraint.rhs, int):
+            raise Exception("Constraint rhs must be a positive integer")
+        
+        slack_coefficients = calc_slack_coefficients(constraint.rhs)
+        
+        
+        
+
+        
+    def use_unbalanced_penalization():
+        ...
 
     @staticmethod
     def create_weight_free_qubo(problem: Problem) -> QUBO:
