@@ -84,8 +84,11 @@ class Random(Optimizer):
             ))
         min_idx = np.argmin([result.value for result in results])
 
+        history = [OptimizationResult(res.value, params, [[res]])
+                   for res, params in zip(results, hyperparams)]
+
         return OptimizationResult(
             value=results[min_idx].value,
             params=hyperparams[min_idx],
-            history=[[result.value for result in results]],
+            history=[history],
         )

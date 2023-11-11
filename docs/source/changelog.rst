@@ -1,6 +1,10 @@
 Changelog
 =========
 
+2023-11-11
+----------
+- Add params to the history of optimization, also all the results are stored in the history
+
 2023-11-08
 ----------
 - Allow to pass any keyword arguments to SciPy optimizer

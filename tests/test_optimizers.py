@@ -168,7 +168,7 @@ def test_cem():
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.171165308)
+    assert result == pytest.approx(-0.263179844)
 
 
 def test_grid():

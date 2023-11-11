@@ -59,6 +59,12 @@ class ScipyOptimizer(Optimizer):
         def wrapper(params: npt.NDArray[np.float64]) -> float:
             return func(np.array(params).reshape(np.array(init).shape)).value
 
+        history: list[OptimizationResult] = []
+
+        def callback(intermediate_result):
+            history.append(OptimizationResult(
+                intermediate_result.fun, np.copy(intermediate_result.x)))
+
         if 'options' not in self.optimizer_kwargs:
             self.optimizer_kwargs['options'] = {}
         if 'maxfun' not in self.optimizer_kwargs['options']:
@@ -71,7 +77,11 @@ class ScipyOptimizer(Optimizer):
                 self.bounds if self.bounds is not None
                 else [(0, 2*np.pi)]*len(np.array(init).flatten())
             ),
+            callback=callback,
             **self.optimizer_kwargs
         )
+
         return OptimizationResult(
-            result.fun, result.x.reshape(np.array(init).shape))
+            result.fun, result.x.reshape(np.array(init).shape),
+            history
+        )

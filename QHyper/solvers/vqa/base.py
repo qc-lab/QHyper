@@ -93,6 +93,19 @@ class VQA(Solver):
                 self.pqc, self.problem, self.optimizer, params_inits)
             res = self.hyper_optimizer.minimize(wrapper, hyper_args)
             best_hargs = res.params
+            local_opt_args = next(
+                x for x in res.history[-1] if x.value == res.value)
+            local_opt_args = next(
+                x for x in local_opt_args.history[-1] if x.value == res.value
+            ).params
+
+            return SolverResult(
+                self.pqc.run_with_probs(
+                    self.problem, local_opt_args, best_hargs),
+                self.pqc.get_params_init_format(
+                    local_opt_args, best_hargs),
+                res.history,
+            )
         else:
             best_hargs = hyper_args
 
