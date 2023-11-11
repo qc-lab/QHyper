@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from QHyper.problems.base import Problem
-from QHyper.optimizers import Optimizer
+from QHyper.optimizers import Optimizer, OptimizationResult
 
 
 class SolverConfigException(Exception):
@@ -29,7 +29,7 @@ class SolverResult:
     """
     results_probabilities: dict[str, float]
     params: dict[Any, Any]
-    history: list[list[float]] = field(default_factory=list)
+    history: list[list[OptimizationResult]] = field(default_factory=list)
 
 
 class Solver:

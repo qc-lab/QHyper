@@ -26,7 +26,8 @@ class OptimizationResult:
 
     value: float
     params: npt.NDArray[np.float64]
-    history: list[list[float]] = dataclasses.field(default_factory=list)
+    history: list[list['OptimizationResult']] = dataclasses.field(
+        default_factory=list)
 
 
 class Optimizer:

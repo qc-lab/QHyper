@@ -98,7 +98,7 @@ class CEM(Optimizer):
         cov = np.identity(len(mean))
         best_hyperparams = _init
         best_result = None
-        history: list[list[float]] = []
+        history: list[list[OptimizationResult]] = []
 
         for _ in range(self.epochs):
             hyperparams = self._get_points(mean, cov)
@@ -118,7 +118,8 @@ class CEM(Optimizer):
                     or results[elite_ids[0]].value < best_result.value):
                 best_hyperparams = best_hyperparams
                 best_result = results[elite_ids[0]]
-            history.append([x.value for x in results])
+            history.append([OptimizationResult(res.value, params, [[res]])
+                            for res, params in zip(results, hyperparams)])
             mean = np.mean(elite_weights, axis=0)
             cov = np.cov(np.stack((elite_weights), axis=1), bias=True)
 

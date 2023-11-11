@@ -99,7 +99,7 @@ class QmlGradientDescent(Optimizer):
             self.optimizer.reset()
         for _ in range(self.optimization_steps):
             params, cost = self.optimizer.step_and_cost(wrapper, params)
-            cost_history.append([float(cost)])
+            cost_history.append(OptimizationResult(float(cost), params))
 
         return OptimizationResult(cost, params, cost_history)
 
@@ -113,6 +113,6 @@ class QmlGradientDescent(Optimizer):
             self.optimizer.reset()
         for _ in range(self.optimization_steps):
             params, cost = self.optimizer.step_and_cost(func, params)
-            cost_history.append([float(cost)])
+            cost_history.append(OptimizationResult(float(cost), params))
 
-        return OptimizationResult(cost, params, cost_history)
+        return OptimizationResult(cost, params, [cost_history])
