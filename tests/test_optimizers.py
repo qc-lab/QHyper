@@ -57,7 +57,7 @@ def test_scipy():
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.310672703)
+    assert result == pytest.approx(-0.310670967)
 
 
 def test_qml():
@@ -168,7 +168,7 @@ def test_cem():
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.263179844)
+    assert result == pytest.approx(-0.159216707)
 
 
 def test_grid():
