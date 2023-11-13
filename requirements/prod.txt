@@ -1,7 +1,7 @@
-numpy
-PennyLane
+numpy==1.23.4
+PennyLane==0.33.1
 tqdm
-sympy
+sympy==1.11.1
 dwave-system
 gurobipy
 types-tqdm
