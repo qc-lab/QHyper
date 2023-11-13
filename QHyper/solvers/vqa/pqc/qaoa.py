@@ -49,7 +49,7 @@ class QAOA(PQC):
                 summand = (
                     summand @ encoded_var if summand else coeff * encoded_var
                 )
-            result = summand if not result else summand + result
+            result = result + summand if result else summand
         return result + const * qml.Identity(result.wires[0])
 
     def _hadamard_layer(self, problem: Problem) -> None:
