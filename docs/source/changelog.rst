@@ -1,6 +1,10 @@
 Changelog
 =========
 
+2023-11-13
+----------
+- QAOA can now create cost operator from HOBO
+
 2023-11-11
 ----------
 - Add params to the history of optimization, also all the results are stored in the history
