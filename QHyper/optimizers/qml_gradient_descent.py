@@ -27,7 +27,7 @@ class QmlGradientDescent(Optimizer):
     ----------
     optimizer : qml.GradientDescentOptimizer
         object of class GradientDescentOptimizer or inheriting from this class
-    optimization_steps : int
+    steps : int
         number of optimization steps
     stepsize : float
         stepsize for the optimizer
@@ -38,7 +38,7 @@ class QmlGradientDescent(Optimizer):
     def __init__(
         self,
         optimizer: str = 'adam',
-        optimization_steps: int = 200,
+        steps: int = 200,
         stepsize: float = 0.005,
         **kwargs: Any
     ) -> None:
@@ -47,7 +47,7 @@ class QmlGradientDescent(Optimizer):
         ----------
         optimizer : str
             name of the gradient descent optimizer provided by PennyLane
-        optimization_steps : int
+        steps : int
             number of optimization steps
         stepsize : float
             stepsize for the optimizer
@@ -63,7 +63,7 @@ class QmlGradientDescent(Optimizer):
             stepsize=stepsize,
             **kwargs
         )
-        self.optimization_steps = optimization_steps
+        self.steps = steps
 
     def minimize(
         self,
@@ -97,7 +97,7 @@ class QmlGradientDescent(Optimizer):
         params = np.array(init, requires_grad=True)
         if "reset" in dir(self.optimizer):
             self.optimizer.reset()
-        for _ in range(self.optimization_steps):
+        for _ in range(self.steps):
             params, cost = self.optimizer.step_and_cost(wrapper, params)
             cost_history.append(OptimizationResult(float(cost), params))
 
@@ -111,7 +111,7 @@ class QmlGradientDescent(Optimizer):
         params = np.array(init, requires_grad=True)
         if "reset" in dir(self.optimizer):
             self.optimizer.reset()
-        for _ in range(self.optimization_steps):
+        for _ in range(self.steps):
             params, cost = self.optimizer.step_and_cost(func, params)
             cost_history.append(OptimizationResult(float(cost), params))
 
