@@ -222,7 +222,7 @@ def sort_solver_results(
 def add_evaluation_to_results(
     results: dict[str, float],
     score_function: Callable[[str, float], float],
-    penalty: float = 1,
+    penalty: float = 0,
 ) -> dict[str, tuple[float, float]]:
     """
     Parameters

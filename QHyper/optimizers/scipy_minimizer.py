@@ -21,16 +21,20 @@ class ScipyOptimizer(Optimizer):
     optimizer_kwargs : dict[str, Any]
         Additional keyword arguments for the SciPy minimizer.
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+    verbose : bool
+        If set to True, additional information will be printed (default False).
     """
     def __init__(
             self,
             maxfun: int,
             bounds: Optional[list[tuple[float, float]]] = None,
-            optimizer_kwargs: dict[str, Any] = {}
+            optimizer_kwargs: dict[str, Any] = {},
+            verbose: bool = False,
     ) -> None:
         self.maxfun = maxfun
         self.bounds = bounds
         self.optimizer_kwargs = optimizer_kwargs
+        self.verbose = verbose
 
     def minimize(
         self,
@@ -62,6 +66,9 @@ class ScipyOptimizer(Optimizer):
         history: list[OptimizationResult] = []
 
         def callback(intermediate_result):
+            if self.verbose:
+                print(f"Step {len(history)+1}/{self.maxfun}: "
+                      f"{float(intermediate_result.fun)}")
             history.append(OptimizationResult(
                 intermediate_result.fun, np.copy(intermediate_result.x)))
 
