@@ -2,7 +2,7 @@ from abc import ABC
 
 import sympy
 
-from QHyper.util import Expression
+from QHyper.util import Expression, Constraint
 
 
 class Problem(ABC):
@@ -33,7 +33,7 @@ class Problem(ABC):
     """
 
     objective_function: Expression
-    constraints: list[Expression]
+    constraints: list[Constraint]
     variables: tuple[sympy.Symbol]
     name: str = ""
     cases: int = 1

@@ -14,7 +14,7 @@ from networkx.classes.reportviews import NodeView
 from sympy.core.expr import Expr
 from typing import cast
 
-from QHyper.util import Expression
+from QHyper.util import Expression, Constraint, MethodsForInequalities, Operator
 from .base import Problem
 
 
@@ -100,20 +100,12 @@ def calc_slack_coefficients(constant: int) -> list[int]:
 class WorkflowSchedulingProblem(Problem):
     def __init__(self, workflow: Workflow):
         self.workflow: Workflow = workflow
-        self.slack_coefficients = self._get_slacks()
         self.variables: tuple[sympy.Symbol] = sympy.symbols(' '.join(
             [f'x{i}' for i in range(
                 len(self.workflow.tasks) * len(self.workflow.machines))]
-        ) + ' ' + ' '.join(
-            [f's{i}' for i in range(len(self.slack_coefficients))]))
-
+        ))
         self._set_objective_function()
         self._set_constraints()
-
-    def _get_slacks(self) -> list[int]:
-        min_path_runtime, _ = self.get_deadlines()
-        deadline_diff = int(self.workflow.deadline - min_path_runtime)
-        return calc_slack_coefficients(deadline_diff)
 
     def _set_objective_function(self) -> None:
         expression: Expr = cast(Expr, 0)
@@ -129,7 +121,7 @@ class WorkflowSchedulingProblem(Problem):
         self.objective_function: Expression = Expression(expression)
 
     def _set_constraints(self) -> None:
-        self.constraints: list[Expression] = []
+        self.constraints: list[Constraint] = []
 
         # machine assignment constraint
         for task_id in range(len(self.workflow.time_matrix.index)):
@@ -139,17 +131,11 @@ class WorkflowSchedulingProblem(Problem):
                     machine_id
                     + task_id * len(self.workflow.time_matrix.columns)
                 ]
-            expression -= 1
-
-            self.constraints.append(Expression(expression))
+            self.constraints.append(Constraint(Expression(expression), 1, Operator.EQ))
 
         # deadline constraint
-
-        min_deadline, _ = self.get_deadlines()
-        # deadline_for_slacks = int(self.workflow.deadline - min_deadline)
-
         for path in self.workflow.paths:
-            expression = cast(Expr, -self.workflow.deadline)
+            expression = cast(Expr, 0)
             for task_id, task_name in enumerate(
                     self.workflow.time_matrix.index):
                 for machine_id, machine_name in enumerate(
@@ -162,18 +148,9 @@ class WorkflowSchedulingProblem(Problem):
                             + task_id * len(self.workflow.time_matrix.columns)
                         ]
 
-            first_slack_index = (
-                len(self.workflow.time_matrix.index)
-                * len(self.workflow.time_matrix.columns)
-            )
-            for i, coefficient in enumerate(self.slack_coefficients):
-                expression += (
-                    coefficient * self.variables[first_slack_index + i])
+            #todo add constraints unbalanced penalization
+            self.constraints.append(Constraint(Expression(expression), self.workflow.deadline, Operator.LE, MethodsForInequalities.UNBALANCED_PENALIZATION))
 
-            self.constraints.append(Expression(expression))
-
-    def check_solution_correctness(self) -> None:
-        raise NotImplementedError  # todo check if slack values are correct
 
     def decode_solution(self, solution: dict) -> dict:
         decoded_solution = {}
@@ -217,4 +194,9 @@ class WorkflowSchedulingProblem(Problem):
         return min_path_runtime, max_path_runtime
 
     def get_score(self, result: str, penalty: float = 0) -> float:
-        return 0
+        x = [int(val) for val in result]
+        
+        
+        
+        
+        return penalty

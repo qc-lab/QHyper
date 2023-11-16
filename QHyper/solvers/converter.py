@@ -4,80 +4,180 @@ import dimod
 from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
 from QHyper.util import Expression
 from QHyper.problems.base import Problem
-from QHyper.util import QUBO, VARIABLES, Constraint
+from QHyper.util import QUBO, VARIABLES, Constraint, MethodsForInequalities, Operator
 import numpy as np
+import copy
 
 
 def dict_to_list(my_dict: QUBO) -> list[tuple[Any, ...]]:
     return [tuple([*key, val]) for key, val in my_dict.items()]
 
-# TODO slack_coefficients is dict[str, Any] and num_slack is int
-# def calc_slack_coefficients(constant: int) -> dict[str, int]:
-#     num_slack = int(np.floor(np.log2(constant)))
-#     slack_coefficients = {f's{j}': 2 ** j for j in range(num_slack)}
-#     if constant - 2 ** num_slack >= 0:
-#         slack_coefficients[num_slack] = constant - 2 ** num_slack + 1
-#     return slack_coefficients 
-def multiply_dicts(dict_1: dict[str, float], dict_2: dict[str, float]) -> dict[str, float]:
-    return {tuple(key_1 + key_2): value_1 * value_2 for (key_1, value_1) in dict_1.items() for (key_2, value_2) in dict_2.items()}
+
+def multiply_dicts_sorted(dict_1: dict[str, float], dict_2: dict[str, float]) -> QUBO:
+    result = {}
+    for key_1, value_1 in dict_1.items():
+        for key_2, value_2 in dict_2.items():
+            new_key = tuple(sorted(key_1 + key_2))
+            if new_key in result:
+                result[new_key] += value_1 * value_2
+            else:
+                result[new_key] = value_1 * value_2
+
+    return result
+
+
+def multiply_dict_by_constant(dict: QUBO, constant: int | float) -> QUBO:
+    return {key: value * constant for key, value in dict.items()}
 
 
 class Converter:
     @staticmethod
-    def create_qubo(problem: Problem, weights: list[float]) -> QUBO:
-        results: dict[VARIABLES, float] = {}
+    def calc_slack_coefficients(constant: int | float) -> list[int]:
+        num_slack = int(np.floor(np.log2(constant)))
+        slack_coefficients = [2**j for j in range(num_slack)]
+        if constant - 2**num_slack >= 0:
+            slack_coefficients.append(constant - 2**num_slack + 1)
+        return slack_coefficients
 
-        if len(weights) != len(problem.constraints) + 1:
-            raise Exception(
-                f"Expected {len(problem.constraints)+1} weights, "
-                f"got {len(weights)} (weights: {weights}))"
-            )
+    @staticmethod
+    def get_variables(qubo: QUBO) -> tuple[VARIABLES]:
+        tmp_list = []
+        
+        for key in qubo.keys():
+            for var in key:
+                if var not in tmp_list and var != tuple():
+                    tmp_list.append(var)
+        print("***  TMP LIST ****", tmp_list)
+        return tuple(tmp_list)
+    
+    @staticmethod
+    def use_slacks(constraint: Constraint) -> QUBO:
+        # todo constraint.lhs cannot have any numerical values
+        if constraint.rhs <= 0 or not int(constraint.rhs) == constraint.rhs:
+            raise ValueError("Constraint rhs must be a positive integer")
 
-        objective_function = Expression(
-            {
-                key: weights[0] * val
-                for key, val in problem.objective_function.as_dict().items()
-            }
+        slack_coefficients = Converter.calc_slack_coefficients(constraint.rhs)
+        slack_names = tuple(
+            (f"{constraint.label}_{i}",) for i in range(len(slack_coefficients))
         )
-        for key, value in objective_function.as_dict().items():
-            if key in results:
-                results[key] += value
+
+        tmp_slack_names = tuple(f"{constraint.label}_{i}" for i in range(len(slack_coefficients))
+        )
+
+        slacks_as_dict = dict(zip(slack_names, slack_coefficients))
+        return slacks_as_dict
+    
+    @staticmethod
+    def apply_slacks(results: QUBO, constraint: Constraint, weight: list[float]) -> QUBO:
+        if constraint.rhs <= 0 or not int(constraint.rhs) == constraint.rhs:
+            raise ValueError("Constraint rhs must be a positive integer")
+        
+        constraint_tmp = copy.deepcopy(constraint.lhs)
+        constraint_tmp[tuple()] = -constraint.rhs
+        slacks = Converter.use_slacks(constraint)
+        qubo_with_slakcs = Converter.add_dicts(constraint_tmp, slacks)
+
+        qubo_with_slacks_squared = multiply_dicts_sorted(
+            qubo_with_slakcs, qubo_with_slakcs
+        )
+        
+        weighted_qubo_with_slacks_squared = multiply_dict_by_constant(
+            qubo_with_slacks_squared, weight
+        )
+
+        return Converter.add_dicts(results, weighted_qubo_with_slacks_squared)
+
+    @staticmethod
+    def use_unbalanced_penalization(results: QUBO, constraint: Constraint, weight: list[float]) -> QUBO:
+        constraints_unbalanced = copy.deepcopy(constraint.lhs)
+        constraints_unbalanced[tuple()] = -constraint.rhs
+
+        linear = multiply_dict_by_constant(
+            constraints_unbalanced, weight[0]
+        )
+
+        results = Converter.add_dicts(results, linear)
+
+        quadratic = multiply_dicts_sorted(linear, linear)
+        quadratic_with_weight = multiply_dict_by_constant(
+            quadratic, weight[1]
+        )
+
+        return Converter.add_dicts(results, quadratic_with_weight)
+
+    @staticmethod
+    def add_dicts(dict_1: QUBO, dict_2: QUBO) -> QUBO:
+        result = copy.deepcopy(dict_1)
+
+        for key, value in dict_2.items():
+            if key in result:
+                result[key] += value
             else:
-                results[key] = value
+                result[key] = value
+        return result
+    
+    @staticmethod
+    def assign_weights_to_constraints(constraints_weights: list[float], constraints: list[Constraint]):
+        #todo add error handling
+        tmp_list = []
+        
+        i = 0
+        for constraint in constraints:
+            if constraint.method_for_inequalities == MethodsForInequalities.UNBALANCED_PENALIZATION:
+                tmp_list.append(([constraints_weights[i], constraints_weights[i+1]], constraint))
+                i += 2
+            else:
+                tmp_list.append((constraints_weights[i], constraint))
+                i += 1
+        return tmp_list
 
-        constraint_weights = weights[1:]
+    @staticmethod
+    def create_qubo(problem: Problem, weights: list[float]) -> QUBO:
+        # todo if we are to append slacks here, to create the circuit size we can't use problem.variables,
+        # because now, there will be more
+        results: QUBO = {}
 
-        for weight, element in zip(constraint_weights, problem.constraints):
-            constraint = Expression(element.polynomial**2 * weight)
-            for key, value in constraint.as_dict().items():
-                if key in results:
-                    results[key] += value
-                else:
-                    results[key] = value
+        # 1. Process objective function
+        objective_function_weight = weights[0]
+        for key, value in problem.objective_function.dictionary.items():
+            if key in results:
+                results[key] += objective_function_weight * value
+            else:
+                results[key] = objective_function_weight * value
+
+        # 2. Process constraints
+        # if len(weights) != len(problem.constraints) + 1:
+        #     raise Exception(
+        #         f"Expected {len(problem.constraints)+1} weights, "
+        #         f"got {len(weights)} (weights: {weights}))"
+        #     )
+
+        
+        # for weight, constraint in zip(constraints_weights, problem.constraints):
+
+        constraints_weights = weights[1:]
+        for weight, constraint in Converter.assign_weights_to_constraints(constraints_weights, problem.constraints):
+            if constraint.operator == Operator.EQ:
+                constraint_tmp = copy.deepcopy(constraint.lhs)
+                constraint_tmp[tuple()] = -constraint.rhs #todo what to do with 0
+
+                quadratic = multiply_dicts_sorted(constraint_tmp, constraint_tmp)
+                quadratic_with_weight = multiply_dict_by_constant(quadratic, weight)
+                results = Converter.add_dicts(results, quadratic_with_weight)
+
+            elif constraint.operator == Operator.LE:
+                if (constraint.method_for_inequalities== MethodsForInequalities.SLACKS_LOG_2):
+                    results = Converter.apply_slacks(results, constraint, weight)
+
+                elif (
+                    constraint.method_for_inequalities
+                    == MethodsForInequalities.UNBALANCED_PENALIZATION
+                ):
+                    results = Converter.use_unbalanced_penalization(results, constraint, weight)
 
         return results
     
-    @staticmethod
-    def calc_slack_coefficients(constant: int) -> list[int]:
-        num_slack = int(np.floor(np.log2(constant)))
-        slack_coefficients = [2 ** j for j in range(num_slack)]
-        if constant - 2 ** num_slack >= 0:
-            slack_coefficients.append(constant - 2 ** num_slack + 1)
-        return slack_coefficients
-    
-    def use_slacks(constraint: Constraint):
-
-        if constraint.rhs <= 0 or not isinstance(constraint.rhs, int):
-            raise Exception("Constraint rhs must be a positive integer")
-        
-        slack_coefficients = calc_slack_coefficients(constraint.rhs)
-        
-        
-        
-
-        
-    def use_unbalanced_penalization():
-        ...
+  
 
     @staticmethod
     def create_weight_free_qubo(problem: Problem) -> QUBO:
@@ -89,7 +189,6 @@ class Converter:
                 results[key] += value
             else:
                 results[key] = value
-        
 
         return results
 
@@ -106,9 +205,7 @@ class Converter:
                 cqm.add_variable(dimod.BINARY, str(var))
 
         for i, constraint in enumerate(problem.constraints):
-            cqm.add_constraint(
-                dict_to_list(constraint.as_dict()), "==", label=i
-            )
+            cqm.add_constraint(dict_to_list(constraint.as_dict()), "==", label=i)
 
         return cqm
 
@@ -130,8 +227,7 @@ class Converter:
             return f"x{discrete_id}"
 
         variables_discrete = [
-            binary_to_discrete(str(v))
-            for v in problem.variables[:: problem.cases]
+            binary_to_discrete(str(v)) for v in problem.variables[:: problem.cases]
         ]
         for var in variables_discrete:
             if var not in dqm.variables:
@@ -147,10 +243,7 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
-                    {
-                        (case, case): bias
-                        for case in range(problem.cases + BIN_OFFSET)
-                    },
+                    {(case, case): bias for case in range(problem.cases + BIN_OFFSET)},
                 )
             else:
                 dqm.set_linear(
