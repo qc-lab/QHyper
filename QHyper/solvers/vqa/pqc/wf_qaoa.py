@@ -51,8 +51,9 @@ class WFQAOA(QAOA):
         problem: Problem,
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64],
-        print_probabilities: bool = False
+        print_probabilities: bool = True
     ) -> float:
+        print("tutaj")
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
         probs = self.get_probs_func(problem, list(hyper_args))(
