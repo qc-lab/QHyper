@@ -76,7 +76,7 @@ class QAOA(PQC):
     def get_expval_circuit(self, problem: Problem, weights: list[float]
                            ) -> Callable[[npt.NDArray[np.float64]], float]:
         cost_operator = self.create_qubo(problem, weights)
-        print(cost_operator)
+   
         @qml.qnode(self.dev)
         def expval_circuit(params: npt.NDArray[np.float64]) -> float:
             self._circuit(problem, params, cost_operator)
@@ -100,7 +100,7 @@ class QAOA(PQC):
         """
         qubo = Converter.create_qubo(problem, weights)
         cost_operator = self._create_cost_operator(qubo)
-        print(cost_operator)
+        
         @qml.qnode(self.dev)
         def probability_circuit(params: npt.NDArray[np.float64]
                                 ) -> list[float]:
