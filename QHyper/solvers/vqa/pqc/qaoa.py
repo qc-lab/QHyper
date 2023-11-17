@@ -35,6 +35,7 @@ class QAOA(PQC):
                     - 0.5 * qml.PauliZ(str(variables[1]))
                 )
             result += tmp
+        
         return result
     
     def _create_weight_free_hamiltonian(
