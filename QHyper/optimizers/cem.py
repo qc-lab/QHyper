@@ -17,8 +17,8 @@ class CEM(Optimizer):
     samples_per_epoch: int = 100
     elite_frac: float = 0.1
     processes: int = mp.cpu_count()
-    print_on_epochs: list[int] = field(default_factory=list)
     disable_tqdm: bool = False
+    verbose: bool = False
     n_elite: int = field(init=False)
 
     def __post_init__(self) -> None:
@@ -41,10 +41,10 @@ class CEM(Optimizer):
         number of processors that will be used (default cpu count)
     n_elite : int
         calulated by multiplying samples_per_epoch by elite_frac
-    print_on_epochs: list[int]
-        list indicating after which epochs print best results
     disable_tqdm: bool
         if set to True, tdqm will be disabled
+    verbose: bool
+        if set to True, additional information will be printed (default False)
     """
 
     def _get_points(
@@ -100,7 +100,10 @@ class CEM(Optimizer):
         best_result = None
         history: list[list[OptimizationResult]] = []
 
-        for _ in range(self.epochs):
+        for i in range(self.epochs):
+            if self.verbose:
+                print(f'Epoch {i+1}/{self.epochs}')
+
             hyperparams = self._get_points(mean, cov)
             with mp.Pool(processes=self.processes) as p:
                 results = list(tqdm.tqdm(
@@ -114,8 +117,14 @@ class CEM(Optimizer):
 
             elite_weights = [hyperparams[i].flatten() for i in elite_ids]
 
+            if self.verbose:
+                print(f'Values: {sorted([x.value for x in results])}')
+
             if (best_result is None
                     or results[elite_ids[0]].value < best_result.value):
+                if self.verbose:
+                    print(f'New best result: {results[elite_ids[0]].value}')
+
                 best_hyperparams = best_hyperparams
                 best_result = results[elite_ids[0]]
             history.append([OptimizationResult(res.value, params, [[res]])

@@ -35,7 +35,7 @@ Changelog
                     "stepsize": 0.0001,
                 }
             },
-            "params_inits": params_cofing
+            "params_inits": params_config
         },
         "problem": problem_config
     }

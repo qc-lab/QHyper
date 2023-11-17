@@ -73,7 +73,7 @@ def test_qml():
             },
             "optimizer": {
                 "type": "qml",
-                "optimization_steps": 10
+                "steps": 10
             },
             "params_inits": params_config,
         },
@@ -96,7 +96,7 @@ def test_qml_qaoa():
                 "backend": "default.qubit",
                 "optimizer": "adam",
                 "optimizer_args": {
-                    "optimization_steps": 10
+                    "steps": 10
                 }
             },
             "params_inits": params_config,
@@ -121,7 +121,7 @@ def test_random():
             },
             "optimizer": {
                 "type": "qml",
-                "optimization_steps": 10
+                "steps": 10
             },
             "hyper_optimizer": {
                 "type": "random",
@@ -152,7 +152,7 @@ def test_cem():
             },
             "optimizer": {
                 "type": "qml",
-                "optimization_steps": 10
+                "steps": 10
             },
             "hyper_optimizer": {
                 "type": "cem",
@@ -184,7 +184,7 @@ def test_grid():
             },
             "optimizer": {
                 "type": "qml",
-                "optimization_steps": 10
+                "steps": 10
             },
             "hyper_optimizer": {
                 "type": "grid",

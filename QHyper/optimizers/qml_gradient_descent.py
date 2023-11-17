@@ -27,10 +27,12 @@ class QmlGradientDescent(Optimizer):
     ----------
     optimizer : qml.GradientDescentOptimizer
         object of class GradientDescentOptimizer or inheriting from this class
-    optimization_steps : int
+    steps : int
         number of optimization steps
     stepsize : float
         stepsize for the optimizer
+    verbose : bool
+        if set to True, additional information will be printed (default False)
     **kwargs : Any
         additional arguments for the optimizer
     """
@@ -38,8 +40,9 @@ class QmlGradientDescent(Optimizer):
     def __init__(
         self,
         optimizer: str = 'adam',
-        optimization_steps: int = 200,
+        steps: int = 200,
         stepsize: float = 0.005,
+        verbose: bool = False,
         **kwargs: Any
     ) -> None:
         """
@@ -47,7 +50,7 @@ class QmlGradientDescent(Optimizer):
         ----------
         optimizer : str
             name of the gradient descent optimizer provided by PennyLane
-        optimization_steps : int
+        steps : int
             number of optimization steps
         stepsize : float
             stepsize for the optimizer
@@ -63,7 +66,8 @@ class QmlGradientDescent(Optimizer):
             stepsize=stepsize,
             **kwargs
         )
-        self.optimization_steps = optimization_steps
+        self.steps = steps
+        self.verbose = verbose
 
     def minimize(
         self,
@@ -97,9 +101,12 @@ class QmlGradientDescent(Optimizer):
         params = np.array(init, requires_grad=True)
         if "reset" in dir(self.optimizer):
             self.optimizer.reset()
-        for _ in range(self.optimization_steps):
+        for i in range(self.steps):
             params, cost = self.optimizer.step_and_cost(wrapper, params)
             cost_history.append(OptimizationResult(float(cost), params))
+
+            if self.verbose:
+                print(f'Step {i+1}/{self.steps}: {float(cost)}')
 
         return OptimizationResult(cost, params, cost_history)
 
@@ -111,8 +118,11 @@ class QmlGradientDescent(Optimizer):
         params = np.array(init, requires_grad=True)
         if "reset" in dir(self.optimizer):
             self.optimizer.reset()
-        for _ in range(self.optimization_steps):
+        for i in range(self.steps):
             params, cost = self.optimizer.step_and_cost(func, params)
             cost_history.append(OptimizationResult(float(cost), params))
+
+            if self.verbose:
+                print(f'Step {i+1}/{self.steps}: {float(cost)}')
 
         return OptimizationResult(cost, params, [cost_history])
