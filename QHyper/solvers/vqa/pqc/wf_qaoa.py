@@ -52,7 +52,7 @@ class WFQAOA(QAOA):
         problem: Problem,
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64],
-        print_probabilities: bool = True
+        print_probabilities: bool = False
     ) -> OptimizationResult:
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
@@ -72,7 +72,7 @@ class WFQAOA(QAOA):
                     results_by_probabilites.items(),
                     key=lambda item: item[1],
                     reverse=True
-                )[:64]
+                )
             }
             for k, v in sorted_results.items():
                 print(f'{k}, {v:.3f}, {problem.get_score(k)}')
