@@ -214,7 +214,7 @@ class HOBOQAOA(PQC):
         opt = qml.QNGOptimizer(0.0001)
         params = np.array(opt_args, requires_grad=True)
         history=[]
-        for step_no in range(1):
+        for step_no in range(50):
            # print(qml.metric_tensor(expval_circuit, approx="diag")(params))
             params, cost = opt.step_and_cost(expval_circuit,params)
             history.append([step_no+1,cost,params])
