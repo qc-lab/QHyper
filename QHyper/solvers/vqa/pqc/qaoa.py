@@ -129,12 +129,12 @@ class QAOA(PQC):
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64]
     ) -> dict[str, float]:
-        print(opt_args)
+     
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
         probs = self.get_probs_func(problem, list(hyper_args))(
             opt_args.reshape(2, -1))
-        print(probs)
+      
         return {
             format(result, 'b').zfill(len(problem.variables)): float(prob)
             for result, prob in enumerate(probs)
