@@ -72,7 +72,7 @@ class WFQAOA(QAOA):
                     results_by_probabilites.items(),
                     key=lambda item: item[1],
                     reverse=True
-                )[:8]
+                )[:64]
             }
             for k, v in sorted_results.items():
                 print(f'{k}, {v:.3f}, {problem.get_score(k)}')
