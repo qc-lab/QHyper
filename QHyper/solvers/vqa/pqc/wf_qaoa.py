@@ -58,7 +58,7 @@ class WFQAOA(QAOA):
             self.backend, wires=[str(x) for x in problem.variables])
         probs = self.get_probs_func(problem, list(hyper_args))(
             opt_args.reshape(2, -1))
-        
+        print(probs)
         if isinstance(probs, qml.numpy.numpy_boxes.ArrayBox):
             probs = probs._value
         results_by_probabilites = {
@@ -75,7 +75,7 @@ class WFQAOA(QAOA):
                 )#[:512]
             }
             for k, v in sorted_results.items():
-                print(f'{k}, {v:.3f}, {problem.get_score(k)}')
+                print("bla", f'{k}, {v:.5f}, {problem.get_score(k)}')
 
         return WFEval(self.penalty).evaluate(
             results_by_probabilites, problem, list(hyper_args))
