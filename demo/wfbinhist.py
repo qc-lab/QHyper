@@ -164,23 +164,23 @@ from QHyper.util import (
     weighted_avg_evaluation, sort_solver_results, add_evaluation_to_results)
 
 # Evaluate results with weighted average evaluation
-print("Evaluation:")
-print(weighted_avg_evaluation(
-    solver_results.results_probabilities, problem.get_score,
-    penalty=0, limit_results=64, normalize=True
-))
-print("Sort results:")
-sorted_results = sort_solver_results(
-    solver_results.results_probabilities, limit_results=64)
+#print("Evaluation:")
+#print(weighted_avg_evaluation(
+#    solver_results.results_probabilities, problem.get_score,
+#    penalty=0, limit_results=64, normalize=True
+##))
+#print("Sort results:")
+#sorted_results = sort_solver_results(
+  #  solver_results.results_probabilities, limit_results=64)
 
 # Add evaluation to results
-results_with_evaluation = add_evaluation_to_results(
-    sorted_results, problem.get_score, penalty=0)
+#results_with_evaluation = add_evaluation_to_results(
+##    sorted_results, problem.get_score, penalty=0)
 
-for result, (probability, evaluation) in results_with_evaluation.items():
-    print(f"Result: {result}, "
-          f"Prob: {probability:.5}, "
-          f"Evaluation: {evaluation}")
+#for result, (probability, evaluation) in results_with_evaluation.items():
+    #print(f"Result: {result}, "
+      #    f"Prob: {probability:.5}, "
+      #    f"Evaluation: {evaluation}")
     
 from QHyper.solvers import VQA
 tester_config = {
