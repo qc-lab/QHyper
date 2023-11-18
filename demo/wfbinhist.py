@@ -164,7 +164,7 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
     
 params_config = {
-       'angles': [[0.1e-13]*6, [np.pi/2]*6], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
+       'angles': [[0.1,0.1e-13,0.1e-13,0.1e-13,0.1e-13,0.1e13], [np.pi/2]*6], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
     #'angles': [[3.23810485e-04,  3.89068182e-04,  4.08362541e-04,  2.18136406e-04,
    #3.91692476e-04,  3.01205096e-04],
  #[-2.51645530e+02, -1.22816763e+02, -1.20555243e+02, -9.45352537e+01,
@@ -177,14 +177,14 @@ params_config = {
 }
 
 from QHyper.solvers import VQA
-steps=50
+steps=10
 solver_config = {
     "pqc": {
         "type": "qml_qaoa",
         "layers": 6,
         "optimizer": "qng",
         "optimizer_args": {
-            "stepsize": 0.0001,
+            "stepsize": 0.00001,
             "steps": steps,
             "verbose": True,
         },
@@ -223,12 +223,12 @@ for i in range(steps):
  
     res=pd.DataFrame(data={'result': tester_results.results_probabilities.keys(),
                        'prop': tester_results.results_probabilities.values(),'energy':en}).sort_values('energy')
-    res.to_csv("probability_step"+str(i)+".csv")
+    res.to_csv("probability_step"+str(i+1)+".csv")
     
-    res.plot(x='energy', y='prop', kind='bar')
+    res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.05))
     
 # Import matplotlib
-    plt.savefig("probability_step"+str(i)+".png")
+    plt.savefig("probability_step"+str(i+1)+".png")
     plt.close()
 
 
