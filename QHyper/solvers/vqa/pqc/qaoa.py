@@ -20,23 +20,31 @@ class QAOA(PQC):
     backend: str = "default.qubit"
     mixer: str = 'pl_x_mixer'
 
+    offset=0;
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
-        result = qml.Identity(0)
+       # print("jestem tutaj")
+        result = qml.Identity(0) - qml.Identity(0)
         for variables, coeff in qubo.items():
             if not variables:
+                result+= coeff *qml.Identity(0)
                 continue
             tmp = coeff * (
                 0.5 * qml.Identity(str(variables[0]))
                 - 0.5 * qml.PauliZ(str(variables[0]))
             )
-            if len(variables) == 2 and variables[0] != variables[1]:
+            used = set()
+            used.add(variables[0])
+            for variable in variables[1:]:
+                if variable in used:
+                    continue
+                used.add(variable)
                 tmp = tmp @ (
-                    0.5 * qml.Identity(str(variables[1]))
-                    - 0.5 * qml.PauliZ(str(variables[1]))
+                    0.5 * qml.Identity(str(variable))
+                    - 0.5 * qml.PauliZ(str(variable))
                 )
             result += tmp
-        
         return result
+    
     
     def _create_weight_free_hamiltonian(
             self, problem: Problem) -> qml.Hamiltonian:
