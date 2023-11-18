@@ -164,7 +164,11 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
     
 params_config = {
-       'angles': [[0.1,0.1e-13,0.1e-13,0.1e-13,0.1e-13,0.1e13], [np.pi/2]*6], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
+       #'angles': [[0.1e-13,0.1,0.1e-13,0.1e-13,0.1e-13,0.1e13], [np.pi/2]*6], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
+   'angles':[[8.66892857,  1.00000145e-01, -1.91456774e-06, -1.08992071e-07,
+  -1.83911351e-06,  1.00000000e+12],
+ [-4.93647311e+01,  1.57310046e+00,  1.57309622e+00,  1.57310244e+00,
+   1.57309841e+00,  1.58401274e+00]],
     #'angles': [[3.23810485e-04,  3.89068182e-04,  4.08362541e-04,  2.18136406e-04,
    #3.91692476e-04,  3.01205096e-04],
  #[-2.51645530e+02, -1.22816763e+02, -1.20555243e+02, -9.45352537e+01,
@@ -177,7 +181,7 @@ params_config = {
 }
 
 from QHyper.solvers import VQA
-steps=10
+steps=3
 solver_config = {
     "pqc": {
         "type": "qml_qaoa",
@@ -211,6 +215,7 @@ from QHyper.util import (
     weighted_avg_evaluation, sort_solver_results, add_evaluation_to_results)
 
 for i in range(steps):
+    print(i+1,solver_results.history[0][i].params)
     bp={'angles': (solver_results.history[0][i].params) , 'hyper_args': [1]}
     
     #print(solver_results.history[0].params)
