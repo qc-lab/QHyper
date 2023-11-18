@@ -197,6 +197,7 @@ bp={'angles': ([[ 3.23810485e-04,  3.89068182e-04,  4.08362541e-04,
          -9.45352537e+01, -9.88528753e+01, -8.19648493e+01]]), 'hyper_args': [1]}
 
 solver_results1=tester.solve(bp)
+print(f"Best params: {solver_results1.params}")
 # Evaluate results with weighted average evaluation
 print("Evaluation:")
 print(weighted_avg_evaluation(
