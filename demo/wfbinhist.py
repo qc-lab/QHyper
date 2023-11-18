@@ -85,9 +85,9 @@ class SimpleWorkflowProblem(Problem):
         self.constraints = []
 
     def get_score(self, result, penalty=0):
-
+     
         x = [int(val) for val in result]
-
+         
         if (6.0*(1.0-x[0])*(1-x[1])
         + 2.0*(1.0-x[0])*(x[1])
         + 4.0*(x[0])*(1.0-x[1])
@@ -100,7 +100,6 @@ class SimpleWorkflowProblem(Problem):
         + 4.0*(1.0-x[4])*(x[5])
         + 8.0*(x[4])*(1.0-x[5])
         + 32.0*(x[4])*(x[5]) <=13 ):
-
             return (6.0*(1.0-x[0])*(1.0-x[1])
         + 8.0*(1.0-x[0])*(x[1])
         + 8.0*(x[0])*(1.0-x[1])
@@ -116,9 +115,47 @@ class SimpleWorkflowProblem(Problem):
 
         return penalty
     
+    def get_qaoa_energy(self, result):
+
+        x = [int(val) for val in result]
+     
+        tcost=(6.0*(1.0-x[0])*(1.0-x[1]) 
+        + 8.0*(1.0-x[0])*(x[1])
+        + 8.0*(x[0])*(1.0-x[1]) 
+        + 2.0*(x[0])*(x[1]) 
+        + 3.0*(1.0-x[2])*(1.0-x[3]) 
+        + 4.0*(1.0-x[2])*(x[3])
+        + 4.0*(x[2])*(1.0-x[3])
+        + 1.0*(x[2])*(x[3])
+        + 12.0*(1.0-x[4])*(1.0-x[5])
+        + 16.0*(1.0-x[4])*(x[5])
+        + 16.0*(x[4])*(1.0-x[5])
+        + 4.0*(x[4])*(x[5])) 
+        
+   
+        
+        linear=(deadline-(6.0*(1.0-x[0])*(1-x[1])
+        + 2.0*(1.0-x[0])*(x[1])
+        + 4.0*(x[0])*(1.0-x[1])
+        + 16.0*(x[0])*(x[1])
+        + 3.0*(1.0-x[2])*(1.0-x[3])
+        + 1.0*(1.0-x[2])*(x[3])
+        + 2.0*(x[2])*(1.0-x[3])
+        + 8.0*(x[2])*(x[3])
+        + 12.0*(1.0-x[4])*(1.0-x[5])
+        + 4.0*(1.0-x[4])*(x[5])
+        + 8.0*(x[4])*(1.0-x[5])
+        + 32.0*(x[4])*(x[5])))
+      
+        return (hyper_params['cost_function_weight'] * tcost
+                                              + hyper_params['deadline_linear_form_weight'] *  linear
+                                   + hyper_params['deadline_quadratic_form_weight'] * linear*linear)
+
     
 
 problem = SimpleWorkflowProblem()
+
+
 print(f"Variables used to describe objective function"
       f" and constraints: {problem.variables}")
 print(f"Objective function: {problem.objective_function}")
@@ -140,6 +177,7 @@ params_config = {
 }
 
 from QHyper.solvers import VQA
+steps=50
 solver_config = {
     "pqc": {
         "type": "qml_qaoa",
@@ -147,7 +185,7 @@ solver_config = {
         "optimizer": "qng",
         "optimizer_args": {
             "stepsize": 0.0001,
-            "steps": 1,
+            "steps": steps,
             "verbose": True,
         },
         "backend": "default.qubit",
@@ -158,45 +196,62 @@ vqa = VQA.from_config(problem, config=solver_config)
 
 
 solver_results = vqa.solve()
-print(solver_results.history)
 
-from QHyper.util import (
-    weighted_avg_evaluation, sort_solver_results, add_evaluation_to_results)
 
-# Evaluate results with weighted average evaluation
-#print("Evaluation:")
-#print(weighted_avg_evaluation(
-#    solver_results.results_probabilities, problem.get_score,
-#    penalty=0, limit_results=64, normalize=True
-##))
-#print("Sort results:")
-#sorted_results = sort_solver_results(
-  #  solver_results.results_probabilities, limit_results=64)
-
-# Add evaluation to results
-#results_with_evaluation = add_evaluation_to_results(
-##    sorted_results, problem.get_score, penalty=0)
-
-#for result, (probability, evaluation) in results_with_evaluation.items():
-    #print(f"Result: {result}, "
-      #    f"Prob: {probability:.5}, "
-      #    f"Evaluation: {evaluation}")
-    
-from QHyper.solvers import VQA
 tester_config = {
     'pqc': {
         'type': 'qaoa',
         'layers': 6,
     }
 }
-
 tester = VQA.from_config(problem, config=tester_config)
-bp={'angles': ([[ 3.23810485e-04,  3.89068182e-04,  4.08362541e-04,
-          2.18136406e-04,  3.91692476e-04,  3.01205096e-04],
-        [-2.51645530e+02, -1.22816763e+02, -1.20555243e+02,
-         -9.45352537e+01, -9.88528753e+01, -8.19648493e+01]]), 'hyper_args': [1]}
+import pandas as pd
+import matplotlib.pyplot as plt
+from QHyper.util import (
+    weighted_avg_evaluation, sort_solver_results, add_evaluation_to_results)
 
-# solver_results1=tester.solve(bp)
+for i in range(steps):
+    bp={'angles': (solver_results.history[0][i].params) , 'hyper_args': [1]}
+    
+    #print(solver_results.history[0].params)
+    tester_results=tester.solve(bp)
+    #print(f"tester params: {tester_results.params}")
+    
+
+    #Evaluate results with weighted average evaluation
+    en=list(map(problem.get_qaoa_energy,tester_results.results_probabilities.keys()))
+ 
+    res=pd.DataFrame(data={'result': tester_results.results_probabilities.keys(),
+                       'prop': tester_results.results_probabilities.values(),'energy':en}).sort_values('energy')
+    res.to_csv("probability_step"+str(i)+".csv")
+    
+    res.plot(x='energy', y='prop', kind='bar')
+    
+# Import matplotlib
+    plt.savefig("probability_step"+str(i)+".png")
+    plt.close()
+
+
+
+#results_with_evaluation1 = add_evaluation_to_results(
+ ##   tester_results, problem.get_score, penalty=0)
+#print(results_with_evaluation1)
+
+# from QHyper.solvers import VQA
+# tester_config = {
+#     'pqc': {
+#         'type': 'qaoa',
+#         'layers': 6,
+#     }
+# }
+
+# tester = VQA.from_config(problem, config=tester_config)
+# bp={'angles': ([[ 3.23810485e-04,  3.89068182e-04,  4.08362541e-04,
+#           2.18136406e-04,  3.91692476e-04,  3.01205096e-04],
+#         [-2.51645530e+02, -1.22816763e+02, -1.20555243e+02,
+#          -9.45352537e+01, -9.88528753e+01, -8.19648493e+01]]), 'hyper_args': [1]}
+
+#solver_results1=tester.solve(bp)
 # print(f"Best params: {solver_results1.params}")
 # # Evaluate results with weighted average evaluation
 # print("Evaluation:")
