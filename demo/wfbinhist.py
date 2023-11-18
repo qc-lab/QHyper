@@ -196,20 +196,20 @@ bp={'angles': ([[ 3.23810485e-04,  3.89068182e-04,  4.08362541e-04,
         [-2.51645530e+02, -1.22816763e+02, -1.20555243e+02,
          -9.45352537e+01, -9.88528753e+01, -8.19648493e+01]]), 'hyper_args': [1]}
 
-solver_results=tester.solve(bp)
+solver_results1=tester.solve(bp)
 # Evaluate results with weighted average evaluation
 print("Evaluation:")
 print(weighted_avg_evaluation(
-    solver_results.results_probabilities, problem.get_score,
+    solver_results1.results_probabilities, problem.get_score,
     penalty=0, limit_results=64, normalize=True
 ))
 print("Sort results:")
-sorted_results = sort_solver_results(
-    solver_results.results_probabilities, limit_results=64)
+sorted_results1 = sort_solver_results(
+    solver_results1.results_probabilities, limit_results=64)
 
 # Add evaluation to results
 results_with_evaluation = add_evaluation_to_results(
-    sorted_results, problem.get_score, penalty=0)
+    sorted_results1, problem.get_score, penalty=0)
 
 for result, (probability, evaluation) in results_with_evaluation.items():
     print(f"Result: {result}, "
