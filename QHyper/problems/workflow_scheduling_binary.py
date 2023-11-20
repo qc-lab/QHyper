@@ -3,10 +3,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 
 import networkx as nx
-import numpy as np
 import pandas as pd
 import sympy
-from math import ceil, log2
+import math
 from wfcommons import Instance
 from wfcommons.utils import read_json
 
@@ -21,23 +20,14 @@ from .workflow_scheduling import Workflow
 
 
 def calc_slack_coefficients(constant: int) -> list[int]:
-    num_slack = int(np.floor(np.log2(constant)))
+    num_slack = int(math.floor(math.log2(constant)))
     slack_coefficients = [2**j for j in range(num_slack)]
     if constant - 2**num_slack >= 0:
         slack_coefficients.append(constant - 2**num_slack + 1)
     return slack_coefficients
 
 
-def generate_binary_strings(length, current=''):
-    if length == 0:
-        return [current]
-    else:
-        strings_with_0 = generate_binary_strings(length - 1, current + '0')
-        strings_with_1 = generate_binary_strings(length - 1, current + '1')
-        return strings_with_0 + strings_with_1
-
-
-class WorkflowSchedulingProblem(Problem):
+class WorkflowSchedulingBinary(Problem):
     def __init__(self, workflow: Workflow):
         self.workflow: Workflow = workflow
         self.variables: tuple[sympy.Symbol] = sympy.symbols(
@@ -45,26 +35,42 @@ class WorkflowSchedulingProblem(Problem):
                 [
                     f"x{i}"
                     for i in range(
-                        len(self.workflow.tasks) * ceil(log2(len(self.workflow.machines)))
+                        len(self.workflow.tasks)
+                        * math.ceil(math.log2(len(self.workflow.machines)))
                     )
                 ]
             )
         )
+        self._set_binary_representation()
         self._set_objective_function()
         self._set_constraints()
 
+    def _set_binary_representation(self) -> None:
+        num_of_machines = len(self.workflow.machines)
+        len_machine_encoding = math.ceil(math.log2(num_of_machines))
+
+        self.machines_binary_representation = {
+            machine_name: bin(machine_id)[2:].zfill(len_machine_encoding)
+            for machine_name, machine_id in zip(
+                self.workflow.machine_names, range(len(self.workflow.machines))
+            )
+        }
+
     def _set_objective_function(self) -> None:
-        expression: Expr = cast(Expr, 0)
-        for task_id, task_name in enumerate(self.workflow.time_matrix.index):
-            for machine_id, machine_name in enumerate(
-                self.workflow.time_matrix.columns
-            ):
-                cost = self.workflow.cost_matrix[machine_name][task_name]
+        expression = cast(Expr, 0)
+        for _, task_name in enumerate(self.workflow.time_matrix.index):
+            for _, machine_name in enumerate(self.workflow.time_matrix.columns):
+                current_term = cast(Expr, 1)
+                task_id = self.workflow.time_matrix.index.get_loc(task_name)
+                variable_id = task_id * (len(self.workflow.tasks) - 1)
+                for el in self.machines_binary_representation[machine_name]:
+                    if el == "0":
+                        current_term *= 1 - self.variables[variable_id]
+                    elif el == "1":
+                        current_term *= self.variables[variable_id]
+                    variable_id += 1
                 expression += (
-                    cost
-                    * self.variables[
-                        machine_id + task_id * len(self.workflow.time_matrix.columns)
-                    ]
+                    self.wsp.cost_matrix.loc[task_name, machine_name] * current_term
                 )
 
         self.objective_function: Expression = Expression(expression)
@@ -72,83 +78,70 @@ class WorkflowSchedulingProblem(Problem):
     def _set_constraints(self) -> None:
         self.constraints: list[Constraint] = []
 
-        # machine assignment constraint
-        for task_id in range(len(self.workflow.time_matrix.index)):
-            expression: Expr = cast(Expr, 0)
-            for machine_id in range(len(self.workflow.time_matrix.columns)):
-                expression += self.variables[
-                    machine_id + task_id * len(self.workflow.time_matrix.columns)
-                ]
-            self.constraints.append(Constraint(Expression(expression), 1, Operator.EQ))
-
         # deadline constraint
         for path in self.workflow.paths:
-            expression = cast(Expr, 0)
-            for task_id, task_name in enumerate(self.workflow.time_matrix.index):
-                for machine_id, machine_name in enumerate(
-                    self.workflow.time_matrix.columns
-                ):
-                    if task_name in path:
-                        time = self.workflow.time_matrix[machine_name][task_name]
-                        expression += (
-                            time
-                            * self.variables[
-                                machine_id
-                                + task_id * len(self.workflow.time_matrix.columns)
-                            ]
-                        )
-
-            # todo add constraints unbalanced penalization
-            self.constraints.append(
-                Constraint(
-                    Expression(expression),
-                    self.workflow.deadline,
-                    Operator.LE,
-                    MethodsForInequalities.UNBALANCED_PENALIZATION,
-                )
+            expression = self.calculate_expression_with_coefficients(
+                self.workflow.time_matrix
             )
 
-    def decode_solution(self, solution: dict) -> dict:
-        decoded_solution = {}
-        for variable, value in solution.items():
-            _, id = variable[0], int(variable[1:])  # todo add validation
-            if value == 1.0:
-                machine_id = id % len(self.workflow.machines)
-                task_id = id // len(self.workflow.machines)
-                decoded_solution[
-                    self.workflow.time_matrix.index[task_id]
-                ] = self.workflow.time_matrix.columns[machine_id]
+            for path in self.workflow.paths:
+                expression = 0
+                for _, task_name in enumerate(path):
+                    for _, machine_name in enumerate(self.workflow.time_matrix.columns):
+                        current_term = cast(Expr, 1)
+                        task_id = self.workflow.time_matrix.index.get_loc(task_name)
+                        variable_id = task_id * (len(self.workflow.tasks) - 1)
+                        for el in self.machines_binary_representation[machine_name]:
+                            if el == "0":
+                                current_term *= 1 - self.variables[variable_id]
+                            elif el == "1":
+                                current_term *= self.variables[variable_id]
+                            variable_id += 1
+                        expression += (
+                            self.workflow.time_matrix.loc[task_name, machine_name]
+                            * current_term
+                        )
 
-        return decoded_solution
-
-    def get_deadlines(self) -> tuple[float, float]:  # todo test this function
-        """Calculates the minimum and maximum path runtime
-        for the whole workflow."""
-
-        flat_runtimes = [
-            (runtime, name)
-            for n, machine_runtimes in self.workflow.time_matrix.items()
-            for runtime, name in zip(machine_runtimes, self.workflow.task_names)
-        ]
-
-        max_path_runtime = 0.0
-        min_path_runtime = 0.0
-
-        for path in self.workflow.paths:
-            max_runtime: defaultdict[str, float] = defaultdict(lambda: 0.0)
-            min_runtime: defaultdict[str, float] = defaultdict(lambda: math.inf)
-
-            for runtime, name in flat_runtimes:
-                if name not in path:
-                    continue
-                max_runtime[name] = max(max_runtime[name], runtime)
-                min_runtime[name] = min(min_runtime[name], runtime)
-            max_path_runtime = max(max_path_runtime, sum(max_runtime.values()))
-            min_path_runtime = max(min_path_runtime, sum(min_runtime.values()))
-
-        return min_path_runtime, max_path_runtime
+                # todo add constraints unbalanced penalization
+                self.constraints.append(
+                    Constraint(
+                        Expression(expression),
+                        self.workflow.deadline,
+                        Operator.LE,
+                        MethodsForInequalities.UNBALANCED_PENALIZATION,
+                    )
+                )
 
     def get_score(self, result: str, penalty: float = 0) -> float:
-        x = [int(val) for val in result]
+        decoded_solution = {}
+        machine_encoding_len = math.ceil(math.log2(len(self.workflow.machines)))
+        for task_id, task_name in enumerate(self.workflow.task_names):
+            decoded_solution[task_name] = int(
+                result[
+                    task_id * machine_encoding_len : task_id * machine_encoding_len
+                    + machine_encoding_len
+                ],
+                2,
+            )
 
-        return penalty
+        for path in self.workflow.paths:
+            path_time = 0
+            for task_name in path:
+                machine_name = self.workflow.time_matrix.columns[
+                    decoded_solution[task_name]
+                ]
+                path_time += self.workflow.time_matrix.loc[task_name, machine_name]
+
+            if path_time > self.workflow.deadline:
+                return penalty
+
+        cost_of_used_machines = 0
+        for task_id, task_name in enumerate(self.workflow.task_names):
+            machine_name = self.workflow.time_matrix.columns[
+                decoded_solution[task_name]
+            ]
+            cost_of_used_machines += self.workflow.cost_matrix.loc[
+                task_name, machine_name
+            ]
+
+        return cost_of_used_machines

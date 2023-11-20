@@ -42,14 +42,14 @@ class Converter:
     @staticmethod
     def get_variables(qubo: QUBO) -> tuple[VARIABLES]:
         tmp_list = []
-        
+
         for key in qubo.keys():
             for var in key:
                 if var not in tmp_list and var != tuple():
                     tmp_list.append(var)
         print("***  TMP LIST ****", tmp_list)
         return tuple(tmp_list)
-    
+
     @staticmethod
     def use_slacks(constraint: Constraint) -> QUBO:
         # todo constraint.lhs cannot have any numerical values
@@ -61,17 +61,16 @@ class Converter:
             (f"{constraint.label}_{i}",) for i in range(len(slack_coefficients))
         )
 
-        tmp_slack_names = tuple(f"{constraint.label}_{i}" for i in range(len(slack_coefficients))
-        )
-
         slacks_as_dict = dict(zip(slack_names, slack_coefficients))
         return slacks_as_dict
-    
+
     @staticmethod
-    def apply_slacks(results: QUBO, constraint: Constraint, weight: list[float]) -> QUBO:
+    def apply_slacks(
+        results: QUBO, constraint: Constraint, weight: list[float]
+    ) -> QUBO:
         if constraint.rhs <= 0 or not int(constraint.rhs) == constraint.rhs:
             raise ValueError("Constraint rhs must be a positive integer")
-        
+
         constraint_tmp = copy.deepcopy(constraint.lhs)
         constraint_tmp[tuple()] = -constraint.rhs
         slacks = Converter.use_slacks(constraint)
@@ -80,7 +79,7 @@ class Converter:
         qubo_with_slacks_squared = multiply_dicts_sorted(
             qubo_with_slakcs, qubo_with_slakcs
         )
-        
+
         weighted_qubo_with_slacks_squared = multiply_dict_by_constant(
             qubo_with_slacks_squared, weight
         )
@@ -88,20 +87,18 @@ class Converter:
         return Converter.add_dicts(results, weighted_qubo_with_slacks_squared)
 
     @staticmethod
-    def use_unbalanced_penalization(results: QUBO, constraint: Constraint, weight: list[float]) -> QUBO:
+    def use_unbalanced_penalization(
+        results: QUBO, constraint: Constraint, weight: list[float]
+    ) -> QUBO:
         constraints_unbalanced = copy.deepcopy(constraint.lhs)
         constraints_unbalanced[tuple()] = -constraint.rhs
 
-        linear = multiply_dict_by_constant(
-            constraints_unbalanced, weight[0]
-        )
+        linear = multiply_dict_by_constant(constraints_unbalanced, weight[0])
 
         results = Converter.add_dicts(results, linear)
 
         quadratic = multiply_dicts_sorted(linear, linear)
-        quadratic_with_weight = multiply_dict_by_constant(
-            quadratic, weight[1]
-        )
+        quadratic_with_weight = multiply_dict_by_constant(quadratic, weight[1])
 
         return Converter.add_dicts(results, quadratic_with_weight)
 
@@ -115,16 +112,23 @@ class Converter:
             else:
                 result[key] = value
         return result
-    
+
     @staticmethod
-    def assign_weights_to_constraints(constraints_weights: list[float], constraints: list[Constraint]):
-        #todo add error handling
+    def assign_weights_to_constraints(
+        constraints_weights: list[float], constraints: list[Constraint]
+    ):
+        # todo add error handling
         tmp_list = []
-        
+
         i = 0
         for constraint in constraints:
-            if constraint.method_for_inequalities == MethodsForInequalities.UNBALANCED_PENALIZATION:
-                tmp_list.append(([constraints_weights[i], constraints_weights[i+1]], constraint))
+            if (
+                constraint.method_for_inequalities
+                == MethodsForInequalities.UNBALANCED_PENALIZATION
+            ):
+                tmp_list.append(
+                    ([constraints_weights[i], constraints_weights[i + 1]], constraint)
+                )
                 i += 2
             else:
                 tmp_list.append((constraints_weights[i], constraint))
@@ -152,32 +156,36 @@ class Converter:
         #         f"got {len(weights)} (weights: {weights}))"
         #     )
 
-        
         # for weight, constraint in zip(constraints_weights, problem.constraints):
 
         constraints_weights = weights[1:]
-        for weight, constraint in Converter.assign_weights_to_constraints(constraints_weights, problem.constraints):
+        for weight, constraint in Converter.assign_weights_to_constraints(
+            constraints_weights, problem.constraints
+        ):
             if constraint.operator == Operator.EQ:
                 constraint_tmp = copy.deepcopy(constraint.lhs)
-                constraint_tmp[tuple()] = -constraint.rhs #todo what to do with 0
+                constraint_tmp[tuple()] = -constraint.rhs  # todo what to do with 0
 
                 quadratic = multiply_dicts_sorted(constraint_tmp, constraint_tmp)
                 quadratic_with_weight = multiply_dict_by_constant(quadratic, weight)
                 results = Converter.add_dicts(results, quadratic_with_weight)
 
             elif constraint.operator == Operator.LE:
-                if (constraint.method_for_inequalities== MethodsForInequalities.SLACKS_LOG_2):
+                if (
+                    constraint.method_for_inequalities
+                    == MethodsForInequalities.SLACKS_LOG_2
+                ):
                     results = Converter.apply_slacks(results, constraint, weight)
 
                 elif (
                     constraint.method_for_inequalities
                     == MethodsForInequalities.UNBALANCED_PENALIZATION
                 ):
-                    results = Converter.use_unbalanced_penalization(results, constraint, weight)
+                    results = Converter.use_unbalanced_penalization(
+                        results, constraint, weight
+                    )
 
         return results
-    
-  
 
     @staticmethod
     def create_weight_free_qubo(problem: Problem) -> QUBO:

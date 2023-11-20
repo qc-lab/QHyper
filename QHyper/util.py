@@ -182,7 +182,6 @@ class Constraint:
             self.lhs: QUBO = lhs
         elif isinstance(lhs, Expression):
             # todo expression to dict
-            print("in here dictionary ", lhs.dictionary)
             self.lhs: QUBO = lhs.dictionary  # todo
 
     def _set_label(self, label: str) -> None:
