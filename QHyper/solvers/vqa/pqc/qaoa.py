@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import pennylane as qml
-import numpy as np
+from pennylane import numpy as np
 
 import numpy.typing as npt
 from typing import Any, Callable, cast, Optional
@@ -35,38 +35,27 @@ class QAOA(PQC):
         return self.qubo_cache[tuple(weights)]
 
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
-        result = qml.Identity(0)
+        result = None
+        const = 0
+
         for variables, coeff in qubo.items():
             if not variables:
+                const += coeff
                 continue
-            tmp = coeff * (
-                0.5 * qml.Identity(str(variables[0]))
-                - 0.5 * qml.PauliZ(str(variables[0]))
-            )
-            if len(variables) == 2 and variables[0] != variables[1]:
-                tmp = tmp @ (
-                    0.5 * qml.Identity(str(variables[1]))
-                    - 0.5 * qml.PauliZ(str(variables[1]))
+
+            summand = None
+            for var in variables:
+                if summand and str(var) in summand.wires:
+                    continue
+                encoded_var = (
+                    0.5 * qml.Identity(str(var))
+                    - 0.5 * qml.PauliZ(str(var))
                 )
-            result += tmp
-        return result
-
-    # def _create_weight_free_hamiltonian(
-    #         self, problem: Problem) -> qml.Hamiltonian:
-    #     row = []
-    #     col = []
-    #     data = []
-
-    #     for i in range(2**len(problem.variables)):
-    #         row.append(i)
-    #         col.append(i)
-    #         data.append(problem.get_score(
-    #             format(i, 'b').zfill(len(problem.variables)),
-    #             penalty=0.1
-    #         ))
-    #     sparse_matrix = csr_matrix((data, (row, col)))
-    #     ham = qml.SparseHamiltonian(sparse_matrix, problem.variables)
-    #     return ham
+                summand = (
+                    summand @ encoded_var if summand else coeff * encoded_var
+                )
+            result = result + summand if result else summand
+        return result + const * qml.Identity(result.wires[0])
 
     def _hadamard_layer(self, problem: Problem) -> None:
         print("*** SELF.WIRE_NAMES HL ***", self.wire_names)

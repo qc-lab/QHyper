@@ -2,7 +2,7 @@ solver:
   type: vqa
   optimizer:
     type: scipy
-    optimization_steps: 10
+    steps: 10
     # maxfun: 10
   pqc:
     type: qaoa

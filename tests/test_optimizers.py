@@ -43,7 +43,13 @@ def test_scipy():
             },
             "optimizer": {
                 "type": "scipy",
-                "maxfun": 10
+                "maxfun": 10,
+                "optimizer_kwargs": {
+                    'method': 'L-BFGS-B',
+                    'options': {
+                        'maxiter': 10,
+                    }
+                }
             },
             "params_inits": params_config,
         },
@@ -51,7 +57,7 @@ def test_scipy():
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.310672703)
+    assert result == pytest.approx(-0.310672890)
 
 
 def test_qml():
@@ -67,7 +73,7 @@ def test_qml():
             },
             "optimizer": {
                 "type": "qml",
-                "optimization_steps": 10
+                "steps": 10
             },
             "params_inits": params_config,
         },
@@ -90,7 +96,7 @@ def test_qml_qaoa():
                 "backend": "default.qubit",
                 "optimizer": "adam",
                 "optimizer_args": {
-                    "optimization_steps": 10
+                    "steps": 10
                 }
             },
             "params_inits": params_config,
@@ -115,7 +121,7 @@ def test_random():
             },
             "optimizer": {
                 "type": "qml",
-                "optimization_steps": 10
+                "steps": 10
             },
             "hyper_optimizer": {
                 "type": "random",
@@ -130,7 +136,7 @@ def test_random():
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-1.536984353)
+    assert result == pytest.approx(-0.188001271)
 
 
 def test_cem():
@@ -146,7 +152,7 @@ def test_cem():
             },
             "optimizer": {
                 "type": "qml",
-                "optimization_steps": 10
+                "steps": 10
             },
             "hyper_optimizer": {
                 "type": "cem",
@@ -162,7 +168,7 @@ def test_cem():
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.171165308)
+    assert result == pytest.approx(-0.212019545)
 
 
 def test_grid():
@@ -178,7 +184,7 @@ def test_grid():
             },
             "optimizer": {
                 "type": "qml",
-                "optimization_steps": 10
+                "steps": 10
             },
             "hyper_optimizer": {
                 "type": "grid",

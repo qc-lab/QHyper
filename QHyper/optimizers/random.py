@@ -15,6 +15,7 @@ class Random(Optimizer):
     processes: int
     disable_tqdm: bool
     bounds: npt.NDArray[np.float64]
+    verbose: bool = False
 
     def __init__(
         self,
@@ -22,6 +23,7 @@ class Random(Optimizer):
         number_of_samples: int = 100,
         processes: int = 1,
         disable_tqdm: bool = False,
+        verbose: bool = False,
     ) -> None:
         """
         Parameters
@@ -32,12 +34,16 @@ class Random(Optimizer):
             number of processors that will be used (default cpu count)
         disable_tqdm: bool
             if set to True, tdqm will be disabled (default False)
+        verbose: bool
+            if set to True, additional information will be printed
+            (default False)
         """
 
         self.number_of_samples: int = number_of_samples
         self.processes: int = processes
         self.disable_tqdm: bool = disable_tqdm
         self.bounds = np.array(bounds)
+        self.verbose = verbose
 
     def minimize(
         self,
@@ -83,7 +89,16 @@ class Random(Optimizer):
                 disable=self.disable_tqdm
             ))
         min_idx = np.argmin([result.value for result in results])
+
+        if self.verbose:
+            print(f"Best result: {results[min_idx].value}")
+            print(f"Values: {sorted([v.value for v in results])}")
+
+        history = [OptimizationResult(res.value, params, [[res]])
+                   for res, params in zip(results, hyperparams)]
+
         return OptimizationResult(
             value=results[min_idx].value,
             params=hyperparams[min_idx],
+            history=[history],
         )

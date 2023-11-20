@@ -15,6 +15,7 @@ class GridSearch(Optimizer):
     steps: list[np.float64]
     processes: int = 1
     disable_tqdm: bool = False
+    verbose: bool = False
 
     def __init__(
         self,
@@ -34,6 +35,9 @@ class GridSearch(Optimizer):
             number of processors that will be used (default cpu count)
         disable_tqdm: bool
             if set to True, tdqm will be disabled (default False)
+        verbose: bool
+            if set to True, additional information will be printed
+            (default False)
         """
 
         self.bounds = np.array(bounds)
@@ -65,7 +69,14 @@ class GridSearch(Optimizer):
             ))
         min_idx = np.argmin([result.value for result in results])
 
+        if self.verbose:
+            print(f"Best result: {results[min_idx].value}")
+            print(f"Values: {sorted([v.value for v in results])}")
+
+        history = [OptimizationResult(res.value, params, [[res]])
+                   for res, params in zip(results, hyperparams)]
         return OptimizationResult(
             value=results[min_idx].value,
             params=hyperparams[min_idx],
+            history=[history]
         )

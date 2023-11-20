@@ -3,7 +3,7 @@ Usage Guide
 
 Welcome to the usage guide for the `QHyper` library! This guide will provide you
 with practical instructions on using the `QHyper` library for conducting
-experiments. Whether you're new to quantum computing or an experienced 
+experiments. Whether you're new to quantum computing or an experienced
 researcher, this guide will help you navigate the features and capabilities of the library.
 
 Installation
@@ -13,14 +13,14 @@ To get started, you'll need to install the `QHyper` library using pip. Open your
 terminal or command prompt and execute the following command:
 
 .. code-block:: bash
-    
+
     pip install qhyper
 
 Key Concepts
 ------------
 
 - **Solvers:** `QHyper` is designed to facilitate the implementation
-  and experimentation with different types of solvers. It is easy to create you 
+  and experimentation with different types of solvers. It is easy to create you
   own custom solvers and use it with other components already available in the library
 
 - **Problems:** solvers interface was created to be compatible with any type of
@@ -30,7 +30,7 @@ Key Concepts
 Getting Started
 ---------------
 
-Once you've installed the library, you're ready to dive into experimenting using `QHyper`. 
+Once you've installed the library, you're ready to dive into experimenting using `QHyper`.
 Here are some key steps to get started:
 
 1. **Import QHyper:** Begin by importing the required elements from the library.
@@ -41,14 +41,14 @@ Here are some key steps to get started:
     from QHyper.solvers import Solver
 
 
-2. **Create problem:** Use the library's classes and functions to define and set up your problem. 
+2. **Create problem:** Use the library's classes and functions to define and set up your problem.
 
 .. code-block:: python
 
     problem = KnapsackProblem(max_weight=2, items=[(1, 2), (1, 2), (1, 1)])
 
 
-3. **Define initial parameters:** Each solver requires initial parameters to start the optimization process. 
+3. **Define initial parameters:** Each solver requires initial parameters to start the optimization process.
 
 .. code-block:: python
 
@@ -77,7 +77,7 @@ Here are some key steps to get started:
             }
         },
         'hyper_optimizer': {
-            'type': 'random',    
+            'type': 'random',
             'processes': 5,
             'number_of_samples': 100,
             'bounds': [(1, 10), (1, 10), (1, 10)]
@@ -86,11 +86,11 @@ Here are some key steps to get started:
     vqa = Solver.from_config(problem, config=solver_config)
 
 
-5. **Execute solver:** Run your experiments using the solver on defined problem. 
-    
+5. **Execute solver:** Run your experiments using the solver on defined problem.
+
 .. code-block:: python
 
-    solver_results = vqa.solve(params_cofing)
+    solver_results = vqa.solve(params_config)
     print("Solver results:")
     print(f"Probabilities: {solver_results.results_probabilities}")
     print(f"Best params: {solver_results.params}")
@@ -98,14 +98,14 @@ Here are some key steps to get started:
     # Solver results:
     # Probabilities: {'00000': 0.0732912838324004, '00001': 0.01812365507384847, ...}
     # Best params: {'angles': array([[4.77452593, 3.29033494, 0.85409721, 2.25547951, 5.960884  ],
-    #                               [1.64590219, 0.48733654, 0.26765959, 0.03158379, 3.06768805]]), 
+    #                               [1.64590219, 0.48733654, 0.26765959, 0.03158379, 3.06768805]]),
     #               'hyper_args': array([1. , 2.5, 2.5])}
 
 
 6. **Evaluate and show results:** By using the `QHyper` library, you can easily evaluate and show the results of your experiments.
 
 .. code-block:: python
-    
+
     from QHyper.util import (
         weighted_avg_evaluation, sort_solver_results, add_evaluation_to_results)
 
@@ -125,7 +125,7 @@ Here are some key steps to get started:
         print(f"Result: {result}, "
             f"Prob: {probability:.5}, "
             f"Evaluation: {evaluation}")
-    
+
     # Evaluation:
     # -2.1832776777678093
     # Sort results:

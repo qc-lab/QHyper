@@ -1,10 +1,10 @@
 numpy==1.23.4
-PennyLane==0.26.0
-tqdm==4.64.1
+PennyLane==0.33.1
+tqdm
 sympy==1.11.1
 dwave-system
 gurobipy
 types-tqdm
 nptyping
 pandas
-wfcommons
+git+https://github.com/wfcommons/wfcommons.git@main
