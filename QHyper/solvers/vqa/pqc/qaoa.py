@@ -9,7 +9,7 @@ from QHyper.problems.base import Problem
 from QHyper.optimizers import OptimizationResult
 
 from QHyper.solvers.vqa.pqc.base import PQC
-from QHyper.solvers.converter import QUBO, Converter, VARIABLES
+from QHyper.solvers.converter import QUBO, Converter
 
 from .mixers import MIXERS_BY_NAME
 
@@ -22,16 +22,11 @@ class QAOA(PQC):
     qubo_cache: dict[tuple[float], qml.Hamiltonian] = field(
         default_factory=dict)
     dev: qml.Device | None = None
-    wire_names: tuple[VARIABLES] = field(default_factory=tuple)
 
     def create_qubo(self, problem: Problem, weights: list[float]) -> QUBO:
-        qubo = Converter.create_qubo(problem, weights) #TODO BUGGY
         if tuple(weights) not in self.qubo_cache:
             qubo = Converter.create_qubo(problem, weights)
             self.qubo_cache[tuple(weights)] = self._create_cost_operator(qubo)
-        
-        self.wire_names = Converter.get_variables(qubo)
-        print("*** SELF.WIRE_NAMES ***", self.wire_names)
         return self.qubo_cache[tuple(weights)]
 
     def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
@@ -45,6 +40,7 @@ class QAOA(PQC):
 
             summand = None
             for var in variables:
+                print(f"summand {summand}, type: {type(summand)}")
                 if summand and str(var) in summand.wires:
                     continue
                 encoded_var = (
@@ -56,22 +52,43 @@ class QAOA(PQC):
                 )
             result = result + summand if result else summand
         return result + const * qml.Identity(result.wires[0])
+    
+    # def _create_cost_operator(self, qubo: QUBO) -> qml.Hamiltonian:
+    # # print("jestem tutaj")
+    #     result = qml.Identity(0) - qml.Identity(0)
+    #     for variables, coeff in qubo.items():
+    #         if not variables:
+    #             result+= coeff *qml.Identity(0)
+    #             continue
+    #         tmp = coeff * (
+    #             0.5 * qml.Identity(str(variables[0]))
+    #             - 0.5 * qml.PauliZ(str(variables[0]))
+    #         )
+    #         used = set()
+    #         used.add(variables[0])
+    #         for variable in variables[1:]:
+    #             if variable in used:
+    #                 continue
+    #             used.add(variable)
+    #             tmp = tmp @ (
+    #                 0.5 * qml.Identity(str(variable))
+    #                 - 0.5 * qml.PauliZ(str(variable))
+    #             )
+    #         result += tmp
+    #     return result
 
     def _hadamard_layer(self, problem: Problem) -> None:
-        print("*** SELF.WIRE_NAMES HL ***", self.wire_names)
-        for i in self.wire_names:
+        for i in problem.variables:
             qml.Hadamard(str(i))
 
     def _create_mixing_hamiltonian(self, problem: Problem) -> qml.Hamiltonian:
-        print("*** SELF.WIRE_NAMES CMH***", self.wire_names)
         if self.mixer not in MIXERS_BY_NAME:
             raise Exception(f"Unknown {self.mixer} mixer")
-        return MIXERS_BY_NAME[self.mixer]([str(v) for v in self.wire_names])
+        return MIXERS_BY_NAME[self.mixer]([str(v) for v in problem.variables])
 
     def _circuit(self, problem: Problem, params: npt.NDArray[np.float64],
                  cost_operator: qml.Hamiltonian) -> None:
 
-        print("*** SELF.WIRE_NAMES CIRCUIT***", self.wire_names)
         def qaoa_layer(gamma: list[float], beta: list[float]) -> None:
             qml.qaoa.cost_layer(gamma, cost_operator)
             qml.qaoa.mixer_layer(
@@ -112,10 +129,8 @@ class QAOA(PQC):
         def probability_circuit(params: npt.NDArray[np.float64]
                                 ) -> list[float]:
             self._circuit(problem, params, cost_operator)
-            # return cast(list[float], #todo Justyna
-            #             qml.probs(wires=[str(x) for x in self.wire_names]))
             return cast(list[float],
-                        qml.probs(wires=self.wire_names))
+                        qml.probs(wires=[str(x) for x in problem.variables]))
 
         return cast(Callable[[npt.NDArray[np.float64]], list[float]],
                     probability_circuit)
@@ -126,11 +141,8 @@ class QAOA(PQC):
         opt_args: npt.NDArray[np.float64],
         hyper_args: npt.NDArray[np.float64]
     ) -> float:
-        
-        cost_operator = self.create_qubo(problem, list(hyper_args)) #todo THIS IS BUGGY!!!
-        
         self.dev = qml.device(
-            self.backend, wires=self.wire_names)
+            self.backend, wires=[str(x) for x in problem.variables])
         results = self.get_expval_circuit(problem, list(hyper_args))(
             opt_args.reshape(2, -1))
         return OptimizationResult(results, opt_args)
@@ -142,11 +154,11 @@ class QAOA(PQC):
         hyper_args: npt.NDArray[np.float64]
     ) -> dict[str, float]:
         self.dev = qml.device(
-            self.backend, wires=self.wire_names)
+            self.backend, wires=[str(x) for x in problem.variables])
         probs = self.get_probs_func(problem, list(hyper_args))(
             opt_args.reshape(2, -1))
         return {
-            format(result, 'b').zfill(len(self.wire_names)): float(prob)
+            format(result, 'b').zfill(len(problem.variables)): float(prob)
             for result, prob in enumerate(probs)
         }
 
