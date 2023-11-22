@@ -91,16 +91,24 @@ class Converter:
         results: QUBO, constraint: Constraint, weight: list[float]
     ) -> QUBO:
         constraints_unbalanced = copy.deepcopy(constraint.lhs)
-        constraints_unbalanced[tuple()] = -constraint.rhs
+
+        if tuple() in constraints_unbalanced:
+            constraints_unbalanced[tuple()] -= constraint.rhs
+        else:
+            constraints_unbalanced[tuple()] = -constraint.rhs
 
         linear = multiply_dict_by_constant(constraints_unbalanced, weight[0])
 
         results = Converter.add_dicts(results, linear)
 
-        quadratic = multiply_dicts_sorted(linear, linear)
+        quadratic = multiply_dicts_sorted(
+            constraints_unbalanced, constraints_unbalanced
+        )
+
         quadratic_with_weight = multiply_dict_by_constant(quadratic, weight[1])
 
-        return Converter.add_dicts(results, quadratic_with_weight)
+        final_results = Converter.add_dicts(results, quadratic_with_weight)
+        return final_results
 
     @staticmethod
     def add_dicts(dict_1: QUBO, dict_2: QUBO) -> QUBO:
@@ -150,14 +158,6 @@ class Converter:
                 results[key] = objective_function_weight * value
 
         # 2. Process constraints
-        # if len(weights) != len(problem.constraints) + 1:
-        #     raise Exception(
-        #         f"Expected {len(problem.constraints)+1} weights, "
-        #         f"got {len(weights)} (weights: {weights}))"
-        #     )
-
-        # for weight, constraint in zip(constraints_weights, problem.constraints):
-
         constraints_weights = weights[1:]
         for weight, constraint in Converter.assign_weights_to_constraints(
             constraints_weights, problem.constraints
