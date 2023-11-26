@@ -125,7 +125,7 @@ class CEM(Optimizer):
                 if self.verbose:
                     print(f'New best result: {results[elite_ids[0]].value}')
 
-                best_hyperparams = best_hyperparams
+                best_hyperparams = hyperparams[elite_ids[0]]
                 best_result = results[elite_ids[0]]
             history.append([OptimizationResult(res.value, params, [[res]])
                             for res, params in zip(results, hyperparams)])
