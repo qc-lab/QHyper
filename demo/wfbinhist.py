@@ -187,7 +187,7 @@ steps=6
 solver_config = {
     "optimizer": {
         "type": "scipy",
-        "maxfun": 500,
+        "maxfun": 2000,
         "verbose":True,
        
     },
