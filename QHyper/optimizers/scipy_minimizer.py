@@ -87,6 +87,7 @@ class ScipyOptimizer(Optimizer):
             callback=callback,
             **self.optimizer_kwargs
         )
+        
         if self.verbose:
             print(result.success, result.message)
             
