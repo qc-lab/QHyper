@@ -195,12 +195,23 @@ steps=50
 #     },
 #     "params_inits": params_config
 # }
+
+import pickle
+#np.random.seed(None)
+with open("./demo/randomstate.pkl", 'wb') as f:  # open a text file
+   rstate=np.random.get_state()
+   pickle.dump(rstate,f)
+with open('./demo/randomstate.pkl','rb') as f:
+    rstate = pickle.load(f)
+    np.random.set_state(rstate)
+print("Rsatet",rstate)
+
 solver_config = {
     "optimizer": {
         "type": "random",
-        "number_of_samples": 1,
+        "number_of_samples": 1000,
         "bounds": 12*[(0, 2*np.pi)],
-        "processes": 5,
+        "processes": 12,
         "verbose": True,
     },
     "pqc": {
