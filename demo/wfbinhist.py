@@ -188,6 +188,8 @@ solver_config = {
     "optimizer": {
         "type": "scipy",
         "maxfun": 200,
+        "iprint":101
+   #     'disp': True
     },
     "pqc": {
         "type": "qaoa",
