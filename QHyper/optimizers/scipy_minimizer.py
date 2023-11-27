@@ -87,6 +87,8 @@ class ScipyOptimizer(Optimizer):
             callback=callback,
             **self.optimizer_kwargs
         )
+        if self.verbose:
+            print(f"Success: {result.success}. Message: {result.message}")
 
         return OptimizationResult(
             result.fun, result.x.reshape(np.array(init).shape),
