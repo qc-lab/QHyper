@@ -168,8 +168,10 @@ for constraint in problem.constraints:
 #ang=0.1e-13
 layers=6
 params_config = {
-   'angles': [[1.9482571 , 4.22547202, 4.10868492, 5.78015643, 4.14166477,  3.87384822], 
-              [0.90438533, 2.51780911, 1.79309785, 2.46553493,  1.37552044, 1.04574133]] ,
+   'angles': [[3.82385109, 4.09954393, 4.38949407, 6.08155841, 3.34068749,
+        2.14247146],
+       [0.83018559, 1.57345653, 4.87099673, 1.45376835, 2.39224861,
+        1.05206995]],
        #'angles': [[0.1e-13,0.1,0.1e-13,0.1e-13,0.1e-13,0.1e13], [np.pi/2]*6], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
    #'angles':[[ang]*layers, [np.pi/2]*layers],
     
@@ -181,7 +183,18 @@ params_config = {
 }
 
 from QHyper.solvers import VQA
-steps=50
+steps=20
+# solver_config = {
+#     "optimizer": {
+#         "type": "scipy",
+#         "maxfun": 200,
+#     },
+#     "pqc": {
+#         "type": "qaoa",
+#         "layers": 6
+#     },
+#     "params_inits": params_config
+# }
 solver_config = {
     "pqc": {
         "type": "qml_qaoa",
