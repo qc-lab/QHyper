@@ -183,34 +183,37 @@ params_config = {
 }
 
 from QHyper.solvers import VQA
-steps=30
-# solver_config = {
-#     "optimizer": {
-#         "type": "scipy",
-#         "maxfun": 200,
-#         "verbose":True
-#    #     'disp': True
-#     },
-#     "pqc": {
-#         "type": "qaoa",
-#         "layers": 6
-#     },
-#     "params_inits": params_config
-# }
+steps=6
 solver_config = {
+    "optimizer": {
+        "type": "scipy",
+        "maxfun": 200,
+        "verbose":True,
+       
+    },
     "pqc": {
-        "type": "qml_qaoa",
-        "layers": layers,
-        "optimizer": "qng",
-        "optimizer_args": {
-            "stepsize": 0.0004,
-            "steps": steps,
-            "verbose": True,
-        },
-        "backend": "default.qubit",
+        "type": "wfqaoa",
+        "layers": 6,  
+        #"limit_results": 30,
+        "penalty": 200,
+        
     },
     "params_inits": params_config
 }
+# solver_config = {
+#     "pqc": {
+#         "type": "qml_qaoa",
+#         "layers": layers,
+#         "optimizer": "qng",
+#         "optimizer_args": {
+#             "stepsize": 0.0004,
+#             "steps": steps,
+#             "verbose": True,
+#         },
+#         "backend": "default.qubit",
+#     },
+#     "params_inits": params_config
+# }
 vqa = VQA.from_config(problem, config=solver_config)
 
 
