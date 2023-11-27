@@ -199,14 +199,13 @@ solver_config = {
     "optimizer": {
         "type": "random",
         "number_of_samples": 1,
-        "bounds": 6*[(0, 2*np.pi)],
+        "bounds": 12*[(0, 2*np.pi)],
         "processes": 5,
         "verbose": True,
     },
     "pqc": {
         "type": "wfqaoa",
-        "layers": layers,
-        "penalty": 200,
+        "layers": layers
     },
     "params_inits": params_config
 }
@@ -218,7 +217,7 @@ solver_results = vqa.solve()
 from QHyper.util import (
     weighted_avg_evaluation, sort_solver_results, add_evaluation_to_results)
 
-print(f"Best params: {solver_results.params}")
+print(f"Best params random: {solver_results.params}")
 # Evaluate results with weighted average evaluation
 print("Evaluation:")
 print(weighted_avg_evaluation(
@@ -237,14 +236,47 @@ for result, (probability, evaluation) in results_with_evaluation.items():
     print(f"Result: {result}, "
           f"Prob: {probability:.5}, "
           f"Evaluation: {evaluation}")
-
+tester_config = {
+    "optimizer": {
+        "type": "scipy",
+        "maxfun": 200,
+        "verbose": True
+    },
+    "pqc": {
+        "type": "wfqaoa",
+        "layers": 6,
+        "limit_results": 30,
+        "penalty": 200,
+    },
+    "params_inits": solver_results.params
+}
 # tester_config = {
 #     'pqc': {
 #         'type': 'qaoa',
 #         'layers': layers,
 #     }
 # }
-# tester = VQA.from_config(problem, config=tester_config)
+tester = VQA.from_config(problem, config=tester_config)
+tester_results = tester.solve()
+print(f"Best params: {tester_results.params}")
+# Evaluate results with weighted average evaluation
+print("Evaluation:")
+print(weighted_avg_evaluation(
+    tester_results.results_probabilities, problem.get_score,
+    penalty=0, limit_results=64, normalize=True
+))
+print("Sort results:")
+sorted_results2 = sort_solver_results(
+    tester_results.results_probabilities, limit_results=64)
+
+# Add evaluation to results
+results_with_evaluation2 = add_evaluation_to_results(
+    sorted_results2, problem.get_score, penalty=0)
+
+for result, (probability, evaluation) in results_with_evaluation2.items():
+    print(f"Result: {result}, "
+          f"Prob: {probability:.5}, "
+          f"Evaluation: {evaluation}")
 # import pandas as pd
 # import matplotlib.pyplot as plt
 
