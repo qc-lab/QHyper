@@ -8,7 +8,7 @@ for i in range(steps):
     
     res=pd.read_csv("probability_step"+str(i)+".csv").sort_values('result')
     print(res.results)
-    res.plot(x='result', y='prop', kind='bar',ylim=(0, 0.05))
+    res.plot(x='result', y='prop', kind='bar',ylim=(0, 0.3))
     
     plt.savefig("probability_stepr"+str(i)+".png")
     plt.close()

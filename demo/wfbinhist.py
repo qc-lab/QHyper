@@ -252,6 +252,7 @@ for i in range(steps):
     res.to_csv(".\demo\wynikirob\probability_step"+str(i+1)+".csv")
     
     res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
+    res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
     
 # Import matplotlib
     plt.savefig(".\demo\wynikirob\probability_step"+str(i+1)+".png")
