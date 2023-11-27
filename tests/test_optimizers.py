@@ -44,11 +44,9 @@ def test_scipy():
             "optimizer": {
                 "type": "scipy",
                 "maxfun": 10,
-                "optimizer_kwargs": {
-                    'method': 'L-BFGS-B',
-                    'options': {
-                        'maxiter': 10,
-                    }
+                'method': 'L-BFGS-B',
+                'options': {
+                    'maxiter': 10,
                 }
             },
             "params_inits": params_config,

@@ -18,22 +18,22 @@ class ScipyOptimizer(Optimizer):
     bounds : list[tuple[float, float]] or None
         A list of tuples specifying the lower and upper bounds for each
         dimension of the search space, or None if no bounds are provided.
-    optimizer_kwargs : dict[str, Any]
-        Additional keyword arguments for the SciPy minimizer.
-        https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     verbose : bool
         If set to True, additional information will be printed (default False).
+    kwargs : dict[str, Any]
+        Additional keyword arguments for the SciPy minimizer.
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     """
     def __init__(
             self,
             maxfun: int,
             bounds: Optional[list[tuple[float, float]]] = None,
-            optimizer_kwargs: dict[str, Any] = {},
             verbose: bool = False,
+            **kwargs: Any
     ) -> None:
         self.maxfun = maxfun
         self.bounds = bounds
-        self.optimizer_kwargs = optimizer_kwargs
+        self.optimizer_kwargs = kwargs
         self.verbose = verbose
 
     def minimize(
