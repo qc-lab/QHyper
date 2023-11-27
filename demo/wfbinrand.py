@@ -165,13 +165,12 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
 ##ang= (2*np.pi)/(3791-25)
 ##print(ang)
-#ang=0.1e-13
+ang=0.1e-13
 layers=6
 params_config = {
-   'angles': [[1.9482571 , 4.22547202, 4.10868492, 5.78015643, 4.14166477,  3.87384822], 
-              [0.90438533, 2.51780911, 1.79309785, 2.46553493,  1.37552044, 1.04574133]] ,
+   
        #'angles': [[0.1e-13,0.1,0.1e-13,0.1e-13,0.1e-13,0.1e13], [np.pi/2]*6], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
-   #'angles':[[ang]*layers, [np.pi/2]*layers],
+    'angles':[[ang]*layers, [np.pi/2]*layers],
     
     'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function
                           # we also have the deadline in the linear form (as of now it needs to be implemented this way due to QHyper limitations)
@@ -182,17 +181,32 @@ params_config = {
 
 from QHyper.solvers import VQA
 steps=50
+# solver_config = {
+#     "pqc": {
+#         "type": "qml_qaoa",
+#         "layers": layers,
+#         "optimizer": "qng",
+#         "optimizer_args": {
+#             "stepsize": 0.0001,
+#             "steps": steps,
+#             "verbose": True,
+#         },
+#         "backend": "default.qubit",
+#     },
+#     "params_inits": params_config
+# }
 solver_config = {
+    "optimizer": {
+        "type": "random",
+        "number_of_samples": 1000,
+        "bounds": 6*[(0, 2*np.pi)],
+        "processes": 5,
+        "verbose": True,
+    },
     "pqc": {
-        "type": "qml_qaoa",
+        "type": "wfqaoa",
         "layers": layers,
-        "optimizer": "qng",
-        "optimizer_args": {
-            "stepsize": 0.0001,
-            "steps": steps,
-            "verbose": True,
-        },
-        "backend": "default.qubit",
+        "penalty": 200,
     },
     "params_inits": params_config
 }
@@ -224,39 +238,39 @@ for result, (probability, evaluation) in results_with_evaluation.items():
           f"Prob: {probability:.5}, "
           f"Evaluation: {evaluation}")
 
-tester_config = {
-    'pqc': {
-        'type': 'qaoa',
-        'layers': layers,
-    }
-}
-tester = VQA.from_config(problem, config=tester_config)
-import pandas as pd
-import matplotlib.pyplot as plt
+# tester_config = {
+#     'pqc': {
+#         'type': 'qaoa',
+#         'layers': layers,
+#     }
+# }
+# tester = VQA.from_config(problem, config=tester_config)
+# import pandas as pd
+# import matplotlib.pyplot as plt
 
 
-for i in range(steps):
-    print(i+1,solver_results.history[0][i].params)
-    bp={'angles': (solver_results.history[0][i].params) , 'hyper_args': [1]}
+# for i in range(steps):
+#     print(i+1,solver_results.history[0][i].params)
+#     bp={'angles': (solver_results.history[0][i].params) , 'hyper_args': [1]}
     
-    #print(solver_results.history[0].params)
-    tester_results=tester.solve(bp)
-    #print(f"tester params: {tester_results.params}")
+#     #print(solver_results.history[0].params)
+#     tester_results=tester.solve(bp)
+#     #print(f"tester params: {tester_results.params}")
     
 
-    #Evaluate results with weighted average evaluation
-    en=list(map(problem.get_qaoa_energy,tester_results.results_probabilities.keys()))
+#     #Evaluate results with weighted average evaluation
+#     en=list(map(problem.get_qaoa_energy,tester_results.results_probabilities.keys()))
  
-    res=pd.DataFrame(data={'result': tester_results.results_probabilities.keys(),
-                       'prop': tester_results.results_probabilities.values(),'energy':en}).sort_values('energy')
-    res.to_csv(".\demo\wynikirob\probability_step"+str(i+1)+".csv")
+#     res=pd.DataFrame(data={'result': tester_results.results_probabilities.keys(),
+#                        'prop': tester_results.results_probabilities.values(),'energy':en}).sort_values('energy')
+#     res.to_csv(".\demo\wynikirob\probability_step"+str(i+1)+".csv")
     
-    res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
-    res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
+#     res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
+#     res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
     
-# Import matplotlib
-    plt.savefig(".\demo\wynikirob\probability_step"+str(i+1)+".png")
-    plt.close()
+# # Import matplotlib
+#     plt.savefig(".\demo\wynikirob\probability_step"+str(i+1)+".png")
+#     plt.close()
 
 
 
