@@ -165,11 +165,13 @@ for constraint in problem.constraints:
     print(f"    {constraint}")
 ##ang= (2*np.pi)/(3791-25)
 ##print(ang)
-ang=0.1e-13
-layers=5
+#ang=0.1e-13
+layers=6
 params_config = {
+   'angles': [[1.9482571 , 4.22547202, 4.10868492, 5.78015643, 4.14166477,  3.87384822], 
+              [0.90438533, 2.51780911, 1.79309785, 2.46553493,  1.37552044, 1.04574133]] ,
        #'angles': [[0.1e-13,0.1,0.1e-13,0.1e-13,0.1e-13,0.1e13], [np.pi/2]*6], # QAOA angles - first we have gammas (for the cost Hamiltonian), then we have betas (for the mixer)
-   'angles':[[ang]*layers, [np.pi/2]*layers],
+   #'angles':[[ang]*layers, [np.pi/2]*layers],
     
     'hyper_args': [1, # do not change - this should be the weight for the 'cost function' but since in our cost function
                           # we also have the deadline in the linear form (as of now it needs to be implemented this way due to QHyper limitations)
@@ -249,7 +251,7 @@ for i in range(steps):
                        'prop': tester_results.results_probabilities.values(),'energy':en}).sort_values('energy')
     res.to_csv(".\demo\wynikirob\probability_step"+str(i+1)+".csv")
     
-    res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.05))
+    res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
     
 # Import matplotlib
     plt.savefig(".\demo\wynikirob\probability_step"+str(i+1)+".png")
