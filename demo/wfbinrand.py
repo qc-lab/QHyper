@@ -206,7 +206,7 @@ solver_config = {
     "pqc": {
         "type": "wfqaoa",
         "layers": layers,
-        "penalty": 200,
+        "penalty": 0,
     },
     "params_inits": params_config
 }
