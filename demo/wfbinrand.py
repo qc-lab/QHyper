@@ -198,7 +198,7 @@ steps=50
 solver_config = {
     "optimizer": {
         "type": "random",
-        "number_of_samples": 1000,
+        "number_of_samples": 1,
         "bounds": 6*[(0, 2*np.pi)],
         "processes": 5,
         "verbose": True,
@@ -206,7 +206,7 @@ solver_config = {
     "pqc": {
         "type": "wfqaoa",
         "layers": layers,
-        "penalty": 0,
+        "penalty": 200,
     },
     "params_inits": params_config
 }
