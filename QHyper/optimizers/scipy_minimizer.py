@@ -89,7 +89,7 @@ class ScipyOptimizer(Optimizer):
         )
         
         if self.verbose:
-            print(result.success, result.message)
+            print(result.success,  result.message)
             
         return OptimizationResult(
             result.fun, result.x.reshape(np.array(init).shape),
