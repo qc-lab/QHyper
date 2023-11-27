@@ -168,6 +168,7 @@ for constraint in problem.constraints:
 #ang=0.1e-13
 layers=6
 params_config = {
+    
    'angles': [[3.82385109, 4.09954393, 4.38949407, 6.08155841, 3.34068749,
         2.14247146],
        [0.83018559, 1.57345653, 4.87099673, 1.45376835, 2.39224861,
@@ -185,12 +186,12 @@ params_config = {
 from QHyper.solvers import VQA
 steps=6
 solver_config = {
-    "optimizer": {
-        "type": "scipy",
-        "maxfun": 2000,
-        "verbose":True,
+    # "optimizer": {
+    #     "type": "scipy",
+    #     "maxfun": ,
+    #     "verbose":True,
        
-    },
+    # },
     "pqc": {
         "type": "wfqaoa",
         "layers": 6,  
