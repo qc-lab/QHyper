@@ -91,6 +91,5 @@ class ScipyOptimizer(Optimizer):
             print(f"Success: {result.success}. Message: {result.message}")
 
         return OptimizationResult(
-            result.fun, result.x.reshape(np.array(init).shape),
-            history
+            result.fun, result.x.reshape(np.array(init).shape), [history]
         )
