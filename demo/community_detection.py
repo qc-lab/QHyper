@@ -13,7 +13,9 @@ problem =CommunityDetectionProblem(
             network_data=KarateClubNetwork(resolution=RESOLUTION),
             communities=1
         )
-#print(problem.objective_function)
+
+print(problem.objective_function)
+print("-------------------------")
 #print(problem.constraints)
 qubo = Converter.create_qubo(problem, weights=[1])
 #print(qubo)
