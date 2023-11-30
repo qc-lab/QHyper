@@ -271,13 +271,13 @@ for i in range(steps):
  
     res=pd.DataFrame(data={'result': tester_results.results_probabilities.keys(),
                        'prop': tester_results.results_probabilities.values(),'energy':en}).sort_values('energy')
-    res.to_csv(".\demo\wynikirob\probability_steprr"+str(i+1)+".csv")
+    res.to_csv("./demo/wynikirob/probability_step"+str(i+1)+".csv")
     
     res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
     res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
     
 # Import matplotlib
-    plt.savefig(".\demo\wynikirob\probability_step"+str(i+1)+".png")
+    plt.savefig("./demo/wynikirob/probability_step"+str(i+1)+".png")
     plt.close()
 
 
