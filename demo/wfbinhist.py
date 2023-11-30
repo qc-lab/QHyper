@@ -188,36 +188,36 @@ params_config = {
 
 from QHyper.solvers import VQA
 steps=6
-solver_config = {
-    "optimizer": {
-        "type": "scipy",
-        "maxfun": 2000,
-        "verbose":True,
-       
-    },
-    "pqc": {
-        "type": "wfqaoa",
-        "layers": 6,  
-        #"limit_results": 30,
-        "penalty": 200,
-        
-    },
-    "params_inits": params_config
-}
 # solver_config = {
+#     "optimizer": {
+#         "type": "scipy",
+#         "maxfun": 200,
+#         "verbose":True,
+       
+#     },
 #     "pqc": {
-#         "type": "qml_qaoa",
-#         "layers": layers,
-#         "optimizer": "qng",
-#         "optimizer_args": {
-#             "stepsize": 0.0004,
-#             "steps": steps,
-#             "verbose": True,
-#         },
-#         "backend": "default.qubit",
+#         "type": "wfqaoa",
+#         "layers": 6,  
+#         #"limit_results": 30,
+#         "penalty": 200,
+        
 #     },
 #     "params_inits": params_config
 # }
+solver_config = {
+    "pqc": {
+        "type": "qml_qaoa",
+        "layers": layers,
+        "optimizer": "qng",
+        "optimizer_args": {
+            "stepsize": 0.0004,
+            "steps": steps,
+            "verbose": True,
+        },
+        "backend": "default.qubit",
+    },
+    "params_inits": params_config
+}
 vqa = VQA.from_config(problem, config=solver_config)
 
 
@@ -271,7 +271,7 @@ for i in range(steps):
  
     res=pd.DataFrame(data={'result': tester_results.results_probabilities.keys(),
                        'prop': tester_results.results_probabilities.values(),'energy':en}).sort_values('energy')
-    res.to_csv(".\demo\wynikirob\probability_step"+str(i+1)+".csv")
+    res.to_csv(".\demo\wynikirob\probability_steprr"+str(i+1)+".csv")
     
     res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
     res.plot(x='energy', y='prop', kind='bar',ylim=(0, 0.3))
