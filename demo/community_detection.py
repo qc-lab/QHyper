@@ -14,8 +14,8 @@ problem =CommunityDetectionProblem(
             communities=1
         )
 
-print(problem.objective_function)
-print("-------------------------")
+#print(problem.objective_function)
+#print("-------------------------")
 #print(problem.constraints)
 qubo = Converter.create_qubo(problem, weights=[1])
 #print(qubo)
