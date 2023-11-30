@@ -14,4 +14,5 @@ class Dummy(Optimizer):
             func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
             init: npt.NDArray[np.float64]
     ) -> OptimizationResult:
-        return func(init)
+        result = func(init)
+        return OptimizationResult(result.value, result.params, [[result]])
