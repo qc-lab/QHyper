@@ -94,8 +94,21 @@ def calc_slack_coefficients(constant: int) -> list[int]:
 
 
 class WorkflowSchedulingProblem(Problem):
+    def __new__(
+            self, encoding: str, tasks_file: str,
+            machines_file: str, deadline: float
+    ) -> None:
+        workflow = Workflow(tasks_file, machines_file, deadline)
+
+        if encoding == "one-hot":
+            return WorkflowSchedulingOneHot(workflow)
+        elif encoding == "binary":
+            return WorkflowSchedulingBinary(workflow)
+
+
+class WorkflowSchedulingOneHot(Problem):
     def __init__(self, workflow: Workflow):
-        self.workflow: Workflow = workflow
+        self.workflow = workflow
         self.variables: tuple[sympy.Symbol] = sympy.symbols(
             " ".join(
                 [
@@ -212,7 +225,7 @@ class WorkflowSchedulingProblem(Problem):
 
 class WorkflowSchedulingBinary(Problem):
     def __init__(self, workflow: Workflow):
-        self.workflow: Workflow = workflow
+        self.workflow = workflow
         self.variables: tuple[sympy.Symbol] = sympy.symbols(
             " ".join(
                 [
