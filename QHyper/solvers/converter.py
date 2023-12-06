@@ -203,7 +203,7 @@ class Converter:
     @staticmethod
     def to_cqm(problem: Problem) -> ConstrainedQuadraticModel:
         binary_polynomial = dimod.BinaryPolynomial(
-            problem.objective_function, dimod.BINARY
+            problem.objective_function.dictionary, dimod.BINARY
         )
         cqm = dimod.make_quadratic_cqm(binary_polynomial)
 
