@@ -66,13 +66,11 @@ class Workflow:
                     task["task"].runtime
                     * old_machine.cpu_speed
                     * old_machine.cpu_cores
-                    * 10**6
                 )
                 # todo can this overflow?
                 real_runtime = number_of_operations / (
                     machine_details.cpu["speed"]
                     * machine_details.cpu["count"]
-                    * 10**6
                 )
                 machine_runtime.append(real_runtime)
                 machine_cost.append(real_runtime * machine_details.price)
