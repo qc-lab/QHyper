@@ -63,14 +63,11 @@ class Workflow:
             for task_name, task in self.tasks:
                 old_machine = task["task"].machine
                 number_of_operations = (
-                    task["task"].runtime
-                    * old_machine.cpu_speed
-                    * old_machine.cpu_cores
+                    task["task"].runtime * old_machine.cpu_speed * old_machine.cpu_cores
                 )
                 # todo can this overflow?
                 real_runtime = number_of_operations / (
-                    machine_details.cpu["speed"]
-                    * machine_details.cpu["count"]
+                    machine_details.cpu["speed"] * machine_details.cpu["count"]
                 )
                 machine_runtime.append(real_runtime)
                 machine_cost.append(real_runtime * machine_details.price)
@@ -93,8 +90,7 @@ def calc_slack_coefficients(constant: int) -> list[int]:
 
 class WorkflowSchedulingProblem(Problem):
     def __new__(
-            self, encoding: str, tasks_file: str,
-            machines_file: str, deadline: float
+        self, encoding: str, tasks_file: str, machines_file: str, deadline: float
     ) -> None:
         workflow = Workflow(tasks_file, machines_file, deadline)
 
@@ -107,16 +103,11 @@ class WorkflowSchedulingProblem(Problem):
 class WorkflowSchedulingOneHot(Problem):
     def __init__(self, workflow: Workflow):
         self.workflow = workflow
-        self.variables: tuple[sympy.Symbol] = sympy.symbols(
-            " ".join(
-                [
-                    f"x{i}"
-                    for i in range(
-                        len(self.workflow.tasks) * len(self.workflow.machines)
-                    )
-                ]
+        self.variables: tuple[sympy.Symbol] = sympy.symbols(" ".join([
+            f"x{i}" for i in range(
+                len(self.workflow.tasks) * len(self.workflow.machines)
             )
-        )
+        ]))
         self._set_objective_function()
         self._set_constraints()
 
@@ -264,7 +255,8 @@ class WorkflowSchedulingBinary(Problem):
                         current_term *= self.variables[variable_id]
                     variable_id += 1
                 expression += (
-                    self.workflow.cost_matrix.loc[task_name, machine_name] * current_term
+                    self.workflow.cost_matrix.loc[task_name, machine_name]
+                    * current_term
                 )
 
         self.objective_function: Expression = Expression(expression)

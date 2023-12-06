@@ -40,15 +40,14 @@ class Converter:
         return slack_coefficients
 
     @staticmethod
-    def get_variables(qubo: QUBO) -> tuple[VARIABLES]:
+    def get_variables(qubo: QUBO) -> VARIABLES:
         tmp_list = []
 
         for key in qubo.keys():
             for var in key:
                 if var not in tmp_list and var != tuple():
                     tmp_list.append(var)
-        print("***  TMP LIST ****", tmp_list)
-        return tuple(tmp_list)
+        return tmp_list
 
     @staticmethod
     def use_slacks(constraint: Constraint) -> QUBO:
@@ -128,19 +127,19 @@ class Converter:
         # todo add error handling
         tmp_list = []
 
-        i = 0
+        idx = 0
         for constraint in constraints:
             if (
                 constraint.method_for_inequalities
                 == MethodsForInequalities.UNBALANCED_PENALIZATION
             ):
                 tmp_list.append(
-                    ([constraints_weights[i], constraints_weights[i + 1]], constraint)
+                    ([constraints_weights[idx], constraints_weights[idx + 1]], constraint)
                 )
-                i += 2
+                idx += 2
             else:
-                tmp_list.append((constraints_weights[i], constraint))
-                i += 1
+                tmp_list.append((constraints_weights[idx], constraint))
+                idx += 1
         return tmp_list
 
     @staticmethod

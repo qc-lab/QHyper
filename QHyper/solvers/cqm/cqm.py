@@ -25,8 +25,7 @@ class CQM(Solver):
         The maximum time allowed for the CQM solver.
     """
 
-    def __init__(
-            self, problem: Problem, time: float) -> None:
+    def __init__(self, problem: Problem, time: float) -> None:
         """
         Parameters
         ----------
