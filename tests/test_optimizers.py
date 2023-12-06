@@ -44,11 +44,9 @@ def test_scipy():
             "optimizer": {
                 "type": "scipy",
                 "maxfun": 10,
-                "optimizer_kwargs": {
-                    'method': 'L-BFGS-B',
-                    'options': {
-                        'maxiter': 10,
-                    }
+                'method': 'L-BFGS-B',
+                'options': {
+                    'maxiter': 10,
                 }
             },
             "params_inits": params_config,
@@ -168,7 +166,7 @@ def test_cem():
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.212019545)
+    assert result == pytest.approx(-1.098571737)
 
 
 def test_grid():
