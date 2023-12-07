@@ -36,6 +36,14 @@ class KarateClubNetwork(Network):
     def __init__(self, resolution: float = 1):
         super().__init__(nx.karate_club_graph(), resolution=resolution)
 
+class VerySimpleNetwork(Network):
+    def __init__(self, resolution: float = 1):
+        G = nx.Graph()
+        G.add_edges_from([(1, 2)])
+        G.add_edges_from([(2, 3)])
+        print(list(G.nodes))
+        print(list(G.edges))
+        super().__init__(G, resolution=resolution)
 
 class BrainNetwork(Network):
     def __init__(
@@ -128,6 +136,7 @@ class CommunityDetectionProblem(Problem):
         )
 
     def _set_objective_function(self) -> None:
+     
         equation: dict[VARIABLES, float] = {}
         for i in self.G.nodes:
             for j in range(i + 1, len(self.G.nodes)):
@@ -135,12 +144,13 @@ class CommunityDetectionProblem(Problem):
                     x_i, x_j = sympy.symbols(f"x{i}"), sympy.symbols(f"x{j}")
                     s_i = str(self._encode_discrete_to_one_hot(x_i, case_val))
                     s_j = str(self._encode_discrete_to_one_hot(x_j, case_val))
-                  #  print(s_i, "bla ", s_j)
+                    print(s_i, "bla ", s_j)
                     equation[(s_i, s_j)] = self.B[i, j]
 
         equation = {key: -1 * val for key, val in equation.items()}
 
         self.objective_function = Expression(equation)
+     
 
     def _set_one_hot_constraints(self, communities: int) -> None:
         ONE_HOT_CONST = -1
