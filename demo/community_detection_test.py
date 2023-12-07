@@ -43,7 +43,7 @@ from QHyper.problems.community_detection import \
 
 problem =CommunityDetectionProblem(
              network_data=VerySimpleNetwork(),
-             communities=3
+             communities=2
          )
 
 print(problem.objective_function)
