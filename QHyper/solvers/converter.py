@@ -1,7 +1,7 @@
 from typing import Any, cast
 
 import dimod
-from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
+from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel, BinaryQuadraticModel
 from QHyper.util import Expression
 from QHyper.problems.base import Problem
 from QHyper.util import QUBO, VARIABLES
@@ -50,14 +50,13 @@ class Converter:
     def create_weight_free_qubo(problem: Problem) -> QUBO:
         results: dict[VARIABLES, float] = {}
 
-        objective_function = Expression(problem.objective_function.polynomial)
-        for key, value in objective_function.as_dict().items():
+        # objective_function = Expression(problem.objective_function.polynomial)
+        for key, value in problem.objective_function.dictionary.items():
             if key in results:
                 results[key] += value
             else:
                 results[key] = value
         
-
         return results
 
     @staticmethod
@@ -126,3 +125,10 @@ class Converter:
                 )
 
         return dqm
+    
+    @staticmethod
+    def to_bqm(problem: Problem) -> BinaryQuadraticModel:
+        qubo = Converter.create_weight_free_qubo(problem)
+        bqm = BinaryQuadraticModel.from_qubo(qubo)
+
+        return bqm
