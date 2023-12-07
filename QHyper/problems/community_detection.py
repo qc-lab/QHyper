@@ -135,7 +135,7 @@ class CommunityDetectionProblem(Problem):
                     x_i, x_j = sympy.symbols(f"x{i}"), sympy.symbols(f"x{j}")
                     s_i = str(self._encode_discrete_to_one_hot(x_i, case_val))
                     s_j = str(self._encode_discrete_to_one_hot(x_j, case_val))
-                    print(s_i, "bla ", s_j)
+                  #  print(s_i, "bla ", s_j)
                     equation[(s_i, s_j)] = self.B[i, j]
 
         equation = {key: -1 * val for key, val in equation.items()}
