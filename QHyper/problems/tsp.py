@@ -5,7 +5,7 @@ import numpy as np
 
 from typing import cast
 
-from QHyper.util import Expression
+from QHyper.util import Expression, Constraint
 from .base import Problem
 
 
@@ -135,18 +135,18 @@ class TSPProblem(Problem):
         self.objective_function: Expression = Expression(equation)
 
     def _set_constraints(self) -> None:
-        self.constraints: list[Expression] = []
+        self.constraints: list[Constraint] = []
         for i in range(self.tsp_instance.number_of_cities):
             equation = cast(sympy.Expr, 1)
             for t in range(self.tsp_instance.number_of_cities):
                 equation -= self.variables[self._calc_bit(i, t)]
-            self.constraints.append(Expression(equation))
+            self.constraints.append(Constraint(Expression(equation), 0))
 
         for t in range(self.tsp_instance.number_of_cities):
             equation = cast(sympy.Expr, 1)
             for i in range(self.tsp_instance.number_of_cities):
                 equation -= self.variables[self._calc_bit(i, t)]
-        self.constraints.append(Expression(equation))
+        self.constraints.append(Constraint(Expression(equation), 0))
 
     def _get_distance(self, key: str) -> float:
         results = np.array_split(list(key), self.tsp_instance.number_of_cities)

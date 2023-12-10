@@ -15,10 +15,10 @@ def test_knapsack():
         Item(weight=1, value=1)
     ]
 
-    assert problem.objective_function.as_dict() == {
+    assert problem.objective_function.dictionary == {
         ('x0',): -2, ('x1',): -2, ('x2',): -1}
 
-    assert [constraint.as_dict() for constraint in problem.constraints] == [
+    assert [constraint.lhs for constraint in problem.constraints] == [
         {('x3',): -1, ('x4',): -1, (): 1},
         {('x0',): -1, ('x1',): -1, ('x2',): -1, ('x3',): 1, ('x4',): 2}
     ]
@@ -27,7 +27,7 @@ def test_knapsack():
 def test_TSP():
     problem = TSPProblem(number_of_cities=3)
 
-    assert problem.objective_function.as_dict() == {
+    assert problem.objective_function.dictionary == {
         ('x0', 'x4'): 0.591474650245022,
         ('x0', 'x5'): 1.0,
         ('x0', 'x7'): 0.591474650245022,
@@ -48,7 +48,7 @@ def test_TSP():
         ('x5', 'x7'): 0.842995170488782
     }
 
-    assert [constraint.as_dict() for constraint in problem.constraints] == [
+    assert [constraint.lhs for constraint in problem.constraints] == [
         {('x0',): -1, ('x3',): -1, ('x6',): -1, (): 1},
         {('x1',): -1, ('x4',): -1, ('x7',): -1, (): 1},
         {('x2',): -1, ('x5',): -1, ('x8',): -1, (): 1},

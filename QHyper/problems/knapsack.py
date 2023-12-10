@@ -5,7 +5,7 @@ from collections import namedtuple
 from typing import cast
 
 from .base import Problem
-from QHyper.util import Expression
+from QHyper.util import Expression, Constraint
 
 Item = namedtuple('Item', "weight value")
 
@@ -128,19 +128,19 @@ class KnapsackProblem(Problem):
         xs = [self.variables[i] for i in range(len(self.knapsack))]
         ys = [self.variables[i] for i in range(
             len(self.knapsack), len(self.knapsack) + self.knapsack.max_weight)]
-        self.constraints: list[Expression] = []
+        self.constraints: list[Constraint] = []
         equation = cast(sympy.Expr, 1)
         for y in ys:
             equation -= y
         # equation = equation
-        self.constraints.append(Expression(equation))
+        self.constraints.append(Constraint(Expression(equation), 0))
         equation = cast(sympy.Expr, 0)
         for i, y in enumerate(ys):
             equation += (i + 1)*y
         for i, x in enumerate(xs):
             equation += -(self.knapsack.items[i].weight)*x
         # equation = equation
-        self.constraints.append(Expression(equation))
+        self.constraints.append(Constraint(Expression(equation), 0))
 
     def get_score(self, result: str, penalty: float = 0) -> float:
         """Returns score of the provided outcome in bits
