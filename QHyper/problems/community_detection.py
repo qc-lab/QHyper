@@ -77,7 +77,7 @@ class CommunityDetectionProblem(Problem):
         in the graph
     """
 
-    def __init__(self, network_data: Network, communities: int = 2) -> None:
+    def __init__(self, network_data: Network, communities: int = 2, one_hot_encoding: bool = True) -> None:
         """
         Parameters
         ----------
@@ -86,6 +86,9 @@ class CommunityDetectionProblem(Problem):
         communities: int
             number of communities into which the graph shall be divided
             (default 2)
+        one_hot_encoding: bool
+            decides if objective function should be encoded to one-hot
+            values
         """
         self.G: nx.Graph = network_data.graph
         self.B: np.ndarray = network_data.modularity_matrix
@@ -95,6 +98,8 @@ class CommunityDetectionProblem(Problem):
             )
 
         self.cases: int = communities
+        self.one_hot_encoding: bool = one_hot_encoding
+        self.resolution: float = network_data.resolution
         self.variables: tuple[
             sympy.Symbol
         ] = self._encode_discretes_to_one_hots()
@@ -129,16 +134,28 @@ class CommunityDetectionProblem(Problem):
 
     def _set_objective_function(self) -> None:
         equation: dict[VARIABLES, float] = {}
+        _, degrees = zip(*dict(nx.degree(self.G)).items())
         for i in self.G.nodes:
-            for j in range(i + 1, len(self.G.nodes)):
+            for j in range(len(self.G.nodes)):
                 for case_val in range(self.cases):
                     x_i, x_j = sympy.symbols(f"x{i}"), sympy.symbols(f"x{j}")
-                    s_i = str(self._encode_discrete_to_one_hot(x_i, case_val))
-                    s_j = str(self._encode_discrete_to_one_hot(x_j, case_val))
-                    equation[(s_i, s_j)] = self.B[i, j]
+                    if self.one_hot_encoding:
+                        if i >= j:
+                            continue
+                        s_i = str(self._encode_discrete_to_one_hot(x_i, case_val))
+                        s_j = str(self._encode_discrete_to_one_hot(x_j, case_val))
+                        if s_i == s_j:
+                            continue
+                        equation[(s_i, s_j)] = self.B[i, j]
+                    else:
+                        x_i, x_j = str(x_i), str(x_j)
+                        equation[(x_i, x_j)] = self.B[i, j]
+                        if i == j:
+                            equation[(x_i, x_j)] -= ((1 - self.resolution) * 
+                                                      np.array(degrees, dtype=np.float32)[i])
 
         equation = {key: -1 * val for key, val in equation.items()}
-
+        
         self.objective_function = Expression(equation)
 
     def _set_one_hot_constraints(self, communities: int) -> None:

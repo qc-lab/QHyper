@@ -19,9 +19,9 @@ class Advantage(Solver):
         self.time: float = time
 
     def solve(self, params_inits: dict[str, Any] = {}) -> Any:
-        bqm = Converter.to_bqm(self.problem)
-        sampler = DWaveSampler(solver=dict(topology__type="pegasus"))
-        sampleset = EmbeddingComposite(sampler).sample(bqm)
+        sampler = DWaveSampler(region="eu-central-1", solver='Advantage_system5.4')
+        Q = self.problem.objective_function.dictionary
+        sampleset = EmbeddingComposite(sampler).sample_qubo(Q)
 
         return sampleset
 
