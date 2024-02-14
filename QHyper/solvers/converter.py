@@ -168,7 +168,11 @@ class Converter:
         ):
             if constraint.operator == Operator.EQ:
                 constraint_tmp = copy.deepcopy(constraint.lhs)
-                constraint_tmp[tuple()] = -constraint.rhs  # todo what to do with 0
+                 if tuple() in constraint_tmp:
+                    # todo what to do with 0
+                    constraint_tmp[tuple()] -= constraint.rhs
+                else:
+                    constraint_tmp[tuple()] = -constraint.rhs
 
                 quadratic = multiply_dicts_sorted(constraint_tmp, constraint_tmp)
                 quadratic_with_weight = multiply_dict_by_constant(quadratic, weight)
