@@ -168,7 +168,7 @@ class Converter:
         ):
             if constraint.operator == Operator.EQ:
                 constraint_tmp = copy.deepcopy(constraint.lhs)
-                 if tuple() in constraint_tmp:
+                if tuple() in constraint_tmp:
                     # todo what to do with 0
                     constraint_tmp[tuple()] -= constraint.rhs
                 else:
