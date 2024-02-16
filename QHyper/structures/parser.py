@@ -1,5 +1,5 @@
 import ast
-from typing import Any
+import sympy
 
 from QHyper.structures.polynomial import Polynomial
 
@@ -9,12 +9,8 @@ class ParserException(Exception):
 
 
 class Parser(ast.NodeVisitor):
-    def __init__(self) -> None:
-        self.polynomial: Polynomial = Polynomial()
-
     def visit_Expr(self, node: ast.Expr) -> None:
         visited = self.visit(node.value)
-
         return visited
 
     def visit_Constant(self, node: ast.Constant) -> Polynomial:
@@ -39,14 +35,36 @@ class Parser(ast.NodeVisitor):
         if isinstance(node.op, ast.Pow):
             return lhs ** rhs
 
-        raise ParserException(f"Unsupported operation: {node.op}")
+        raise ParserException(f"Unsupported operation: {lhs} {node.op} {rhs}")
 
-    def visit_UnaryOp(self, node: ast.UnaryOp) -> Any:  # todo what it really returns?
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> Polynomial:
         lhs = self.visit(node.operand)
 
         if isinstance(node.op, ast.USub):
             return -lhs
 
-        if isinstance(node.op, ast.UAdd):  # TODO - check if it is needed
+        if isinstance(node.op, ast.UAdd):
             return lhs
 
+        raise ParserException(f"Unsupported operation: {node.op}{lhs}")
+
+
+def to_sympy(poly: Polynomial) -> str:
+    polynomial = ""
+    for term, const in poly.terms.items():
+        if const < 0:
+            polynomial += f"{const}*"
+        else:
+            polynomial += f"+{const}*"
+        polynomial += "*".join(term)
+    return sympy.parse_expr(polynomial, evaluate=False)
+
+
+def from_str(equation: str) -> Polynomial:
+    parser = Parser()
+    ast_tree = ast.parse(equation)
+    return parser.visit(ast_tree)
+
+
+def from_sympy(equation: sympy.core.Expr) -> Polynomial:
+    return from_str(str(sympy.expand(equation)))

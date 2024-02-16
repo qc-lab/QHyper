@@ -3,6 +3,8 @@ from collections import defaultdict
 
 from typing import overload
 
+import sympy
+
 
 @dataclass
 class Polynomial:
@@ -16,7 +18,16 @@ class Polynomial:
                 continue
             self.terms[tuple(sorted(term))] += coefficient
 
-    def __add__(self, other: 'Polynomial') -> 'Polynomial':
+    @overload
+    def __add__(self, other: float | int) -> 'Polynomial': ...
+
+    @overload
+    def __add__(self, other: 'Polynomial') -> 'Polynomial': ...
+
+    def __add__(self, other: 'Polynomial | float | int') -> 'Polynomial':
+        if isinstance(other, (float, int)):
+            return Polynomial({tuple(): float(other)}) + self
+
         if not isinstance(other, Polynomial):
             raise TypeError(f"Unsupported operation: {self} + {other}")
 
@@ -27,7 +38,15 @@ class Polynomial:
 
         return Polynomial(new_terms)
 
-    def __sub__(self, other: 'Polynomial') -> 'Polynomial':
+    @overload
+    def __sub__(self, other: float | int) -> 'Polynomial': ...
+
+    @overload
+    def __sub__(self, other: 'Polynomial') -> 'Polynomial': ...
+
+    def __sub__(self, other: 'Polynomial | float | int') -> 'Polynomial':
+        if isinstance(other, (float, int)):
+            return Polynomial({tuple(): float(other)}) - self
         if not isinstance(other, Polynomial):
             raise TypeError(f"Unsupported operation: {self} - {other}")
 
@@ -38,7 +57,15 @@ class Polynomial:
 
         return Polynomial(new_terms)
 
-    def __mul__(self, other: 'Polynomial') -> 'Polynomial':
+    @overload
+    def __mul__(self, other: float | int) -> 'Polynomial': ...
+
+    @overload
+    def __mul__(self, other: 'Polynomial') -> 'Polynomial': ...
+
+    def __mul__(self, other: 'Polynomial | float | int') -> 'Polynomial':
+        if isinstance(other, (float, int)):
+            return Polynomial({tuple(): float(other)}) * self
         if not isinstance(other, Polynomial):
             raise TypeError(f"Unsupported operation: {self} * {other}")
 
@@ -70,3 +97,13 @@ class Polynomial:
         return Polynomial({
             term: -coefficient for term, coefficient in self.terms.items()
         })
+
+    def separate_const(self) -> tuple['Polynomial', float]:
+        constant = self.terms.pop(tuple(), 0)
+        return Polynomial(self.terms), constant
+
+    def degree(self) -> int:
+        return max(len(term) for term in self.terms)
+
+    def get_variables(self) -> set[str]:
+        return set(variable for term in self.terms for variable in term)

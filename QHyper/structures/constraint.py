@@ -1,8 +1,7 @@
-import ast
 import uuid
 from enum import Enum
 
-import sympy
+from QHyper.structures.polynomial import Polynomial
 
 
 class MethodsForInequalities(Enum):  # todo penalization method
@@ -16,64 +15,26 @@ class Operator(Enum):  # todo comparison operator
     LE = "<="
 
 
-class Expression:
-    def __init__(self, equation: dict) -> None:
-        if isinstance(equation, dict):
-            self.dictionary = equation
-        else:
-            raise Exception(
-                "Expression equation must be an instance of "
-                "sympy.core.Expr or dict, got of type: "
-                f"{type(equation)} instead"
-            )
-
-    def __repr__(self) -> str:
-        return str(self.dictionary)
-
-    def to_sympy(self) -> str:
-        polynomial = str()
-        for k in self.dictionary:
-            if self.dictionary[k] < 0:
-                polynomial += "- "
-            polynomial += str(abs(self.dictionary[k])) + "*"
-            polynomial += "*".join(k)
-            polynomial += " "
-        return polynomial.rstrip()
-
-    @staticmethod
-    def from_sympy(equation: sympy.core.Expr) -> "Expression":
-        parser = Parser()
-        ast_tree = ast.parse(str(sympy.expand(equation)))
-        parser.visit(ast_tree)
-        return Expression(parser.polynomial_as_dict)
-
 class Constraint:
     def __init__(
         self,
-        lhs: QUBO | Expression,
-        rhs: int | float,
+        lhs: Polynomial,
+        rhs: Polynomial,
         operator: Operator = Operator.EQ,
-        method_for_inequalities: MethodsForInequalities = MethodsForInequalities.SLACKS_LOG_2,
+        method_for_inequalities: MethodsForInequalities | None = None,
         label: str = "",
     ) -> None:
         """For now, we assume that the constraint is in the form of: sum of something <= number"""
-        self._set_lhs(lhs)
-        self.rhs: int | float = rhs
-        self.operator: Operator = operator  # for now it is only LE: number <= some polynomial without constants
-        self._set_label(label)
+        self.lhs: Polynomial = lhs
+        self.rhs: Polynomial = rhs
+        self.operator: Operator = operator
+
+        if operator != Operator.EQ and method_for_inequalities is None:
+            raise Exception(
+                f"Method for inequalities must be provided when operator is not =="
+            )
         self.method_for_inequalities = method_for_inequalities
-
-    def setup(
-        self,
-    ):
-        ...
-
-    def _set_lhs(self, lhs):
-        if isinstance(lhs, dict):
-            self.lhs: QUBO = lhs
-        elif isinstance(lhs, Expression):
-            # todo expression to dict
-            self.lhs: QUBO = lhs.dictionary  # todo
+        self._set_label(label)
 
     def _set_label(self, label: str) -> None:
         if label == "":
@@ -82,5 +43,3 @@ class Constraint:
 
     def __repr__(self) -> str:
         return f"{self.lhs} {self.operator.value} {self.rhs}"
-
-
