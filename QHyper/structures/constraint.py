@@ -8,6 +8,9 @@ class MethodsForInequalities(Enum):  # todo penalization method
     SLACKS_LOG_2 = 0
     UNBALANCED_PENALIZATION = 1
 
+SLACKS_LOG_2 = MethodsForInequalities.SLACKS_LOG_2
+UNBALANCED_PENALIZATION = MethodsForInequalities.UNBALANCED_PENALIZATION
+
 
 class Operator(Enum):  # todo comparison operator
     EQ = "=="
@@ -37,9 +40,7 @@ class Constraint:
         self._set_label(label)
 
     def _set_label(self, label: str) -> None:
-        if label == "":
-            self.label = f"s{uuid.uuid4().hex}"
-        self.label = label
+        self.label = label or f"s{uuid.uuid4().hex}"
 
     def __repr__(self) -> str:
         return f"{self.lhs} {self.operator.value} {self.rhs}"

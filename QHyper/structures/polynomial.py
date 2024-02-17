@@ -3,8 +3,6 @@ from collections import defaultdict
 
 from typing import overload
 
-import sympy
-
 
 @dataclass
 class Polynomial:
@@ -38,6 +36,9 @@ class Polynomial:
 
         return Polynomial(new_terms)
 
+    def __radd__(self, other: float | int) -> 'Polynomial':
+        return self + other
+
     @overload
     def __sub__(self, other: float | int) -> 'Polynomial': ...
 
@@ -56,6 +57,9 @@ class Polynomial:
             new_terms[term] -= coefficient
 
         return Polynomial(new_terms)
+
+    def __rsub__(self, other: float | int) -> 'Polynomial':
+        return -self + other
 
     @overload
     def __mul__(self, other: float | int) -> 'Polynomial': ...
@@ -79,6 +83,9 @@ class Polynomial:
                 new_terms[new_term] += new_coefficient
 
         return Polynomial(new_terms)
+
+    def __rmul__(self, other: float | int) -> 'Polynomial':
+        return self * other
 
     def __pow__(self, power: int) -> 'Polynomial':
         if not isinstance(power, int):
