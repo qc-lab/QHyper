@@ -110,15 +110,14 @@ class Converter:
             if s_j:
                 x_j = binary_to_discrete(*s_j)
                 xj_idx: int = cast(int, dqm.variables.index(x_j))
-                if xi_idx != xj_idx:
-                    dqm.set_quadratic(
-                        dqm.variables[xi_idx],
-                        dqm.variables[xj_idx],
-                        {
-                            (case, case): bias
-                            for case in range(problem.cases + BIN_OFFSET)
-                        },
-                    )
+                dqm.set_quadratic(
+                    dqm.variables[xi_idx],
+                    dqm.variables[xj_idx],
+                    {
+                        (case, case): bias
+                        for case in range(problem.cases + BIN_OFFSET)
+                    },
+                )
             else:
                 dqm.set_linear(
                     dqm.variables[xi_idx],

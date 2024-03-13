@@ -145,36 +145,19 @@ class CommunityDetectionProblem(Problem):
 
     def _set_objective_function(self) -> None:
         equation: dict[VARIABLES, float] = {}
-        _, degrees = zip(*dict(nx.degree(self.G)).items())
         for i in range(len(self.B)):
             for j in range(len(self.B)):
-                if len(self.B) != self.G.number_of_nodes():
-                    c_i, c_j = f"x{self.community[i]}", f"x{self.community[j]}"
-                    equation[(c_i, c_j)] = self.B[i, j]
-                    if i == j:
-                        equation[(c_i, c_j)] -= ((1 - self.resolution) * 
-                                        np.array(degrees, dtype=np.float32)[i])
-                else:
+                x_i, x_j = sympy.symbols(f"x{self.community[i]}"), sympy.symbols(f"x{self.community[j]}")
+                if self.one_hot_encoding:
+                    if i >= j:
+                        continue
                     for case_val in range(self.cases):
-                        x_i, x_j = sympy.symbols(f"x{self.community[i]}"), sympy.symbols(f"x{self.community[j]}")
-                        # TODO
-                        if self.one_hot_encoding:
-                            if i >= j:
-                                continue
-                            s_i = str(self._encode_discrete_to_one_hot(x_i, case_val))
-                            s_j = str(self._encode_discrete_to_one_hot(x_j, case_val))
-                            if s_i == s_j:
-                                continue
-                            equation[(s_i, s_j)] = self.B[i, j]
-                            equation[(s_j, s_i)] = self.B[j, i]
-                        else:
-                            x_i, x_j = str(x_i), str(x_j)
-                            equation[(x_i, x_j)] = self.B[i, j]
-                            if i == j:
-                                equation[(x_i, x_j)] -= ((1 - self.resolution) * 
-                                                            np.array(degrees, dtype=np.float32)[i])
-                                continue
-                            equation[(x_j, x_i)] = self.B[j, i]
+                        s_i = str(self._encode_discrete_to_one_hot(x_i, case_val))
+                        s_j = str(self._encode_discrete_to_one_hot(x_j, case_val))
+                        equation[(s_i, s_j)], equation[(s_j, s_i)] = self.B[i, j], self.B[j, i]
+                else:
+                    x_i, x_j = str(x_i), str(x_j)
+                    equation[(x_i, x_j)] = self.B[i, j]
 
         equation = {key: -1 * val for key, val in equation.items()}
 
