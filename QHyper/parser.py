@@ -1,7 +1,7 @@
 import ast
 import sympy
 
-from QHyper.structures.polynomial import Polynomial
+from QHyper.polynomial import Polynomial
 
 
 class ParserException(Exception):
@@ -9,9 +9,11 @@ class ParserException(Exception):
 
 
 class Parser(ast.NodeVisitor):
+    def __init__(self) -> None:
+        self.polynomial: Polynomial | None = None
+
     def visit_Expr(self, node: ast.Expr) -> None:
-        visited = self.visit(node.value)
-        return visited
+        self.polynomial = self.visit(node.value)
 
     def visit_Constant(self, node: ast.Constant) -> Polynomial:
         return Polynomial({tuple(): node.value})
@@ -63,7 +65,11 @@ def to_sympy(poly: Polynomial) -> str:
 def from_str(equation: str) -> Polynomial:
     parser = Parser()
     ast_tree = ast.parse(equation)
-    return parser.visit(ast_tree)
+    parser.visit(ast_tree)
+    if parser.polynomial is None:
+        raise ParserException(f"Failed to parse: {equation}")
+
+    return parser.polynomial
 
 
 def from_sympy(equation: sympy.core.Expr) -> Polynomial:

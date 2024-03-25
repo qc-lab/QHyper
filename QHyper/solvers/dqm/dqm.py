@@ -9,7 +9,7 @@ from typing import Any
 from dwave.system import LeapHybridDQMSampler
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
-from QHyper.solvers.converter import Converter
+from QHyper.converter import Converter
 
 DWAVE_API_TOKEN = os.environ.get("DWAVE_API_TOKEN")
 

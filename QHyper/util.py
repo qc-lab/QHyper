@@ -2,18 +2,7 @@
 # Smart Growth Operational Programme (2014-2020), Measure 4.2
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
-
-import ast
-import uuid
-from _ast import Compare
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Callable, Union, cast
-
-import sympy
-
-
-
+from typing import Callable
 
 
 def weighted_avg_evaluation(

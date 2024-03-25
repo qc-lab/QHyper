@@ -8,75 +8,59 @@ from typing import Any, Optional
 import gurobipy as gp
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
-from QHyper.solvers.converter import QUBO
+from QHyper.polynomial import Polynomial
+from QHyper.constraint import Operator
 
 
-def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:
+def polynomial_to_gurobi(gurobi_vars: dict[str, Any], poly: Polynomial) -> Any:
     cost_function: float = 0
-    for key, value in poly_dict.items():
+    for vars, coeff in poly.terms.items():
         tmp = 1
-        for k in key:
-            tmp *= vars[k]
-        cost_function += tmp * value
+        for v in vars:
+            tmp *= gurobi_vars[v]
+        cost_function += tmp * coeff
     return cost_function
 
 
 class Gurobi(Solver):  # todo works only for quadratic expressions
     def __init__(self, problem: Problem,
-                 params_inits: Optional[dict[str, Any]] = None) -> None:
+                 model_name: str = "") -> None:
         self.problem: Problem = problem
-        self.params_inits: Optional[dict[str, Any]] = params_inits
+        self.model_name: str = model_name
+        self.mip_gap: float | None = None
 
     def solve(self, params_inits: Optional[dict[str, Any]] = None) -> Any:
-        params_inits = params_inits or self.params_inits
-
-        name = params_inits.get("name", "name")
-        gpm = gp.Model(name)
-        if "MIPGap" in params_inits:
-            gpm.Params.MIPGap = params_inits["MIPGap"]
+        gpm = gp.Model(self.model_name)
+        if self.mip_gap:
+            gpm.Params.MIPGap = self.mip_gap
 
         vars = {
             str(var_name): gpm.addVar(vtype=gp.GRB.BINARY, name=str(var_name))
-            for var_name in self.problem.variables
+            for var_name in self.problem.objective_function.get_variables().union(
+                [con.get_variables() for con in self.problem.constraints]
+            )
         }
-        # gpm.update()
 
-        objective_function = calc(
-            vars, self.problem.objective_function.as_dict()
+        objective_function = polynomial_to_gurobi(
+            vars, self.problem.objective_function
         )
         gpm.setObjective(objective_function, gp.GRB.MINIMIZE)
 
         for i, constraint in enumerate(self.problem.constraints):
-            tmp_constraint = calc(vars, constraint.as_dict())
-            gpm.addConstr(tmp_constraint == 0, f"constr_{i}")
+            lhs = polynomial_to_gurobi(vars, constraint.lhs)
+            rhs = polynomial_to_gurobi(vars, constraint.rhs)
+            if constraint.operator == Operator.EQ:
+                gpm.addConstr(lhs == rhs, f"constr_{i}")
+            elif constraint.operator == Operator.LE:
+                gpm.addConstr(lhs <= rhs, f"constr_{i}")
+            elif constraint.operator == Operator.GE:
+                gpm.addConstr(lhs >= rhs, f"constr_{i}")
+
             gpm.update()
-
-        # eq_constraints = self.problem.constraints["=="]
-        # for i, constraint in enumerate(eq_constraints):
-        #     tmp_constraint = calc(vars, constraint.as_dict())
-        #     gpm.addConstr(tmp_constraint == 0, f"eq_constr_{i}")
-        #
-        # ltq_constraints = self.problem.constraints["<="]
-        # for i, constraint in enumerate(ltq_constraints):
-        #     tmp_constraint = calc(vars, constraint.as_dict())
-        #     gpm.addConstr(tmp_constraint <= 0, f"leq_constr_{i}")
-        #
-        # gtq_constraints = self.problem.constraints["<="]
-        # for i, constraint in enumerate(gtq_constraints):
-        #     tmp_constraint = calc(vars, constraint.as_dict())
-        #     gpm.addConstr(tmp_constraint >= 0, f"gtq_constr_{i}")
-
         gpm.optimize()
 
-        # print(dir(gpm))
-        # print("status ", gpm.Status)
-        # print("is optimal? ", GRB.OPTIMAL)
-        #
-        # allvars = gpm.getVars()
-        # for v in allvars[-1:]:
-        #     print(v.VarName)
-        #     print(v.X)
-        #     print(dir(v))
+        # print("Status ", gpm.Status)
+        # print("Is optimal? ", GRB.OPTIMAL)
 
         allvars = gpm.getVars()
         solution = {}

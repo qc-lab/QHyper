@@ -5,9 +5,11 @@
 
 from abc import ABC
 
-import sympy
+from QHyper.constraint import Constraint, Polynomial
 
-from QHyper.util import Expression, Constraint
+
+class ProblemException(Exception):
+    pass
 
 
 class Problem(ABC):
@@ -37,9 +39,8 @@ class Problem(ABC):
         (default 1 - denoting binary variable)
     """
 
-    objective_function: Expression
+    objective_function: Polynomial
     constraints: list[Constraint]
-    variables: tuple[sympy.Symbol]
     name: str = ""
     cases: int = 1
 
@@ -59,7 +60,7 @@ class Problem(ABC):
             Returns float indicating the score, if function should be
             maximized the returned value should be returned with negative sign
         """
-        raise Exception("Unimplemented")
+        raise NotImplementedError("Unimplemented")
 
     def __repr__(self) -> str:
         if self.name == "":

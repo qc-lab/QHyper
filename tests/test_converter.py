@@ -1,53 +1,44 @@
-from typing import cast
-
-import pytest
 import sympy
+from QHyper.polynomial import Polynomial
 
 from QHyper.problems.base import Problem
-from QHyper.solvers.converter import Converter
-from QHyper.util import Constraint, Expression, MethodsForInequalities, Operator
+from QHyper.parser import from_sympy
+from QHyper.converter import Converter
+from QHyper.constraint import Constraint, Operator, MethodsForInequalities
 
 
 class SimpleProblem(Problem):
-    def __init__(self, num_variables) -> None:
-        self.num_variables = num_variables
-        self.variables = sympy.symbols(
-            " ".join([f"x{i}" for i in range(self.num_variables)])
-        )
-        self.objective_function: Expression = None
-        self.constraints: list[Constraint] = []
-        self.method_for_inequalities = None
-
-    def set_objective_function(self, expression) -> None:
-        self.objective_function = Expression(expression)
-
-    def add_constraint(self, constraint) -> None:
-        self.constraints.append(constraint)
-
-    def set_method_for_inequalities(self, method: MethodsForInequalities) -> None:
-        self.method_for_inequalities = method
+    def __init__(self, objective_function,
+                 constraints, method_for_inequalities) -> None:
+        self.objective_function = objective_function
+        self.constraints = constraints
+        self.method_for_inequalities = method_for_inequalities
 
     def get_score(self, result: str, penalty: float = 0) -> float:
         # todo implement
         return 0
 
-def test_example_0():
-    problem = SimpleProblem(2)
-    expression = problem.variables[0] + problem.variables[1]
-    problem.set_objective_function(expression)
 
-    constraint_le_lhs = {("x0",): 1, ("x1",): 1}
-    constraint_le = Constraint(constraint_le_lhs, 1, Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "s",)
-    problem.add_constraint(constraint_le)
-    
-    constraint_le_lhs_1 = {("x0",): 1, ("x1",): 1}
-    constraint_le_1 = Constraint(constraint_le_lhs_1, 2, Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "t",)
-    problem.add_constraint(constraint_le_1)
-    
-    weights = [2, 4, 8]
+def test_example_0():
+    num_variables = 2
+    variables = sympy.symbols(
+        " ".join([f"x{i}" for i in range(num_variables)])
+    )
+    objective_function = from_sympy(variables[0] + variables[1])
+
+    constraint_le = Constraint(objective_function, Polynomial(1),
+                               Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "s",)
+
+    constraint_le_1 = Constraint(objective_function, Polynomial(2),
+                                 Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "t",)
+    problem = SimpleProblem(
+        objective_function, [constraint_le, constraint_le_1],
+        MethodsForInequalities.SLACKS_LOG_2)
+
+    weights = [2., 4., 8.]
     qubo = Converter.create_qubo(problem, weights)
-    
-    expected = {
+
+    expected = Polynomial({
         ('s_0', 'x0'): 8,
         ('s_0', 'x1'): 8,
         ('s_0', 's_0'): 4,
@@ -66,28 +57,32 @@ def test_example_0():
         ('x0', ): -38,
         ('x0', 'x1'): 24,
         ('x1', ): -38,
-        (): 36,     
-    }
+        (): 36,
+    })
     assert qubo==expected
-    
+
 
 def test_example_1():
-    problem = SimpleProblem(2)
-    expression = - (2 * problem.variables[0] + 5 * problem.variables[1] + problem.variables[0] * problem.variables[1])
-    problem.set_objective_function(expression)
+    num_variables = 2
+    variables = sympy.symbols(
+        " ".join([f"x{i}" for i in range(num_variables)])
+    )
+    objective_function = from_sympy(- (2 * variables[0] + 5 * variables[1] + variables[0] * variables[1]))
 
-    constraint_eq_lhs = {("x0",): 1, ("x1",): 1}
-    constraint_eq = Constraint(constraint_eq_lhs, 1, Operator.EQ)
-    problem.add_constraint(constraint_eq)
-    
-    constraint_le_lhs = {("x0",): 5, ("x1",): 2}
-    constraint_le = Constraint(constraint_le_lhs, 5, Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "s")
-    problem.add_constraint(constraint_le)
+    constraint_eq_lhs = Polynomial({("x0",): 1, ("x1",): 1})
+    constraint_eq = Constraint(constraint_eq_lhs, Polynomial(1), Operator.EQ)
 
-    weights = [1, 2, 3]
+    constraint_le_lhs = Polynomial({("x0",): 5, ("x1",): 2})
+    constraint_le = Constraint(constraint_le_lhs, Polynomial(5),
+                               Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "s")
+
+    problem = SimpleProblem(
+        objective_function, [constraint_eq, constraint_le],
+        MethodsForInequalities.SLACKS_LOG_2)
+    weights = [1., 2., 3.]
     qubo = Converter.create_qubo(problem, weights)
 
-    expected = {
+    expected = Polynomial({
         ("s_0", "x0"): 30,
         ("s_0", "x1"): 12,
         ("s_1", "x0"): 60,
@@ -109,94 +104,108 @@ def test_example_1():
         ("x0", "x1"): 63,
         ("x1",): -69,
         (): 77,
-    }
+    })
 
     assert qubo == expected
 
 
 def test_example_2():
-    problem = SimpleProblem(2)
-    expression = (
-        5 * problem.variables[0]
-        + 2 * problem.variables[1]
-        + problem.variables[0] * problem.variables[1]
+    num_variables = 2
+    variables = sympy.symbols(
+        " ".join([f"x{i}" for i in range(num_variables)])
     )
-    problem.set_objective_function(expression)
+    objective_function = from_sympy(
+        5 * variables[0]
+        + 2 * variables[1]
+        + variables[0] * variables[1]
+    )
 
-    constraint_le_lhs = {("x0",): 5, ("x1",): 2}
-    constraint_le = Constraint(constraint_le_lhs, 5, Operator.LE, MethodsForInequalities.UNBALANCED_PENALIZATION)
-    problem.add_constraint(constraint_le)
+    constraint_le_lhs = Polynomial({("x0",): 5, ("x1",): 2})
+    constraint_le = Constraint(constraint_le_lhs, Polynomial(5),
+                               Operator.LE, MethodsForInequalities.UNBALANCED_PENALIZATION)
 
-    weights = [1, 1, 1]
+    weights = [1., 1., 1.]
+    problem = SimpleProblem(
+        objective_function, [constraint_le],
+        MethodsForInequalities.SLACKS_LOG_2)
     qubo = Converter.create_qubo(problem, weights)
 
-    expected = {
+    expected = Polynomial({
         ("x0", "x0"): 25,
         ("x0", "x1"): 21,
         ("x0",): -40,
         ("x1", "x1"): 4,
         ("x1",): -16,
         (): 20,
-    }
+    })
 
     assert qubo == expected
 
 
 def test_example_3():
-    problem = SimpleProblem(2)
-    expression = (
-        5 * problem.variables[0]
-        + 2 * problem.variables[1]
-        + problem.variables[0] * problem.variables[1]
+    num_variables = 2
+    variables = sympy.symbols(
+        " ".join([f"x{i}" for i in range(num_variables)])
     )
-    problem.set_objective_function(expression)
+    objective_function = from_sympy(
+        5 * variables[0]
+        + 2 * variables[1]
+        + variables[0] * variables[1]
+    )
 
-    constraint_le_lhs = {("x0",): 5, ("x1",): 2}
-    constraint_le = Constraint(constraint_le_lhs, 5, Operator.LE, MethodsForInequalities.UNBALANCED_PENALIZATION)
-    problem.add_constraint(constraint_le)
+    constraint_le_lhs = Polynomial({("x0",): 5, ("x1",): 2})
+    constraint_le = Constraint(constraint_le_lhs, Polynomial(5),
+                               Operator.LE, MethodsForInequalities.UNBALANCED_PENALIZATION)
 
-    constraint_le_lhs_2 = {("x0",): 3, ("x1",): 4}
-    constraint_le_2 = Constraint(constraint_le_lhs_2, 7, Operator.LE, MethodsForInequalities.UNBALANCED_PENALIZATION)
-    problem.add_constraint(constraint_le_2)
+    constraint_le_lhs_2 = Polynomial({("x0",): 3, ("x1",): 4})
+    constraint_le_2 = Constraint(constraint_le_lhs_2, Polynomial(7),
+                                 Operator.LE, MethodsForInequalities.UNBALANCED_PENALIZATION)
 
-    weights = [1, 1, 1, 1, 1]
+    problem = SimpleProblem(
+        objective_function, [constraint_le, constraint_le_2],
+        MethodsForInequalities.UNBALANCED_PENALIZATION)
+    weights = [1., 1., 1., 1., 1.]
     qubo = Converter.create_qubo(problem, weights)
 
-    expected = {
+    expected = Polynomial({
         ("x0", "x0"): 34,
         ("x0", "x1"): 45,
         ("x0",): -79,
         ("x1", "x1"): 20,
         ("x1",): -68,
         (): 62,
-    }
+    })
 
     assert qubo == expected
 
 
 def test_example_4():
-    problem = SimpleProblem(2)
-    expression = (
-        5 * problem.variables[0]
-        + 2 * problem.variables[1]
-        + problem.variables[0] * problem.variables[1]
+    num_variables = 2
+    variables = sympy.symbols(
+        " ".join([f"x{i}" for i in range(num_variables)])
     )
-    problem.set_objective_function(expression)
+    objective_function = from_sympy(
+        5 * variables[0]
+        + 2 * variables[1]
+        + variables[0] * variables[1]
+    )
 
-    constraint_eq_lhs = {("x0",): 1, ("x1",): 1}
-    constraint_eq = Constraint(constraint_eq_lhs, 1, Operator.EQ)
-    problem.add_constraint(constraint_eq)
+    constraint_eq_lhs = Polynomial({("x0",): 1, ("x1",): 1})
+    constraint_eq = Constraint(constraint_eq_lhs, Polynomial(1), Operator.EQ)
 
-    weights = [1, 6]
+    problem = SimpleProblem(
+        objective_function, [constraint_eq],
+        MethodsForInequalities.UNBALANCED_PENALIZATION)
+    weights = [1., 6.]
     qubo = Converter.create_qubo(problem, weights)
 
-    expected = {
+    expected = Polynomial({
         ("x0", "x0"): 6,
         ("x0", "x1"): 13,
         ("x0",): -7,
         ("x1", "x1"): 6,
         ("x1",): -10,
         (): 6,
-    }
+    })
 
     assert qubo == expected

@@ -8,7 +8,19 @@ from typing import overload
 class Polynomial:
     terms: dict[tuple[str, ...], float] = field(default_factory=dict)
 
-    def __init__(self, terms: dict[tuple[str, ...], float] = {tuple(): 0}) -> None:
+    @overload
+    def __init__(self, terms: float | int) -> None: ...
+
+    @overload
+    def __init__(self, terms: dict[tuple[str, ...], float]) -> None: ...
+
+    def __init__(self, terms: dict[tuple[str, ...], float] | float | int
+                 ) -> None:
+        if isinstance(terms, (float, int)):
+            terms = {tuple(): float(terms)}
+        else:
+            terms = terms.copy() if terms else {tuple(): 0}
+
         self.terms = defaultdict(float)
 
         for term, coefficient in terms.items():
@@ -73,7 +85,7 @@ class Polynomial:
         if not isinstance(other, Polynomial):
             raise TypeError(f"Unsupported operation: {self} * {other}")
 
-        new_terms = {}
+        new_terms = defaultdict(float)
 
         for variables1, coefficient1 in self.terms.items():
             for variables2, coefficient2 in other.terms.items():
@@ -104,6 +116,16 @@ class Polynomial:
         return Polynomial({
             term: -coefficient for term, coefficient in self.terms.items()
         })
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, dict):
+            terms = other
+        elif isinstance(other, Polynomial):
+            terms = other.terms
+        else:
+            raise TypeError(f"Unsupported operation: {self} == {other}")
+
+        return self.terms == terms
 
     def separate_const(self) -> tuple['Polynomial', float]:
         constant = self.terms.pop(tuple(), 0)
