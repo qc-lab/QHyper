@@ -35,8 +35,8 @@ class PQC:
     def run_opt(
         self,
         problem: Problem,
-        opt_args: npt.NDArray[np.float64],
-        hyper_args: npt.NDArray[np.float64]
+        opt_args: list[float],
+        hyper_args: list[float]
     ) -> OptimizationResult:
         """
         Run optimization using the PQC.

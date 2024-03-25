@@ -10,7 +10,8 @@ from collections import namedtuple
 from typing import cast
 
 from .base import Problem
-from QHyper.util import Expression
+from QHyper.constraint import Constraint
+from QHyper.parser import from_sympy
 
 Item = namedtuple('Item', "weight value")
 
@@ -116,15 +117,15 @@ class KnapsackProblem(Problem):
 
     def _set_objective_function(self) -> None:
         """
-        Create the objective functiif items on defined in SymPy syntax
+        Create the objective function items on defined in SymPy syntax
         """
         # xs = [f"x{i}" for i in range(len(self.knapsack))]
         equation = cast(sympy.Expr, 0)
         for i, x in enumerate(self.variables[:len(self.knapsack)]):
             equation += self.knapsack.items[i].value*x
-        equation *= -1
+        equation = -equation
 
-        self.objective_function: Expression = Expression(equation)
+        self.objective_function = from_sympy(equation)
 
     def _set_constraints(self) -> None:
         """
@@ -133,19 +134,19 @@ class KnapsackProblem(Problem):
         xs = [self.variables[i] for i in range(len(self.knapsack))]
         ys = [self.variables[i] for i in range(
             len(self.knapsack), len(self.knapsack) + self.knapsack.max_weight)]
-        self.constraints: list[Expression] = []
+        self.constraints: list[Constraint] = []
         equation = cast(sympy.Expr, 1)
         for y in ys:
             equation -= y
         # equation = equation
-        self.constraints.append(Expression(equation))
+        self.constraints.append(Constraint(from_sympy(equation)))
         equation = cast(sympy.Expr, 0)
         for i, y in enumerate(ys):
             equation += (i + 1)*y
         for i, x in enumerate(xs):
             equation += -(self.knapsack.items[i].weight)*x
         # equation = equation
-        self.constraints.append(Expression(equation))
+        self.constraints.append(Constraint(from_sympy(equation)))
 
     def get_score(self, result: str, penalty: float = 0) -> float:
         """Returns score of the provided outcome in bits

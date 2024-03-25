@@ -15,10 +15,10 @@ from .base import Problem
 
 
 PROBLEMS_BY_NAME: dict[str, Type[Problem]] = {
-    'knapsack': KnapsackProblem,
-    'tsp': TSPProblem,
-    'maxcut': MaxCutProblem,
-    'workflow_scheduling': WorkflowSchedulingProblem,
+    "knapsack": KnapsackProblem,
+    "tsp": TSPProblem,
+    "maxcut": MaxCutProblem,
+    "workflow_scheduling": WorkflowSchedulingProblem,
 }
 
 
