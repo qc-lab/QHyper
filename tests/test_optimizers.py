@@ -134,7 +134,7 @@ def test_random():
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.188001271)
+    assert result == pytest.approx(-0.416636943)
 
 
 def test_cem():

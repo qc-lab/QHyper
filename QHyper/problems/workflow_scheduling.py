@@ -18,8 +18,10 @@ from networkx.classes.reportviews import NodeView
 from sympy.core.expr import Expr
 from typing import cast
 
-from QHyper.util import Expression, Constraint, MethodsForInequalities, Operator
-from .base import Problem
+from QHyper.constraint import Constraint, Operator, UNBALANCED_PENALIZATION
+from QHyper.parser import from_sympy
+from QHyper.polynomial import Polynomial
+from .base import Problem, ProblemException
 
 
 @dataclass
@@ -95,14 +97,15 @@ def calc_slack_coefficients(constant: int) -> list[int]:
 
 class WorkflowSchedulingProblem(Problem):
     def __new__(
-        self, encoding: str, tasks_file: str, machines_file: str, deadline: float
-    ) -> None:
+        cls, encoding: str, tasks_file: str, machines_file: str, deadline: float
+    ) -> 'WorkflowSchedulingOneHot | WorkflowSchedulingBinary':
         workflow = Workflow(tasks_file, machines_file, deadline)
 
         if encoding == "one-hot":
             return WorkflowSchedulingOneHot(workflow)
         elif encoding == "binary":
             return WorkflowSchedulingBinary(workflow)
+        raise ProblemException(f"Unsupported encoding: {encoding}")
 
 
 class WorkflowSchedulingOneHot(Problem):
@@ -130,7 +133,7 @@ class WorkflowSchedulingOneHot(Problem):
                     ]
                 )
 
-        self.objective_function: Expression = Expression(expression)
+        self.objective_function = from_sympy(expression)
 
     def _set_constraints(self) -> None:
         self.constraints: list[Constraint] = []
@@ -142,7 +145,8 @@ class WorkflowSchedulingOneHot(Problem):
                 expression += self.variables[
                     machine_id + task_id * len(self.workflow.time_matrix.columns)
                 ]
-            self.constraints.append(Constraint(Expression(expression), 1, Operator.EQ))
+            self.constraints.append(
+                Constraint(from_sympy(expression), Polynomial(1)))
 
         # deadline constraint
         for path in self.workflow.paths:
@@ -164,10 +168,10 @@ class WorkflowSchedulingOneHot(Problem):
             # todo add constraints unbalanced penalization
             self.constraints.append(
                 Constraint(
-                    Expression(expression),
-                    self.workflow.deadline,
+                    from_sympy(expression),
+                    Polynomial(self.workflow.deadline),
                     Operator.LE,
-                    MethodsForInequalities.UNBALANCED_PENALIZATION,
+                    UNBALANCED_PENALIZATION,
                 )
             )
 
@@ -264,17 +268,19 @@ class WorkflowSchedulingBinary(Problem):
                     * current_term
                 )
 
-        self.objective_function: Expression = Expression(expression)
+        self.objective_function = from_sympy(expression)
 
     def _set_constraints(self) -> None:
         self.constraints: list[Constraint] = []
 
         for path in self.workflow.paths:
-            expression = 0
+            expression: sympy.Expr = sympy.Expr(0)
             for _, task_name in enumerate(path):
                 for _, machine_name in enumerate(self.workflow.time_matrix.columns):
                     current_term = cast(Expr, 1)
                     task_id = self.workflow.time_matrix.index.get_loc(task_name)
+                    assert isinstance(task_id, int)
+
                     variable_id = task_id * (len(self.workflow.tasks) - 1)
                     for el in self.machines_binary_representation[machine_name]:
                         if el == "0":
@@ -290,10 +296,10 @@ class WorkflowSchedulingBinary(Problem):
             # todo add constraints unbalanced penalization
             self.constraints.append(
                 Constraint(
-                    Expression(expression),
-                    self.workflow.deadline,
+                    from_sympy(expression),
+                    Polynomial(self.workflow.deadline),
                     Operator.LE,
-                    MethodsForInequalities.UNBALANCED_PENALIZATION,
+                    UNBALANCED_PENALIZATION,
                 )
             )
 

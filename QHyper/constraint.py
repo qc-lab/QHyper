@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum
 
-from QHyper.structures.polynomial import Polynomial
+from QHyper.polynomial import Polynomial
 
 
 class MethodsForInequalities(Enum):  # todo penalization method
@@ -22,10 +22,11 @@ class Constraint:
     def __init__(
         self,
         lhs: Polynomial,
-        rhs: Polynomial,
+        rhs: Polynomial = Polynomial(0),
         operator: Operator = Operator.EQ,
         method_for_inequalities: MethodsForInequalities | None = None,
         label: str = "",
+        group: int = -1,
     ) -> None:
         """For now, we assume that the constraint is in the form of: sum of something <= number"""
         self.lhs: Polynomial = lhs
@@ -38,9 +39,13 @@ class Constraint:
             )
         self.method_for_inequalities = method_for_inequalities
         self._set_label(label)
+        self.group = group
 
     def _set_label(self, label: str) -> None:
         self.label = label or f"s{uuid.uuid4().hex}"
 
     def __repr__(self) -> str:
         return f"{self.lhs} {self.operator.value} {self.rhs}"
+
+    def get_variables(self) -> set[str]:
+        return self.lhs.get_variables() | self.rhs.get_variables()

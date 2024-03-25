@@ -7,8 +7,8 @@ from typing import cast
 
 import dimod
 from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
-from QHyper.structures.polynomial import Polynomial
-from QHyper.structures.constraint import (
+from QHyper.polynomial import Polynomial
+from QHyper.constraint import (
     Constraint, SLACKS_LOG_2, UNBALANCED_PENALIZATION, Operator)
 from QHyper.problems.base import Problem
 import numpy as np
@@ -62,27 +62,45 @@ class Converter:
     ) -> list[tuple[list[float], Constraint]]:
         weights_constraints_list = []
         idx = 0
+        group_to_weight: dict[int, list[float]] = {}
         for constraint in constraints:
             if constraint.method_for_inequalities == UNBALANCED_PENALIZATION:
+                if constraint.group == -1:
+                    weights = constraints_weights[idx: idx + 2]
+                    idx += 2
+                elif constraint.group in group_to_weight:
+                    weights = group_to_weight[constraint.group]
+                else:
+                    weights = constraints_weights[idx: idx + 2]
+                    group_to_weight[constraint.group] = weights
+                    idx += 2
+
                 weights_constraints_list.append(
-                    ([constraints_weights[idx], constraints_weights[idx + 1]], constraint)
+                    (weights, constraint)
                 )
-                idx += 2
             else:
-                weights_constraints_list.append(([constraints_weights[idx]], constraint))
-                idx += 1
+                if constraint.group == -1:
+                    weights = [constraints_weights[idx]]
+                    idx += 1
+                elif constraint.group in group_to_weight:
+                    weights = group_to_weight[constraint.group]
+                else:
+                    weights = [constraints_weights[idx]]
+                    group_to_weight[constraint.group] = weights
+                    idx += 1
+                weights_constraints_list.append((weights, constraint))
         return weights_constraints_list
 
     @staticmethod
     def create_qubo(problem: Problem, weights: list[float]) -> Polynomial:
-        result = weights[0] * problem.objective_function
+        result = float(weights[0]) * problem.objective_function
 
         constraints_weights = weights[1:]
         for weight, constraint in Converter.assign_weights_to_constraints(
             constraints_weights, problem.constraints
         ):
             if constraint.operator == Operator.EQ:
-                result += weight[0] * (constraint.lhs - constraint.rhs) ** 2
+                result += float(weight[0]) * (constraint.lhs - constraint.rhs) ** 2
                 continue
 
             lhs = constraint.lhs - constraint.rhs
@@ -96,7 +114,6 @@ class Converter:
                 result += Converter.use_unbalanced_penalization(
                     constraint, weight
                 )
-
         return result
 
     @staticmethod

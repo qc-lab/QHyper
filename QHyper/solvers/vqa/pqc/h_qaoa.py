@@ -26,7 +26,7 @@ class HQAOA(QAOA):
     limit_results: int | None = None
 
     def get_probs_func(self, problem: Problem, weights: list[float]
-                       ) -> Callable[[npt.NDArray[np.float64]], list[float]]:
+                       ) -> Callable[[list[float]], list[float]]:
         """Returns function that takes angles and returns probabilities
 
         Parameters
@@ -39,14 +39,14 @@ class HQAOA(QAOA):
         Callable[[list[float]], float]
             Returns function that takes angles and returns probabilities
         """
-        cost_operator = self.create_qubo(problem, weights)
+        cost_operator = self.create_cost_operator(problem, weights)
 
         @qml.qnode(self.dev)
         def probability_circuit(params: npt.NDArray[np.float64]
                                 ) -> list[float]:
-            self._circuit(problem, params, cost_operator)
+            self._circuit(params, cost_operator)
             return cast(list[float],
-                        qml.probs(wires=[str(x) for x in problem.variables]))
+                        qml.probs(wires=cost_operator.wires))
 
         return cast(Callable[[npt.NDArray[np.float64]], list[float]],
                     probability_circuit)

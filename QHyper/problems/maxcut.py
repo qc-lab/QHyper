@@ -6,7 +6,8 @@
 from typing import cast
 
 import sympy
-from QHyper.util import Expression
+
+from QHyper.parser import from_sympy
 
 from .base import Problem
 
@@ -30,7 +31,7 @@ class MaxCutProblem(Problem):
             x_i, x_j = self.variables[e[0] - 1], self.variables[e[1] - 1]
             equation -= x_i * (1 - x_j) + x_j * (1 - x_i)
 
-        self.objective_function: Expression = Expression(equation)
+        self.objective_function = from_sympy(equation)
 
     def get_score(self, result: str, penalty: float = 0) -> float:
         sum = 0
