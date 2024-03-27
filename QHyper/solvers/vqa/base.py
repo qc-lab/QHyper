@@ -1,3 +1,8 @@
+# This work was supported by the EuroHPC PL infrastructure funded at the
+# Smart Growth Operational Programme (2014-2020), Measure 4.2
+# under the grant agreement no. POIR.04.02.00-00-D014/20-00
+
+
 from dataclasses import dataclass
 import numpy as np
 from typing import Any, Optional
@@ -84,6 +89,14 @@ class VQA(Solver):
 
         return cls(problem, pqc, optimizer, hyper_optimizer, params_inits)
 
+    def _find_best_result_from_history(
+            self, histories: list[list[OptimizationResult]], best_value: float
+    ) -> dict[str, Any]:
+        for history in reversed(histories):
+            for result in history:
+                if result.value == best_value:
+                    return result
+
     def solve(self, params_inits: dict[str, Any] = None) -> SolverResult:
         params_inits = params_inits or self.params_inits
         hyper_args = self.pqc.get_hopt_args(params_inits)
@@ -93,10 +106,11 @@ class VQA(Solver):
                 self.pqc, self.problem, self.optimizer, params_inits)
             res = self.hyper_optimizer.minimize(wrapper, hyper_args)
             best_hargs = res.params
-            local_opt_args = next(
-                x for x in res.history[-1] if x.value == res.value)
-            local_opt_args = next(
-                x for x in local_opt_args.history[-1] if x.value == res.value
+
+            global_results = self._find_best_result_from_history(
+                res.history, res.value)
+            local_opt_args = self._find_best_result_from_history(
+                global_results.history, res.value
             ).params
 
             return SolverResult(

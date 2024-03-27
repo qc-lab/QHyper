@@ -1,3 +1,8 @@
+# This work was supported by the EuroHPC PL infrastructure funded at the
+# Smart Growth Operational Programme (2014-2020), Measure 4.2
+# under the grant agreement no. POIR.04.02.00-00-D014/20-00
+
+
 from dataclasses import dataclass
 from typing import Callable
 
@@ -14,4 +19,5 @@ class Dummy(Optimizer):
             func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
             init: npt.NDArray[np.float64]
     ) -> OptimizationResult:
-        return func(init)
+        result = func(init)
+        return OptimizationResult(result.value, result.params, [[result]])
