@@ -14,14 +14,15 @@ from sympy.core.expr import Expr
 class Network:
     graph: nx.Graph
     resolution: float = field(default=1)
-    modularity_matrix: np.ndarray = field(init=False)
+    full_modularity_matrix: np.ndarray = field(init=False)
+    generalized_modularity_matrix: np.ndarray = field(init=False)
     weight: str | None = field(default=None)
     community: list | None= field(default=None)
 
     def __post_init__(self) -> None:
         if not self.community:
             self.community = [*range(self.graph.number_of_nodes())]
-        self.modularity_matrix = self.calculate_modularity_matrix()
+        self.full_modularity_matrix, self.generalized_modularity_matrix = self.calculate_modularity_matrix()
 
     def calculate_modularity_matrix(self) -> np.ndarray:
         adj_matrix: np.ndarray = nx.to_numpy_array(
@@ -40,7 +41,7 @@ class Network:
         B_i = np.sum(B_community, axis=-1)
         delta = np.eye(len(self.community), dtype=np.int32)
         B_g = B_community - delta*B_i
-        return B_g
+        return full_modularity_matrix, B_g
     
 
 class KarateClubNetwork(Network):
@@ -102,14 +103,18 @@ class CommunityDetectionProblem(Problem):
             values
         """
         self.G: nx.Graph = network_data.graph
-        self.B: np.ndarray = network_data.modularity_matrix
+        self.one_hot_encoding: bool = one_hot_encoding
+        if one_hot_encoding:
+            self.B: np.ndarray = network_data.full_modularity_matrix
+        else:
+            self.B: np.ndarray = network_data.generalized_modularity_matrix
+            
         if communities < 1:
             raise Exception(
                 "Number of communities must be greater than or equal to 1"
             )
         self.community = network_data.community
         self.cases: int = communities
-        self.one_hot_encoding: bool = one_hot_encoding
         self.resolution: float = network_data.resolution
         self.variables: tuple[
             sympy.Symbol
