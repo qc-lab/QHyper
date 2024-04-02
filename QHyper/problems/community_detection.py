@@ -22,32 +22,32 @@ class Network:
     full_modularity_matrix: np.ndarray = field(init=False)
     generalized_modularity_matrix: np.ndarray = field(init=False)
     weight: str | None = field(default=None)
-    community: list | None= field(default=None)
+    community: list | None = field(default=None)
 
     def __post_init__(self) -> None:
         if not self.community:
             self.community = [*range(self.graph.number_of_nodes())]
-        self.full_modularity_matrix, self.generalized_modularity_matrix = self.calculate_modularity_matrix()
+        (
+            self.full_modularity_matrix,
+            self.generalized_modularity_matrix,
+        ) = self.calculate_modularity_matrix()
 
     def calculate_modularity_matrix(self) -> np.ndarray:
-        adj_matrix: np.ndarray = nx.to_numpy_array(
-            self.graph, weight=self.weight
-        )
+        adj_matrix: np.ndarray = nx.to_numpy_array(self.graph, weight=self.weight)
         degree_matrix: np.ndarray = adj_matrix.sum(axis=1)
         m: int = np.sum(degree_matrix)
 
         full_modularity_matrix = (
-            adj_matrix
-            - self.resolution * np.outer(degree_matrix, degree_matrix) / m
+            adj_matrix - self.resolution * np.outer(degree_matrix, degree_matrix) / m
         )
 
-        B_bis = full_modularity_matrix[self.community,:]
-        B_community = B_bis[:,self.community]
+        B_bis = full_modularity_matrix[self.community, :]
+        B_community = B_bis[:, self.community]
         B_i = np.sum(B_community, axis=-1)
         delta = np.eye(len(self.community), dtype=np.int32)
-        B_g = B_community - delta*B_i
+        B_g = B_community - delta * B_i
         return full_modularity_matrix, B_g
-    
+
 
 class KarateClubNetwork(Network):
     def __init__(self, resolution: float = 1):
@@ -65,9 +65,7 @@ class BrainNetwork(Network):
         adj_matrix = np.genfromtxt(
             f"{input_data_dir}/{input_data_name}.csv", delimiter=delimiter
         )
-        super().__init__(
-            nx.from_numpy_matrix(adj_matrix), resolution=resolution
-        )
+        super().__init__(nx.from_numpy_matrix(adj_matrix), resolution=resolution)
 
 
 class CommunityDetectionProblem(Problem):
@@ -94,7 +92,12 @@ class CommunityDetectionProblem(Problem):
         in the graph
     """
 
-    def __init__(self, network_data: Network, communities: int = 2, one_hot_encoding: bool = True) -> None:
+    def __init__(
+        self,
+        network_data: Network,
+        communities: int = 2,
+        one_hot_encoding: bool = True,
+    ) -> None:
         """
         Parameters
         ----------
@@ -115,17 +118,50 @@ class CommunityDetectionProblem(Problem):
             self.B: np.ndarray = network_data.generalized_modularity_matrix
 
         if communities < 1:
-            raise Exception(
-                "Number of communities must be greater than or equal to 1"
-            )
+            raise Exception("Number of communities must be greater than or equal to 1")
         self.community = network_data.community
         self.cases: int = communities
         self.resolution: float = network_data.resolution
-        self.variables: tuple[
-            sympy.Symbol
-        ] = self._encode_discretes_to_one_hots()
-        self._set_objective_function()
-        self._set_one_hot_constraints(communities)
+
+        if self.one_hot_encoding:
+            self.variables: tuple[sympy.Symbol] = self._encode_discretes_to_one_hots()
+            self._set_objective_function()
+            self._set_one_hot_constraints(communities)
+        else:
+            self.variables: tuple[
+                sympy.Symbol
+            ] = self._get_discrete_variable_representation()
+            self._set_objective_function()
+
+    def _get_discrete_variable_representation(
+        self,
+    ) -> tuple[sympy.Symbol] | Any:
+        return sympy.symbols(" ".join([f"x{i}" for i in range(len(self.community))]))
+
+    def _set_objective_function(self) -> None:
+        equation: dict[VARIABLES, float] = {}
+        for i in range(len(self.B)):
+            for j in range(len(self.B)):
+                x_i, x_j = sympy.symbols(f"x{self.community[i]}"), sympy.symbols(
+                    f"x{self.community[j]}"
+                )
+                if self.one_hot_encoding:
+                    if i >= j:
+                        continue
+                    for case_val in range(self.cases):
+                        s_i = str(self._encode_discrete_to_one_hot(x_i, case_val))
+                        s_j = str(self._encode_discrete_to_one_hot(x_j, case_val))
+                        equation[(s_i, s_j)], equation[(s_j, s_i)] = (
+                            self.B[i, j],
+                            self.B[j, i],
+                        )
+                else:
+                    x_i, x_j = str(x_i), str(x_j)
+                    equation[(x_i, x_j)] = self.B[i, j]
+
+        equation = {key: -1 * val for key, val in equation.items()}
+
+        self.objective_function = Expression(equation)
 
     def _encode_discrete_to_one_hot(
         self, discrete_variable: sympy.Symbol, case_value: int
@@ -135,43 +171,20 @@ class CommunityDetectionProblem(Problem):
         return sympy.symbols(f"s{id}")
 
     def _encode_discretes_to_one_hots(self) -> tuple[sympy.Symbol]:
-        one_hots: tuple[sympy.Symbol] = sympy.symbols(" ".join([
-            str(self._encode_discrete_to_one_hot(var, case_val))
-            for var in self._get_discrete_variable_representation()
-            for case_val in range(self.cases)
-        ]))
+        one_hots: tuple[sympy.Symbol] = sympy.symbols(
+            " ".join(
+                [
+                    str(self._encode_discrete_to_one_hot(var, case_val))
+                    for var in self._get_discrete_variable_representation()
+                    for case_val in range(self.cases)
+                ]
+            )
+        )
         return one_hots
 
     def iter_variables_cases(self) -> Iterable[Tuple[sympy.Symbol, ...]]:
         """s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), ..."""
         return zip(*[iter(self.variables)] * self.cases)
-
-    def _get_discrete_variable_representation(
-        self,
-    ) -> tuple[sympy.Symbol] | Any:
-        return sympy.symbols(
-            " ".join([f"x{i}" for i in range(len(self.G.nodes))])
-        )
-
-    def _set_objective_function(self) -> None:
-        equation: dict[VARIABLES, float] = {}
-        for i in range(len(self.B)):
-            for j in range(len(self.B)):
-                x_i, x_j = sympy.symbols(f"x{self.community[i]}"), sympy.symbols(f"x{self.community[j]}")
-                if self.one_hot_encoding:
-                    if i >= j:
-                        continue
-                    for case_val in range(self.cases):
-                        s_i = str(self._encode_discrete_to_one_hot(x_i, case_val))
-                        s_j = str(self._encode_discrete_to_one_hot(x_j, case_val))
-                        equation[(s_i, s_j)], equation[(s_j, s_i)] = self.B[i, j], self.B[j, i]
-                else:
-                    x_i, x_j = str(x_i), str(x_j)
-                    equation[(x_i, x_j)] = self.B[i, j]
-
-        equation = {key: -1 * val for key, val in equation.items()}
-
-        self.objective_function = Expression(equation)
 
     def _set_one_hot_constraints(self, communities: int) -> None:
         ONE_HOT_CONST = -1
@@ -212,6 +225,4 @@ class CommunityDetectionProblem(Problem):
 
     def sort_decoded_solution(self, decoded_solution: dict) -> dict:
         keyorder = [int(str(v)[1:]) for v in self.variables]
-        return {
-            k: decoded_solution[k] for k in keyorder if k in decoded_solution
-        }
+        return {k: decoded_solution[k] for k in keyorder if k in decoded_solution}
