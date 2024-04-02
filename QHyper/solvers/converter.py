@@ -6,7 +6,11 @@
 from typing import Any, cast
 
 import dimod
-from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel, BinaryQuadraticModel
+from dimod import (
+    ConstrainedQuadraticModel,
+    DiscreteQuadraticModel,
+    BinaryQuadraticModel,
+)
 from QHyper.util import Expression
 from QHyper.problems.base import Problem
 from QHyper.util import QUBO, VARIABLES
@@ -61,7 +65,7 @@ class Converter:
                 results[key] += value
             else:
                 results[key] = value
-        
+
         return results
 
     @staticmethod
@@ -77,9 +81,7 @@ class Converter:
                 cqm.add_variable(dimod.BINARY, str(var))
 
         for i, constraint in enumerate(problem.constraints):
-            cqm.add_constraint(
-                dict_to_list(constraint.as_dict()), "==", label=i
-            )
+            cqm.add_constraint(dict_to_list(constraint.as_dict()), "==", label=i)
 
         return cqm
 
@@ -91,7 +93,43 @@ class Converter:
 
     @staticmethod
     def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
+        if hasattr(problem, "one_hot_encoding"):
+            if problem.one_hot_encoding:
+                return Converter._dqm_from_one_hot_representation(problem)
+            return Converter._dqm_from_discrete_representation(problem)
+        return Converter._dqm_from_one_hot_representation(problem)
+
+    @staticmethod
+    def _dqm_from_discrete_representation(problem: Problem) -> DiscreteQuadraticModel:
         dqm = dimod.DiscreteQuadraticModel()
+
+        for var in problem.variables:
+            var = str(var)
+            if var not in dqm.variables:
+                dqm.add_variable(problem.cases, var)
+
+        for vars, bias in problem.objective_function.as_dict().items():
+            x_i, x_j = vars
+            xi_idx: int = cast(int, dqm.variables.index(x_i))
+            xj_idx: int = cast(int, dqm.variables.index(x_j))
+
+            # We're skipping the linear terms
+            if xi_idx == xj_idx:
+                continue
+
+            dqm.set_quadratic(
+                dqm.variables[xi_idx],
+                dqm.variables[xj_idx],
+                {(case, case): bias for case in range(problem.cases)},
+            )
+
+        return dqm
+
+    @staticmethod
+    def _dqm_from_one_hot_representation(problem: Problem) -> DiscreteQuadraticModel:
+        dqm = dimod.DiscreteQuadraticModel()
+
+        CASES_OFFSET = 1 if problem.cases == 1 else 0
 
         def binary_to_discrete(v: str) -> str:
             id = int(v[1:])
@@ -99,52 +137,32 @@ class Converter:
             return f"x{discrete_id}"
 
         variables_discrete = [
-            binary_to_discrete(str(v))
-            for v in problem.variables[:: problem.cases]
+            binary_to_discrete(str(v)) for v in problem.variables[:: problem.cases]
         ]
         for var in variables_discrete:
             if var not in dqm.variables:
-                dqm.add_variable(problem.cases, var)
+                dqm.add_variable(problem.cases + CASES_OFFSET, var)
 
-        if problem.one_hot_encoding:
-            for vars, bias in problem.objective_function.as_dict().items():
-                s_i, *s_j = vars
-                x_i = binary_to_discrete(s_i)
-                xi_idx: int = cast(int, dqm.variables.index(x_i))
-                if s_j:
-                    x_j = binary_to_discrete(*s_j)
-                    xj_idx: int = cast(int, dqm.variables.index(x_j))
-                    dqm.set_quadratic(
-                        dqm.variables[xi_idx],
-                        dqm.variables[xj_idx],
-                        {
-                            (case, case): bias
-                            for case in range(problem.cases)
-                        },
-                    )
-                else:
-                    dqm.set_linear(
-                        dqm.variables[xi_idx],
-                        [bias for _ in range(problem.cases)],
-                    )
-        else:
-            for vars, bias in problem.objective_function.as_dict().items():
-                x_i, x_j = vars
-                xi_idx: int = cast(int, dqm.variables.index(x_i))
+        for vars, bias in problem.objective_function.as_dict().items():
+            s_i, *s_j = vars
+            x_i = binary_to_discrete(s_i)
+            xi_idx: int = cast(int, dqm.variables.index(x_i))
+            if s_j:
+                x_j = binary_to_discrete(*s_j)
                 xj_idx: int = cast(int, dqm.variables.index(x_j))
-
-                # We're skipping the linear terms
-                if xi_idx == xj_idx:
-                    continue
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
                     {
                         (case, case): bias
-                        for case in range(problem.cases)
+                        for case in range(problem.cases + CASES_OFFSET)
                     },
                 )
-
+            else:
+                dqm.set_linear(
+                    dqm.variables[xi_idx],
+                    [bias for _ in range(problem.cases + CASES_OFFSET)],
+                )
         return dqm
 
     @staticmethod
