@@ -93,8 +93,6 @@ class Converter:
     def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
         dqm = dimod.DiscreteQuadraticModel()
 
-        BIN_OFFSET = 1 if problem.cases == 1 else 0
-
         def binary_to_discrete(v: str) -> str:
             id = int(v[1:])
             discrete_id = id // problem.cases
@@ -106,31 +104,49 @@ class Converter:
         ]
         for var in variables_discrete:
             if var not in dqm.variables:
-                dqm.add_variable(problem.cases + BIN_OFFSET, var)
+                dqm.add_variable(problem.cases, var)
 
-        for vars, bias in problem.objective_function.as_dict().items():
-            s_i, *s_j = vars
-            x_i = binary_to_discrete(s_i)
-            xi_idx: int = cast(int, dqm.variables.index(x_i))
-            if s_j:
-                x_j = binary_to_discrete(*s_j)
+        if problem.one_hot_encoding:
+            for vars, bias in problem.objective_function.as_dict().items():
+                s_i, *s_j = vars
+                x_i = binary_to_discrete(s_i)
+                xi_idx: int = cast(int, dqm.variables.index(x_i))
+                if s_j:
+                    x_j = binary_to_discrete(*s_j)
+                    xj_idx: int = cast(int, dqm.variables.index(x_j))
+                    dqm.set_quadratic(
+                        dqm.variables[xi_idx],
+                        dqm.variables[xj_idx],
+                        {
+                            (case, case): bias
+                            for case in range(problem.cases)
+                        },
+                    )
+                else:
+                    dqm.set_linear(
+                        dqm.variables[xi_idx],
+                        [bias for _ in range(problem.cases)],
+                    )
+        else:
+            for vars, bias in problem.objective_function.as_dict().items():
+                x_i, x_j = vars
+                xi_idx: int = cast(int, dqm.variables.index(x_i))
                 xj_idx: int = cast(int, dqm.variables.index(x_j))
+
+                # We're skipping the linear terms
+                if xi_idx == xj_idx:
+                    continue
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
                     {
                         (case, case): bias
-                        for case in range(problem.cases + BIN_OFFSET)
+                        for case in range(problem.cases)
                     },
-                )
-            else:
-                dqm.set_linear(
-                    dqm.variables[xi_idx],
-                    [bias for _ in range(problem.cases + BIN_OFFSET)],
                 )
 
         return dqm
-    
+
     @staticmethod
     def to_bqm(problem: Problem) -> BinaryQuadraticModel:
         qubo = Converter.create_weight_free_qubo(problem)

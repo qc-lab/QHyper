@@ -113,7 +113,7 @@ class CommunityDetectionProblem(Problem):
             self.B: np.ndarray = network_data.full_modularity_matrix
         else:
             self.B: np.ndarray = network_data.generalized_modularity_matrix
-            
+
         if communities < 1:
             raise Exception(
                 "Number of communities must be greater than or equal to 1"
