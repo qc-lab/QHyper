@@ -14,7 +14,7 @@ from QHyper.optimizers import (
     OPTIMIZERS_BY_NAME, Dummy, Optimizer, OptimizationResult)
 from .pqc.base import PQC
 
-from QHyper.solvers.base import Solver, SolverResult, SolverConfigException
+from QHyper.solvers.base import Solver, SolverResult, SolverConfigException, SolverException
 from QHyper.solvers.vqa.pqc import PQC_BY_NAME
 
 
@@ -22,9 +22,9 @@ from QHyper.solvers.vqa.pqc import PQC_BY_NAME
 class LocalOptimizerFunction:
     pqc: PQC
     problem: Problem
-    hyper_params: npt.NDArray[np.float64]
+    hyper_params: npt.NDArray
 
-    def __call__(self, args: npt.NDArray[np.float64]) -> OptimizationResult:
+    def __call__(self, args: npt.NDArray) -> OptimizationResult:
         return self.pqc.run_opt(self.problem, args, self.hyper_params)
 
 
@@ -35,7 +35,7 @@ class GlobalOptimizerFunction:
     optimizer: Optimizer
     params_config: dict[str, Any]
 
-    def __call__(self, hargs: npt.NDArray[np.float64]) -> float:
+    def __call__(self, hargs: npt.NDArray) -> OptimizationResult:
         opt_args = self.pqc.get_opt_args(self.params_config, hyper_args=hargs)
         opt_wrapper = LocalOptimizerFunction(self.pqc, self.problem, hargs)
         return self.optimizer.minimize(opt_wrapper, opt_args)
@@ -51,6 +51,7 @@ class VQA(Solver):
 
     @classmethod
     def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'VQA':
+        error_msg = ""
         try:
             error_msg = "PQC configuration was not provided"
             pqc_config = config.pop('pqc')
@@ -91,20 +92,28 @@ class VQA(Solver):
 
     def _find_best_result_from_history(
             self, histories: list[list[OptimizationResult]], best_value: float
-    ) -> dict[str, Any]:
+    ) -> OptimizationResult:
         for history in reversed(histories):
             for result in history:
                 if result.value == best_value:
                     return result
+        raise SolverException(
+            f"Could not find the result with value {best_value}")
 
-    def solve(self, params_inits: dict[str, Any] = None) -> SolverResult:
-        params_inits = params_inits or self.params_inits
+    def solve(self, params_inits: dict[str, Any] = {}) -> SolverResult:
+        if not params_inits:
+            if not self.params_inits:
+                raise SolverException("Params were not provided")
+            params_inits = self.params_inits
+
         hyper_args = self.pqc.get_hopt_args(params_inits)
+
+        _hyper_args = np.array(hyper_args).flatten()
 
         if self.hyper_optimizer:
             wrapper = GlobalOptimizerFunction(
                 self.pqc, self.problem, self.optimizer, params_inits)
-            res = self.hyper_optimizer.minimize(wrapper, hyper_args)
+            res = self.hyper_optimizer.minimize(wrapper, _hyper_args)
             best_hargs = res.params
 
             global_results = self._find_best_result_from_history(
@@ -121,7 +130,7 @@ class VQA(Solver):
                 res.history,
             )
         else:
-            best_hargs = hyper_args
+            best_hargs = _hyper_args
 
         opt_args = self.pqc.get_opt_args(params_inits, hyper_args=best_hargs)
         opt_wrapper = LocalOptimizerFunction(

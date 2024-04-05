@@ -120,18 +120,21 @@ class Converter:
     @staticmethod
     def to_cqm(problem: Problem) -> ConstrainedQuadraticModel:
         binary_polynomial = dimod.BinaryPolynomial(
-            problem.objective_function.dictionary, dimod.BINARY
+            problem.objective_function.terms, dimod.BINARY
         )
         cqm = dimod.make_quadratic_cqm(binary_polynomial)
 
         # todo this cqm can probably be initialized in some other way
-        for var in problem.variables:
-            if str(var) not in cqm.variables:
-                cqm.add_variable(dimod.BINARY, str(var))
+        variables = problem.objective_function.get_variables()
+        for constraint in problem.constraints:
+            variables.update(constraint.lhs.get_variables())
+
+        for var in variables:
+            cqm.add_variable(dimod.BINARY, str(var))
 
         for i, constraint in enumerate(problem.constraints):
-            cqm.add_constraint(dict_to_list(constraint.lhs),
-                               constraint.operator.value, constraint.rhs)
+            cqm.add_constraint(
+                constraint.lhs, constraint.operator.value, constraint.rhs)
 
         return cqm
 

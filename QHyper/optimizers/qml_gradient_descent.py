@@ -3,16 +3,17 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from typing import Callable, Any
-import numpy.typing as npt
+from dataclasses import dataclass
+from typing import Callable, Any, Type
+from numpy.typing import NDArray
 
 import pennylane as qml
 from pennylane import numpy as np
 
-from .base import Optimizer, OptimizationResult
+from .base import Optimizer, OptimizationResult, OptimizerError
 
 
-QML_GRADIENT_DESCENT_OPTIMIZERS: dict[str, qml.GradientDescentOptimizer] = {
+QML_GRADIENT_DESCENT_OPTIMIZERS: dict[str, Type[qml.GradientDescentOptimizer]] = {
     'adam': qml.AdamOptimizer,
     'adagrad': qml.AdagradOptimizer,
     'rmsprop': qml.RMSPropOptimizer,
@@ -23,6 +24,7 @@ QML_GRADIENT_DESCENT_OPTIMIZERS: dict[str, qml.GradientDescentOptimizer] = {
 }
 
 
+@dataclass
 class QmlGradientDescent(Optimizer):
     """Gradient Descent Optimizer
 
@@ -74,10 +76,10 @@ class QmlGradientDescent(Optimizer):
         self.steps = steps
         self.verbose = verbose
 
-    def minimize(
+    def _minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
-        init: npt.NDArray[np.float64]
+        func: Callable[[NDArray], OptimizationResult],
+        init: NDArray
     ) -> OptimizationResult:
         """Returns params which lead to the lowest value of
             the provided function and cost history
@@ -96,35 +98,46 @@ class QmlGradientDescent(Optimizer):
             of the provided function and cost history
         """
         if isinstance(self.optimizer, qml.QNGOptimizer):
-            raise ValueError(
+            raise OptimizerError(
                 'QNG is not supported via optimizer, use qml_qaoa instead')
 
-        def wrapper(params: npt.NDArray[np.float64]) -> float:
+        def wrapper(params: NDArray) -> float:
             return func(np.array(params).reshape(np.array(init).shape)).value
 
         cost_history = []
+        best_result = float('inf')
+        best_params = np.array(init, requires_grad=True)
         params = np.array(init, requires_grad=True)
-        if "reset" in dir(self.optimizer):
-            self.optimizer.reset()
+
+        if hasattr(self.optimizer, 'reset'):
+            self.optimizer.reset()  # type: ignore
         for i in range(self.steps):
             params, cost = self.optimizer.step_and_cost(wrapper, params)
+            params = np.array(params, requires_grad=True)
+
+            if cost < best_result:
+                best_params = params
+                best_result = cost
             cost_history.append(OptimizationResult(float(cost), params))
 
             if self.verbose:
                 print(f'Step {i+1}/{self.steps}: {float(cost)}')
 
-        return OptimizationResult(cost, params, cost_history)
+        return OptimizationResult(best_result, best_params, [cost_history])
 
     def minimize_expval_func(
-            self, func: qml.QNode, init: npt.NDArray[np.float64]
+            self, func: qml.QNode, init: NDArray
     ) -> OptimizationResult:
 
         cost_history = []
+        cost = float('inf')
         params = np.array(init, requires_grad=True)
-        if "reset" in dir(self.optimizer):
-            self.optimizer.reset()
+        if hasattr(self.optimizer, 'reset'):
+            self.optimizer.reset()  # type: ignore
         for i in range(self.steps):
             params, cost = self.optimizer.step_and_cost(func, params)
+            params = np.array(params, requires_grad=True)
+
             cost_history.append(OptimizationResult(float(cost), params))
 
             if self.verbose:

@@ -4,56 +4,25 @@
 
 
 from dataclasses import dataclass
-import multiprocessing as mp
 from typing import Callable
-import numpy.typing as npt
+from numpy.typing import NDArray
 
 import numpy as np
-import tqdm
 
-from .base import Optimizer, OptimizationResult
+from QHyper.optimizers.util import run_parallel
+
+from .base import Optimizer, OptimizationResult, OptimizerError
 
 
 @dataclass
 class Random(Optimizer):
-    number_of_samples: int
-    processes: int
-    disable_tqdm: bool
-    bounds: npt.NDArray[np.float64]
-    verbose: bool = False
+    number_of_samples: int = 100
+    processes: int = 1
 
-    def __init__(
+    def _minimize(
         self,
-        bounds: list[tuple[float, float]],
-        number_of_samples: int = 100,
-        processes: int = 1,
-        disable_tqdm: bool = False,
-        verbose: bool = False,
-    ) -> None:
-        """
-        Parameters
-        ----------
-        number_of_samples : int
-            number of random samples (default 100)
-        processes : int
-            number of processors that will be used (default cpu count)
-        disable_tqdm: bool
-            if set to True, tdqm will be disabled (default False)
-        verbose: bool
-            if set to True, additional information will be printed
-            (default False)
-        """
-
-        self.number_of_samples: int = number_of_samples
-        self.processes: int = processes
-        self.disable_tqdm: bool = disable_tqdm
-        self.bounds = np.array(bounds)
-        self.verbose = verbose
-
-    def minimize(
-        self,
-        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
-        init: npt.NDArray[np.float64]
+        func: Callable[[NDArray], OptimizationResult],
+        init: NDArray
     ) -> OptimizationResult:
         """Returns hyperparameters which lead to the lowest values
             returned by the optimizer
@@ -81,18 +50,16 @@ class Random(Optimizer):
             Returns hyperparameters which lead to the lowest values
             returned by the optimizer
         """
-        _init = np.array(init)
+        if self.bounds is None:
+            raise OptimizerError("This optimizer requires bounds")
+
         hyperparams = (
             (self.bounds[:, 1] - self.bounds[:, 0])
-            * np.random.rand(self.number_of_samples, *_init.flatten().shape)
+            * np.random.rand(self.number_of_samples, *init.shape)
             + self.bounds[:, 0])
 
-        with mp.Pool(processes=self.processes) as p:
-            results = list(tqdm.tqdm(
-                p.imap(func, [h.reshape(_init.shape) for h in hyperparams]),
-                total=self.number_of_samples,
-                disable=self.disable_tqdm
-            ))
+        results = run_parallel(
+            func, hyperparams, self.processes, self.disable_tqdm)
         min_idx = np.argmin([result.value for result in results])
 
         if self.verbose:

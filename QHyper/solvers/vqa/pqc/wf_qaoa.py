@@ -58,7 +58,7 @@ class WFQAOA(QAOA):
     ) -> OptimizationResult:
         self.dev = qml.device(
             self.backend, wires=[str(x) for x in problem.variables])
-        probs = self.get_probs_func(problem, list(hyper_args))(
+        probs = self.get_probs_func(problem, hyper_args)(
             opt_args.reshape(2, -1))
 
         if isinstance(probs, qml.numpy.numpy_boxes.ArrayBox):

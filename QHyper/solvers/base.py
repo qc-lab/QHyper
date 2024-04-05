@@ -16,6 +16,10 @@ class SolverConfigException(Exception):
     pass
 
 
+class SolverException(Exception):
+    pass
+
+
 @dataclass
 class SolverResult:
     """
@@ -65,7 +69,7 @@ class Solver:
     @abstractmethod
     def solve(
             self,
-            params_inits: Optional[dict[str, Any]] = None
+            params_inits: dict[str, Any] = {}
     ) -> SolverResult:
         """
         Parameters

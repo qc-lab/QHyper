@@ -7,9 +7,10 @@ from dataclasses import dataclass
 import pennylane as qml
 import numpy as np
 
-import numpy.typing as npt
 from typing import Any, Callable, cast, Optional
+from numpy.typing import NDArray
 
+from QHyper.constraint import get_number_of_constraints
 from QHyper.problems.base import Problem
 from QHyper.optimizers import OptimizationResult
 
@@ -25,8 +26,8 @@ class HQAOA(QAOA):
     backend: str = "default.qubit"
     limit_results: int | None = None
 
-    def get_probs_func(self, problem: Problem, weights: list[float]
-                       ) -> Callable[[list[float]], list[float]]:
+    def get_probs_func(self, problem: Problem, weights: NDArray
+                       ) -> Callable[[NDArray], NDArray]:
         """Returns function that takes angles and returns probabilities
 
         Parameters
@@ -41,30 +42,29 @@ class HQAOA(QAOA):
         """
         cost_operator = self.create_cost_operator(problem, weights)
 
-        @qml.qnode(self.dev)
-        def probability_circuit(params: npt.NDArray[np.float64]
-                                ) -> list[float]:
-            self._circuit(params, cost_operator)
-            return cast(list[float],
-                        qml.probs(wires=cost_operator.wires))
+        self.dev = qml.device(self.backend, wires=cost_operator.wires)
 
-        return cast(Callable[[npt.NDArray[np.float64]], list[float]],
-                    probability_circuit)
+        @qml.qnode(self.dev)
+        def probability_circuit(params: NDArray) -> NDArray:
+            self._circuit(params, cost_operator)
+            return cast(NDArray, qml.probs(wires=cost_operator.wires))
+
+        return probability_circuit
 
     def run_opt(
         self,
         problem: Problem,
-        opt_args: npt.NDArray[np.float64],
-        hyper_args: npt.NDArray[np.float64]
+        opt_args: NDArray,
+        hyper_args: NDArray
     ) -> OptimizationResult:
-        self.dev = qml.device(
-            self.backend, wires=[str(x) for x in problem.variables])
+        num_of_constraints = get_number_of_constraints(problem.constraints)
+        weights = opt_args[:1 + num_of_constraints]
+        probs = self.get_probs_func(problem, weights)(
+            opt_args[1 + num_of_constraints:].reshape(2, -1))
 
-        weights = list(opt_args[:1 + len(problem.constraints)])
-        probs = self.get_probs_func(problem, list(weights))(
-            opt_args[1 + len(problem.constraints):].reshape(2, -1))
+        vars_num = self._get_num_of_wires()
         results_by_probabilites = {
-            format(result, 'b').zfill(len(problem.variables)): float(prob)
+            format(result, 'b').zfill(vars_num): float(prob)
             for result, prob in enumerate(probs)
         }
         result = weighted_avg_evaluation(
@@ -76,25 +76,26 @@ class HQAOA(QAOA):
     def run_with_probs(
         self,
         problem: Problem,
-        opt_args: npt.NDArray[np.float64],
-        hyper_args: npt.NDArray[np.float64]
+        opt_args: NDArray,
+        hyper_args: NDArray
     ) -> dict[str, float]:
-        self.dev = qml.device(
-            self.backend, wires=[str(x) for x in problem.variables])
-        weights = list(opt_args[:1 + len(problem.constraints)])
-        probs = self.get_probs_func(problem, list(weights))(
-            opt_args[1 + len(problem.constraints):].reshape(2, -1))
+        num_of_constraints = get_number_of_constraints(problem.constraints)
+        weights = opt_args[:1 + num_of_constraints]
+        probs = self.get_probs_func(problem, weights)(
+            opt_args[1 + num_of_constraints:].reshape(2, -1))
+
+        vars_num = self._get_num_of_wires()
         return {
-            format(result, 'b').zfill(len(problem.variables)): float(prob)
+            format(result, 'b').zfill(vars_num): float(prob)
             for result, prob in enumerate(probs)
         }
 
     def get_opt_args(
         self,
         params_init: dict[str, Any],
-        args: Optional[npt.NDArray[np.float64]] = None,
-        hyper_args: Optional[npt.NDArray[np.float64]] = None
-    ) -> npt.NDArray[np.float64]:
+        args: Optional[NDArray] = None,
+        hyper_args: Optional[NDArray] = None
+    ) -> NDArray:
         return np.concatenate((
             hyper_args if hyper_args is not None
             else params_init['hyper_args'],
@@ -103,8 +104,8 @@ class HQAOA(QAOA):
 
     def get_params_init_format(
         self,
-        opt_args: npt.NDArray[np.float64],
-        hyper_args: npt.NDArray[np.float64]
+        opt_args: NDArray,
+        hyper_args: NDArray
     ) -> dict[str, Any]:
         return {
             'angles': opt_args[len(hyper_args):],

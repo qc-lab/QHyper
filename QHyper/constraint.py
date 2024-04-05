@@ -49,3 +49,19 @@ class Constraint:
 
     def get_variables(self) -> set[str]:
         return self.lhs.get_variables() | self.rhs.get_variables()
+
+
+def get_number_of_constraints(constraints: list[Constraint]) -> int:
+    """Returns the number of unique groups in the constraints list.
+    """
+
+    counter = 0
+    visited = set()
+
+    for c in constraints:
+        if c.group == -1:
+            counter += 1
+        elif c.group not in visited:
+            visited.add(c.group)
+            counter += 1
+    return counter
