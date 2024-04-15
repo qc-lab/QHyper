@@ -29,7 +29,6 @@ class Converter:
             raise Exception(
                 f"Expected {len(problem.constraints)+1} weights, "
                 f"got {len(weights)} (weights: {weights}))"
-            )
 
         objective_function = Expression(
             {
