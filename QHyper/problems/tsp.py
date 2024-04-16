@@ -1,3 +1,8 @@
+# This work was supported by the EuroHPC PL infrastructure funded at the
+# Smart Growth Operational Programme (2014-2020), Measure 4.2
+# under the grant agreement no. POIR.04.02.00-00-D014/20-00
+
+
 import itertools
 
 import sympy
@@ -16,8 +21,6 @@ class TSP:
     ----------
     number_of_cities : int
         cities count
-    coords_range : tuple[int, int]
-        range of coordinates of the cities
     cities_coords : list[tuple[float, float]]
         coordinates of the cities
     distance_matrix : list[list[float]]
@@ -29,7 +32,8 @@ class TSP:
     def __init__(
         self,
         number_of_cities: int,
-        coords_range: tuple[int, int] = (0, 10000)
+        coords_range: tuple[int, int] = (0, 10000),
+        cities_coords: list[tuple[float, float]] = [],
     ) -> None:
         """
         Parameters
@@ -38,18 +42,22 @@ class TSP:
             cities count
         coords_range : tuple[float, float]
             range of coordinates of the cities
+        cities_coords : list[tuple[float, float]]
+            predefined coordinates of the cities
         """
         self.number_of_cities: int = number_of_cities
-        self.coords_range: tuple[int, int] = coords_range
-        self.cities_coords: list[tuple[float, float]] = self.get_cities()
+        if cities_coords:
+            self.cities_coords = cities_coords
+        else:
+            self.cities_coords = self.get_cities(coords_range)
         self.distance_matrix: list[
             list[float]] = self.calculate_distance_matrix()
         self.normalized_distance_matrix: list[
             list[float]] = self.normalize_distance_matrix()
 
-    def get_cities(self) -> list[tuple[float, float]]:
+    def get_cities(self, coords_range) -> list[tuple[float, float]]:
         cities_coords = np.random.randint(
-            self.coords_range[0], self.coords_range[1],
+            coords_range[0], coords_range[1],
             size=(self.number_of_cities, 2))
         return cast(list[tuple[float, float]], cities_coords)
 
@@ -97,7 +105,8 @@ class TSPProblem(Problem):
 
     def __init__(
             self,
-            number_of_cities: int
+            number_of_cities: int,
+            cities_coords: list[tuple[float, float]] = [],
     ) -> None:
         """
         Parameters
@@ -106,7 +115,8 @@ class TSPProblem(Problem):
             number of cities
         """
 
-        self.tsp_instance = TSP(number_of_cities)
+        self.tsp_instance = TSP(
+            number_of_cities, cities_coords=cities_coords)
         self.variables: tuple[sympy.Symbol] = sympy.symbols(
             ' '.join([f'x{i}' for i in range(number_of_cities ** 2)]))
         self._set_objective_function()
