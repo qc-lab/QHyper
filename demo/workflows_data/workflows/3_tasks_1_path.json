@@ -1,0 +1,80 @@
+{
+  "name": "3_tasks_3_machines_1_path",
+  "description": "Instance generated with WfCommons - https://wfcommons.org",
+  "createdAt": "2023-01-11T11:53:47.280376",
+  "schemaVersion": "1.4",
+  "author": {
+      "name": "jzawalska",
+      "email": "support@wfcommons.org"
+  },
+  "wms": {
+      "name": "WfCommons",
+      "version": "0.8",
+      "url": "https://docs.wfcommons.org/en/v0.8/"
+  },
+  "workflow": {
+      "executedAt": "20230111T125347+0100",
+      "tasks": [
+          {
+              "name": "task1",
+              "type": "compute",
+              "command": {},
+              "parents": [],
+              "children": [
+                  "task2"
+              ],
+              "files": [],
+              "cores": 1,
+              "id": "task1",
+              "memory": 0,
+              "machine": "default_machine",
+              "runtimeInSeconds": 2.0,
+              "memoryInBytes": 0
+          },
+          {
+              "name": "task2",
+              "type": "compute",
+              "command": {},
+              "parents": [
+                  "task1"
+              ],
+              "children": [
+                  "task3"
+              ],
+              "files": [],
+              "cores": 1,
+              "id": "task2",
+              "memory": 0,
+              "machine": "default_machine",
+              "runtimeInSeconds": 1.0,
+              "memoryInBytes": 0
+          },
+          {
+              "name": "task3",
+              "type": "compute",
+              "command": {},
+              "parents": [
+                  "task2"
+              ],
+              "children": [],
+              "files": [],
+              "cores": 1,
+              "id": "task3",
+              "memory": 0,
+              "machine": "default_machine",
+              "runtimeInSeconds": 4.0,
+              "memoryInBytes": 0
+          }
+      ],
+      "machines": [
+          {
+              "nodeName": "default_machine",
+              "cpu": {
+                  "count": 1,
+                  "speed": 1
+              }
+          }
+      ],
+      "makespanInSeconds": 0
+  }
+}

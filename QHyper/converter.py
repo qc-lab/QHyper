@@ -6,60 +6,123 @@
 from typing import Any, cast
 
 import dimod
-from dimod import (
-    ConstrainedQuadraticModel,
-    DiscreteQuadraticModel,
-    BinaryQuadraticModel,
-)
-from QHyper.util import Expression
+from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
+from QHyper.polynomial import Polynomial
+from QHyper.constraint import (
+    Constraint, SLACKS_LOG_2, UNBALANCED_PENALIZATION, Operator)
 from QHyper.problems.base import Problem
-from QHyper.util import QUBO, VARIABLES
+import numpy as np
 
-
-def dict_to_list(my_dict: QUBO) -> list[tuple[Any, ...]]:
+def dict_to_list(my_dict) -> list[tuple[Any, ...]]:
     return [tuple([*key, val]) for key, val in my_dict.items()]
 
 
 class Converter:
     @staticmethod
-    def create_qubo(problem: Problem, weights: list[float]) -> QUBO:
-        results: dict[VARIABLES, float] = {}
+    def calc_slack_coefficients(constant: int) -> list[int]:
+        num_slack = int(np.floor(np.log2(constant)))
+        slack_coefficients = [2**j for j in range(num_slack)]
+        if constant - 2**num_slack >= 0:
+            slack_coefficients.append(constant - 2**num_slack + 1)
+        return slack_coefficients
 
-        if len(weights) != len(problem.constraints) + 1:
-            raise Exception(
-                f"Expected {len(problem.constraints)+1} weights, "
-                f"got {len(weights)} (weights: {weights}))"
-            )
+    @staticmethod
+    def use_slacks(const: int | float, label: str) -> Polynomial:
+        if const <= 0 or not int(const) == const:
+            raise ValueError("Const must be a positive integer")
+        const = int(const)
+        slack_coefficients = Converter.calc_slack_coefficients(const)
 
-        objective_function = Expression(
-            {
-                key: weights[0] * val
-                for key, val in problem.objective_function.as_dict().items()
-            }
+        return Polynomial(
+            {(f"{label}_{i}",): v
+             for i, v in enumerate(slack_coefficients)}
         )
-        for key, value in objective_function.as_dict().items():
-            if key in results:
-                results[key] += value
-            else:
-                results[key] = value
+    
+    @staticmethod
+    def apply_slacks(
+        constraint: Constraint, weight: list[float]
+    ) -> Polynomial:
+        if len(weight) != 1:
+            raise ValueError("Weight must be a list of length 1")
 
-        constraint_weights = weights[1:]
+        rhs_without_const, rhs_const = constraint.rhs.separate_const()
 
-        for weight, element in zip(constraint_weights, problem.constraints):
-            constraint = Expression(element.polynomial**2 * weight)
-            for key, value in constraint.as_dict().items():
-                if key in results:
-                    results[key] += value
+        lhs = constraint.lhs - rhs_without_const
+        slacks = Converter.use_slacks(rhs_const, constraint.label)
+
+        return weight[0] * (lhs + slacks - rhs_const) ** 2
+        
+    @staticmethod
+    def use_unbalanced_penalization(
+        constraint: Constraint, weight: list[float]
+    ) -> Polynomial:
+        lhs = constraint.lhs - constraint.rhs
+        return weight[0]*lhs + weight[1]*lhs**2
+    
+    @staticmethod
+    def assign_weights_to_constraints(
+        constraints_weights: list[float], constraints: list[Constraint]
+    ) -> list[tuple[list[float], Constraint]]:
+        weights_constraints_list = []
+        idx = 0
+        group_to_weight: dict[int, list[float]] = {}
+        for constraint in constraints:
+            if constraint.method_for_inequalities == UNBALANCED_PENALIZATION:
+                if constraint.group == -1:
+                    weights = constraints_weights[idx: idx + 2]
+                    idx += 2
+                elif constraint.group in group_to_weight:
+                    weights = group_to_weight[constraint.group]
                 else:
-                    results[key] = value
+                    weights = constraints_weights[idx: idx + 2]
+                    group_to_weight[constraint.group] = weights
+                    idx += 2
 
-        return results
+                weights_constraints_list.append(
+                    (weights, constraint)
+                )
+            else:
+                if constraint.group == -1:
+                    weights = [constraints_weights[idx]]
+                    idx += 1
+                elif constraint.group in group_to_weight:
+                    weights = group_to_weight[constraint.group]
+                else:
+                    weights = [constraints_weights[idx]]
+                    group_to_weight[constraint.group] = weights
+                    idx += 1
+                weights_constraints_list.append((weights, constraint))
+        return weights_constraints_list
+
+    @staticmethod
+    def create_qubo(problem: Problem, weights: list[float]) -> Polynomial:
+        result = float(weights[0]) * problem.objective_function
+
+        constraints_weights = weights[1:]
+        for weight, constraint in Converter.assign_weights_to_constraints(
+            constraints_weights, problem.constraints
+        ):
+            if constraint.operator == Operator.EQ:
+                result += float(weight[0]) * (constraint.lhs - constraint.rhs) ** 2
+                continue
+
+            lhs = constraint.lhs - constraint.rhs
+            if constraint.operator == Operator.GE:
+                lhs = -lhs
+
+            if constraint.method_for_inequalities == SLACKS_LOG_2:
+                result += Converter.apply_slacks(constraint, weight)
+            elif (constraint.method_for_inequalities
+                  == UNBALANCED_PENALIZATION):
+                result += Converter.use_unbalanced_penalization(
+                    constraint, weight
+                )
+        return result
 
     @staticmethod
     def create_weight_free_qubo(problem: Problem) -> QUBO:
-        results: dict[VARIABLES, float] = {}
-
-        # objective_function = Expression(problem.objective_function.polynomial)
+        results = {}
+        
         for key, value in problem.objective_function.dictionary.items():
             if key in results:
                 results[key] += value
@@ -71,7 +134,7 @@ class Converter:
     @staticmethod
     def to_cqm(problem: Problem) -> ConstrainedQuadraticModel:
         binary_polynomial = dimod.BinaryPolynomial(
-            problem.objective_function.as_dict(), dimod.BINARY
+            problem.objective_function.dictionary, dimod.BINARY
         )
         cqm = dimod.make_quadratic_cqm(binary_polynomial)
 
@@ -81,15 +144,19 @@ class Converter:
                 cqm.add_variable(dimod.BINARY, str(var))
 
         for i, constraint in enumerate(problem.constraints):
-            cqm.add_constraint(dict_to_list(constraint.as_dict()), "==", label=i)
+            cqm.add_constraint(dict_to_list(constraint.lhs),
+                               constraint.operator.value, constraint.rhs)
 
         return cqm
 
     @staticmethod
-    def to_qubo(problem: Problem) -> tuple[QUBO, float]:
+    def to_dimod_qubo(problem: Problem, lagrange_multiplier: float = 10
+                      ) -> tuple[dict[tuple[str, ...], float], float]:
         cqm = Converter.to_cqm(problem)
-        bqm, _ = dimod.cqm_to_bqm(cqm, lagrange_multiplier=10)
-        return cast(tuple[QUBO, float], bqm.to_qubo())  # (qubo, offset)
+        bqm, _ = dimod.cqm_to_bqm(
+            cqm, lagrange_multiplier=lagrange_multiplier)
+        return cast(tuple[dict[tuple[str, ...], float], float],
+                    bqm.to_qubo())  # (qubo, offset)
 
     @staticmethod
     def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
@@ -141,7 +208,7 @@ class Converter:
         ]
         for var in variables_discrete:
             if var not in dqm.variables:
-                dqm.add_variable(problem.cases + CASES_OFFSET, var)
+                dqm.add_variable(problem.cases + BIN_OFFSET, var)
 
         for vars, bias in problem.objective_function.as_dict().items():
             s_i, *s_j = vars
@@ -153,21 +220,12 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
-                    {
-                        (case, case): bias
-                        for case in range(problem.cases + CASES_OFFSET)
-                    },
+                    {(case, case): bias for case in range(problem.cases + BIN_OFFSET)},
                 )
             else:
                 dqm.set_linear(
                     dqm.variables[xi_idx],
-                    [bias for _ in range(problem.cases + CASES_OFFSET)],
+                    [bias for _ in range(problem.cases + BIN_OFFSET)],
                 )
+
         return dqm
-
-    @staticmethod
-    def to_bqm(problem: Problem) -> BinaryQuadraticModel:
-        qubo = Converter.create_weight_free_qubo(problem)
-        bqm = BinaryQuadraticModel.from_qubo(qubo)
-
-        return bqm
