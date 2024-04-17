@@ -92,7 +92,7 @@ def test_CDP():
     G = nx.barbell_graph(3, 1)
     problem = CommunityDetectionProblem(Network(G), 2)
 
-    assert problem.objective_function.as_dict() == {
+    assert problem.objective_function == {
         ('s0', 's2'): -0.75, ('s2', 's0'): -0.75, 
         ('s1', 's3'): -0.75, ('s3', 's1'): -0.75, 
         ('s0', 's4'): -0.625, ('s4', 's0'): -0.625, 
@@ -137,7 +137,7 @@ def test_CDP():
         ('s11', 's13'): 0.25, ('s13', 's11'): 0.25
     }
 
-    assert [constraint.as_dict() for constraint in problem.constraints] == [
+    assert [constraint.lhs for constraint in problem.constraints] == [
         {('s0',): 1, ('s1',): 1, (): -1}, 
         {('s2',): 1, ('s3',): 1, (): -1}, 
         {('s4',): 1, ('s5',): 1, (): -1}, 
@@ -149,7 +149,7 @@ def test_CDP():
     
     problem_no_one_hot = CommunityDetectionProblem(Network(G), 2, False)
 
-    assert problem_no_one_hot.objective_function.as_dict() == {
+    assert problem_no_one_hot.objective_function == {
         ('x0', 'x0'): 0.25, ('x0', 'x1'): -0.75, 
         ('x0', 'x2'): -0.625, ('x0', 'x3'): 0.375, 
         ('x0', 'x4'): 0.25, ('x0', 'x5'): 0.25, 

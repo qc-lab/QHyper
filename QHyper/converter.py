@@ -120,10 +120,10 @@ class Converter:
         return result
 
     @staticmethod
-    def create_weight_free_qubo(problem: Problem) -> QUBO:
+    def create_weight_free_qubo(problem: Problem):
         results = {}
         
-        for key, value in problem.objective_function.dictionary.items():
+        for key, value in problem.objective_function.items():
             if key in results:
                 results[key] += value
             else:
@@ -131,6 +131,7 @@ class Converter:
 
         return results
 
+    # TODO: Refactor is needed
     @staticmethod
     def to_cqm(problem: Problem) -> ConstrainedQuadraticModel:
         binary_polynomial = dimod.BinaryPolynomial(
@@ -158,6 +159,7 @@ class Converter:
         return cast(tuple[dict[tuple[str, ...], float], float],
                     bqm.to_qubo())  # (qubo, offset)
 
+    # TODO: Refactor is needed
     @staticmethod
     def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
         if hasattr(problem, "one_hot_encoding"):
@@ -208,7 +210,7 @@ class Converter:
         ]
         for var in variables_discrete:
             if var not in dqm.variables:
-                dqm.add_variable(problem.cases + BIN_OFFSET, var)
+                dqm.add_variable(problem.cases + CASES_OFFSET, var)
 
         for vars, bias in problem.objective_function.as_dict().items():
             s_i, *s_j = vars
@@ -220,12 +222,12 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
-                    {(case, case): bias for case in range(problem.cases + BIN_OFFSET)},
+                    {(case, case): bias for case in range(problem.cases + CASES_OFFSET)},
                 )
             else:
                 dqm.set_linear(
                     dqm.variables[xi_idx],
-                    [bias for _ in range(problem.cases + BIN_OFFSET)],
+                    [bias for _ in range(problem.cases + CASES_OFFSET)],
                 )
 
         return dqm

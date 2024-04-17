@@ -9,10 +9,11 @@ from typing import Any, Iterable, Tuple, cast
 import networkx as nx
 import numpy as np
 import sympy
-from QHyper.util import Expression
 from QHyper.problems.base import Problem
-from QHyper.util import VARIABLES
+from QHyper.constraint import Constraint
+from QHyper.polynomial import Polynomial
 from sympy.core.expr import Expr
+from QHyper.parser import from_sympy
 
 
 @dataclass
@@ -139,7 +140,7 @@ class CommunityDetectionProblem(Problem):
         return sympy.symbols(" ".join([f"x{i}" for i in range(len(self.community))]))
 
     def _set_objective_function(self) -> None:
-        equation: dict[VARIABLES, float] = {}
+        equation = {}
         for i in range(len(self.B)):
             for j in range(len(self.B)):
                 x_i, x_j = sympy.symbols(f"x{self.community[i]}"), sympy.symbols(
@@ -161,7 +162,7 @@ class CommunityDetectionProblem(Problem):
 
         equation = {key: -1 * val for key, val in equation.items()}
 
-        self.objective_function = Expression(equation)
+        self.objective_function = equation
 
     def _encode_discrete_to_one_hot(
         self, discrete_variable: sympy.Symbol, case_value: int
@@ -188,7 +189,7 @@ class CommunityDetectionProblem(Problem):
 
     def _set_one_hot_constraints(self, communities: int) -> None:
         ONE_HOT_CONST = -1
-        self.constraints: list[Expression] = []
+        self.constraints: list[Constraint] = []
         # In the case of 1-to-1 mapping between discrete
         # and binary variable values no one-hot constraints
         if communities == ONE_HOT_CONST * -1:
@@ -201,7 +202,7 @@ class CommunityDetectionProblem(Problem):
             for dummy in dummies:
                 expression += dummy
             expression += ONE_HOT_CONST
-            self.constraints.append(Expression(expression))
+            self.constraints.append(Constraint(from_sympy(expression)))
 
     def decode_solution(self, solution: dict) -> dict:
         ONE_HOT_VALUE = 1.0
