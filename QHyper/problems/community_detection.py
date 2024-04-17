@@ -140,7 +140,7 @@ class CommunityDetectionProblem(Problem):
         return sympy.symbols(" ".join([f"x{i}" for i in range(len(self.community))]))
 
     def _set_objective_function(self) -> None:
-        equation = {}
+        equation: dict[tuple[str, ...], float] = {}
         for i in range(len(self.B)):
             for j in range(len(self.B)):
                 x_i, x_j = sympy.symbols(f"x{self.community[i]}"), sympy.symbols(
@@ -162,7 +162,7 @@ class CommunityDetectionProblem(Problem):
 
         equation = {key: -1 * val for key, val in equation.items()}
 
-        self.objective_function = equation
+        self.objective_function = Polynomial(equation)
 
     def _encode_discrete_to_one_hot(
         self, discrete_variable: sympy.Symbol, case_value: int

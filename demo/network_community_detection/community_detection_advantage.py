@@ -32,7 +32,7 @@ problem = CommunityDetectionProblem(
                               resolution=resolution), communities=1
 )
 
-advantage = Advantage(problem, time=5)
+advantage = Advantage(problem)
 sampleset = advantage.solve()
 sample = sampleset.first.sample
 

@@ -40,7 +40,7 @@ class Problem(ABC):
     """
 
     objective_function: Polynomial
-    constraints: list[Constraint]
+    constraints: list[Constraint] = []
     name: str = ""
     cases: int = 1
 

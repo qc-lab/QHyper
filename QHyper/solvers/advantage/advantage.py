@@ -12,13 +12,14 @@ class Advantage(Solver):
     Advantage 
     """
 
-    def __init__(self, problem: Problem) -> None:
-        self.problem: Problem = problem
+    def __init__(self, problem: Problem, region: str = "eu-central-1") -> None:
+        self.problem = problem
+        self.region = region
 
     def solve(self, params_inits: dict[str, Any] = {}) -> Any:
-        sampler = DWaveSampler(region="eu-central-1", solver='Advantage_system5.4')
-        Q = Converter.create_weight_free_qubo(self.problem)
-        sampleset = EmbeddingComposite(sampler).sample_qubo(Q)
+        sampler = DWaveSampler(region=self.region, solver='Advantage_system5.4')
+        qubo = Converter.create_qubo(self.problem, params_inits.get("weights", []))
+        sampleset = EmbeddingComposite(sampler).sample_qubo(qubo.terms)
 
         return sampleset
 
