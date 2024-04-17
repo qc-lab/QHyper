@@ -96,7 +96,7 @@ class Converter:
 
     @staticmethod
     def create_qubo(problem: Problem, weights: list[float]) -> Polynomial:
-        of_weight = weights[0] if weights else 1
+        of_weight = weights[0] if len(weights) else 1
         result = float(of_weight) * problem.objective_function
 
         constraints_weights = weights[1:]
