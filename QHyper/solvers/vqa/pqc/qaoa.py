@@ -14,7 +14,7 @@ from QHyper.problems.base import Problem
 from QHyper.optimizers import OptimizationResult
 
 from QHyper.solvers.vqa.pqc.base import PQC
-from QHyper.solvers.converter import QUBO, Converter
+from QHyper.converter import QUBO, Converter
 
 from .mixers import MIXERS_BY_NAME
 

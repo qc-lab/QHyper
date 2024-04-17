@@ -8,7 +8,7 @@ from typing import Any, Optional
 import gurobipy as gp
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
-from QHyper.solvers.converter import QUBO
+from QHyper.converter import QUBO
 
 
 def calc(vars: dict[str, Any], poly_dict: QUBO) -> Any:

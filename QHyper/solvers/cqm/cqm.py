@@ -9,7 +9,7 @@ from dwave.system import LeapHybridCQMSampler
 
 from typing import Any, Optional
 
-from QHyper.solvers.converter import Converter
+from QHyper.converter import Converter
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver
 

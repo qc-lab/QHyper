@@ -1,1 +1,1 @@
-from .advatnage import Advantage
+from .advantage import Advantage
