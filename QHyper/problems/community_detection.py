@@ -19,11 +19,11 @@ from QHyper.parser import from_sympy
 @dataclass
 class Network:
     graph: nx.Graph
-    resolution: float = field(default=1)
+    resolution: float = 1.0
+    weight: str | None = None
+    community: list | None = None
     full_modularity_matrix: np.ndarray = field(init=False)
     generalized_modularity_matrix: np.ndarray = field(init=False)
-    weight: str | None = field(default=None)
-    community: list | None = field(default=None)
 
     def __post_init__(self) -> None:
         if not self.community:

@@ -13,10 +13,6 @@ from QHyper.constraint import (
 from QHyper.problems.base import Problem
 import numpy as np
 
-def dict_to_list(my_dict) -> list[tuple[Any, ...]]:
-    return [tuple([*key, val]) for key, val in my_dict.items()]
-
-
 class Converter:
     @staticmethod
     def calc_slack_coefficients(constant: int) -> list[int]:
@@ -37,7 +33,7 @@ class Converter:
             {(f"{label}_{i}",): v
              for i, v in enumerate(slack_coefficients)}
         )
-    
+
     @staticmethod
     def apply_slacks(
         constraint: Constraint, weight: list[float]
@@ -51,14 +47,14 @@ class Converter:
         slacks = Converter.use_slacks(rhs_const, constraint.label)
 
         return weight[0] * (lhs + slacks - rhs_const) ** 2
-        
+
     @staticmethod
     def use_unbalanced_penalization(
         constraint: Constraint, weight: list[float]
     ) -> Polynomial:
         lhs = constraint.lhs - constraint.rhs
         return weight[0]*lhs + weight[1]*lhs**2
-    
+
     @staticmethod
     def assign_weights_to_constraints(
         constraints_weights: list[float], constraints: list[Constraint]
@@ -119,18 +115,6 @@ class Converter:
                     constraint, weight
                 )
         return result
-
-    @staticmethod
-    def create_weight_free_qubo(problem: Problem):
-        results = {}
-        
-        for key, value in problem.objective_function.items():
-            if key in results:
-                results[key] += value
-            else:
-                results[key] = value
-
-        return results
 
     # TODO: Refactor is needed
     @staticmethod

@@ -9,7 +9,7 @@ from dwave.system import DWaveSampler, EmbeddingComposite
 class Advantage(Solver):
     """
     Class for solving a problem using
-    Advantage 
+    Advantage
     """
 
     def __init__(self, problem: Problem, region: str = "eu-central-1") -> None:
