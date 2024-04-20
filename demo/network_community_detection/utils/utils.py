@@ -104,8 +104,9 @@ def draw_communities(
     problem: CommunityDetectionProblem, sample: dict, path: str, **kwargs
 ) -> None:
     color_map = []
+    char = list(sample.keys())[0][0]
     for node in problem.G:
-        color_map.append(COLORS[sample["x" + str(node)]])
+        color_map.append(COLORS[sample[char + str(node)]])
 
     pos = kwargs.get("pos") if "pos" in kwargs else None
     f = plt.figure()

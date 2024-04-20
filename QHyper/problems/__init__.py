@@ -10,6 +10,7 @@ from .knapsack import KnapsackProblem
 from .tsp import TSPProblem
 from .maxcut import MaxCutProblem
 from .workflow_scheduling import WorkflowSchedulingProblem
+from .community_detection import CommunityDetectionProblem, Network
 
 from .base import Problem
 
@@ -19,6 +20,7 @@ PROBLEMS_BY_NAME: dict[str, Type[Problem]] = {
     "tsp": TSPProblem,
     "maxcut": MaxCutProblem,
     "workflow_scheduling": WorkflowSchedulingProblem,
+    'community_detection': CommunityDetectionProblem
 }
 
 

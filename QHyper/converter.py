@@ -3,7 +3,7 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from typing import cast
+from typing import Any, cast
 
 import dimod
 from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
@@ -12,7 +12,6 @@ from QHyper.constraint import (
     Constraint, SLACKS_LOG_2, UNBALANCED_PENALIZATION, Operator)
 from QHyper.problems.base import Problem
 import numpy as np
-
 
 class Converter:
     @staticmethod
@@ -93,7 +92,8 @@ class Converter:
 
     @staticmethod
     def create_qubo(problem: Problem, weights: list[float]) -> Polynomial:
-        result = float(weights[0]) * problem.objective_function
+        of_weight = weights[0] if len(weights) else 1
+        result = float(of_weight) * problem.objective_function
 
         constraints_weights = weights[1:]
         for weight, constraint in Converter.assign_weights_to_constraints(
@@ -116,6 +116,7 @@ class Converter:
                 )
         return result
 
+    # TODO: Refactor is needed
     @staticmethod
     def to_cqm(problem: Problem) -> ConstrainedQuadraticModel:
         binary_polynomial = dimod.BinaryPolynomial(
@@ -143,11 +144,46 @@ class Converter:
         return cast(tuple[dict[tuple[str, ...], float], float],
                     bqm.to_qubo())  # (qubo, offset)
 
+    # TODO: Refactor is needed
     @staticmethod
     def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
+        if hasattr(problem, "one_hot_encoding"):
+            if problem.one_hot_encoding:
+                return Converter._dqm_from_one_hot_representation(problem)
+            return Converter._dqm_from_discrete_representation(problem)
+        return Converter._dqm_from_one_hot_representation(problem)
+
+    @staticmethod
+    def _dqm_from_discrete_representation(problem: Problem) -> DiscreteQuadraticModel:
         dqm = dimod.DiscreteQuadraticModel()
 
-        BIN_OFFSET = 1 if problem.cases == 1 else 0
+        for var in problem.variables:
+            var = str(var)
+            if var not in dqm.variables:
+                dqm.add_variable(problem.cases, var)
+
+        for vars, bias in problem.objective_function.as_dict().items():
+            x_i, x_j = vars
+            xi_idx: int = cast(int, dqm.variables.index(x_i))
+            xj_idx: int = cast(int, dqm.variables.index(x_j))
+
+            # We're skipping the linear terms
+            if xi_idx == xj_idx:
+                continue
+
+            dqm.set_quadratic(
+                dqm.variables[xi_idx],
+                dqm.variables[xj_idx],
+                {(case, case): bias for case in range(problem.cases)},
+            )
+
+        return dqm
+
+    @staticmethod
+    def _dqm_from_one_hot_representation(problem: Problem) -> DiscreteQuadraticModel:
+        dqm = dimod.DiscreteQuadraticModel()
+
+        CASES_OFFSET = 1 if problem.cases == 1 else 0
 
         def binary_to_discrete(v: str) -> str:
             id = int(v[1:])
@@ -159,7 +195,7 @@ class Converter:
         ]
         for var in variables_discrete:
             if var not in dqm.variables:
-                dqm.add_variable(problem.cases + BIN_OFFSET, var)
+                dqm.add_variable(problem.cases + CASES_OFFSET, var)
 
         for vars, bias in problem.objective_function.as_dict().items():
             s_i, *s_j = vars
@@ -171,12 +207,12 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
-                    {(case, case): bias for case in range(problem.cases + BIN_OFFSET)},
+                    {(case, case): bias for case in range(problem.cases + CASES_OFFSET)},
                 )
             else:
                 dqm.set_linear(
                     dqm.variables[xi_idx],
-                    [bias for _ in range(problem.cases + BIN_OFFSET)],
+                    [bias for _ in range(problem.cases + CASES_OFFSET)],
                 )
 
         return dqm
