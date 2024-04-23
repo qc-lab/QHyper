@@ -6,18 +6,17 @@
 from dataclasses import dataclass
 from typing import Callable
 
-import numpy as np
-import numpy.typing as npt
+from numpy.typing import NDArray
 
 from .base import Optimizer, OptimizationResult
 
 
 @dataclass
 class Dummy(Optimizer):
-    def minimize(
+    def _minimize(
             self,
-            func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
-            init: npt.NDArray[np.float64]
+            func: Callable[[NDArray], OptimizationResult],
+            init: NDArray
     ) -> OptimizationResult:
         result = func(init)
         return OptimizationResult(result.value, result.params, [[result]])

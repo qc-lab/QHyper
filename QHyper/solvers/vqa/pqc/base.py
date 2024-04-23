@@ -6,7 +6,7 @@
 from abc import abstractmethod
 
 import numpy as np
-import numpy.typing as npt
+from numpy.typing import NDArray
 from typing import Any, Optional
 
 from QHyper.problems.base import Problem
@@ -35,8 +35,8 @@ class PQC:
     def run_opt(
         self,
         problem: Problem,
-        opt_args: list[float],
-        hyper_args: list[float]
+        opt_args: NDArray,
+        hyper_args: NDArray
     ) -> OptimizationResult:
         """
         Run optimization using the PQC.
@@ -61,8 +61,8 @@ class PQC:
     def run_with_probs(
         self,
         problem: Problem,
-        opt_args: npt.NDArray[np.float64],
-        hyper_args: npt.NDArray[np.float64]
+        opt_args: NDArray[np.float64],
+        hyper_args: NDArray[np.float64]
     ) -> dict[str, float]:
         """
         Run optimization using the PQC and return probabilities.
@@ -87,9 +87,9 @@ class PQC:
     def get_opt_args(
         self,
         params_init: dict[str, Any],
-        args: Optional[npt.NDArray[np.float64]] = None,
-        hyper_args: Optional[npt.NDArray[np.float64]] = None
-    ) -> npt.NDArray[np.float64]:
+        args: Optional[NDArray] = None,
+        hyper_args: Optional[NDArray] = None
+    ) -> NDArray:
         """
         Get optimization arguments. This method should return arguments for
         optimizer. These arguments may come from initial parameters
@@ -115,9 +115,9 @@ class PQC:
     def get_hopt_args(
         self,
         params_init: dict[str, Any],
-        args: Optional[npt.NDArray[np.float64]] = None,
-        hyper_args: Optional[npt.NDArray[np.float64]] = None
-    ) -> npt.NDArray[np.float64]:
+        args: Optional[NDArray] = None,
+        hyper_args: Optional[NDArray] = None
+    ) -> NDArray:
         """
         Get hyperparameter optimization arguments.
         This method should return arguments for hyperoptimizer.
@@ -143,8 +143,8 @@ class PQC:
     @abstractmethod
     def get_params_init_format(
         self,
-        opt_args: npt.NDArray[np.float64],
-        hyper_args: npt.NDArray[np.float64]
+        opt_args: NDArray,
+        hyper_args: NDArray
     ) -> dict[str, Any]:
         """
         Get initial params format. Method changes opt_args and hyper_args into

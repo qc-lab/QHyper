@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 import pennylane as qml
-import numpy as np
+import pennylane.numpy as np
 
 import numpy.typing as npt
 from typing import Callable, cast
@@ -26,8 +26,8 @@ class WFQAOA(QAOA):
     backend: str = "default.qubit"
     limit_results: int | None = None
 
-    def get_probs_func(self, problem: Problem, weights: list[float]
-                       ) -> Callable[[list[float]], list[float]]:
+    def get_probs_func(self, problem: Problem, weights: npt.NDArray
+                       ) -> Callable[[npt.NDArray], npt.NDArray]:
         """Returns function that takes angles and returns probabilities
 
         Parameters
@@ -42,29 +42,30 @@ class WFQAOA(QAOA):
         """
         cost_operator = self.create_cost_operator(problem, weights)
 
-        @qml.qnode(self.dev)
-        def probability_circuit(params: list[float]) -> list[float]:
-            self._circuit(params, cost_operator)
-            return cast(list[float], qml.probs(wires=cost_operator.wires))
+        self.dev = qml.device(self.backend, wires=cost_operator.wires)
 
-        return cast(Callable[[list[float]], list[float]], probability_circuit)
+        @qml.qnode(self.dev)
+        def probability_circuit(params: npt.NDArray) -> npt.NDArray:
+            self._circuit(params, cost_operator)
+            return cast(npt.NDArray, qml.probs(wires=cost_operator.wires))
+
+        return probability_circuit
 
     def run_opt(
         self,
         problem: Problem,
-        opt_args: npt.NDArray[np.float64],
-        hyper_args: npt.NDArray[np.float64],
+        opt_args: npt.NDArray,
+        hyper_args: npt.NDArray,
         print_probabilities: bool = False
     ) -> OptimizationResult:
-        self.dev = qml.device(
-            self.backend, wires=[str(x) for x in problem.variables])
-        probs = self.get_probs_func(problem, list(hyper_args))(
+        probs = self.get_probs_func(problem, hyper_args)(
             opt_args.reshape(2, -1))
 
-        if isinstance(probs, qml.numpy.numpy_boxes.ArrayBox):
+        if isinstance(probs, np.numpy_boxes.ArrayBox):
             probs = probs._value
+        vars_num = self._get_num_of_wires()
         results_by_probabilites = {
-            format(result, 'b').zfill(len(problem.variables)): float(prob)
+            format(result, 'b').zfill(vars_num): float(prob)
             for result, prob in enumerate(probs)
         }
         if print_probabilities:

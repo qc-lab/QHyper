@@ -7,29 +7,27 @@ import multiprocessing as mp
 from dataclasses import dataclass, field
 
 from typing import Callable
-import numpy.typing as npt
 
 import numpy as np
-import tqdm
+from numpy.typing import NDArray
 
-from .base import Optimizer, OptimizationResult
+from QHyper.optimizers.util import run_parallel
+
+from .base import Optimizer, OptimizationResult, OptimizerError
 
 
 @dataclass
 class CEM(Optimizer):
-    bounds: npt.NDArray[np.float64]
     epochs: int = 5
     samples_per_epoch: int = 100
     elite_frac: float = 0.1
     processes: int = mp.cpu_count()
-    disable_tqdm: bool = False
-    verbose: bool = False
     n_elite: int = field(init=False)
 
     def __post_init__(self) -> None:
+        super().__post_init__()
         self.n_elite: int = max(
             int(self.samples_per_epoch * self.elite_frac), 1)
-        self.bounds = np.array(self.bounds)
 
     """Implementation of the Cross Entropy Method for hyperparameter tuning
 
@@ -53,9 +51,13 @@ class CEM(Optimizer):
     """
 
     def _get_points(
-        self, mean: npt.NDArray[np.float64], cov: npt.NDArray[np.float64]
-    ) -> list[npt.NDArray[np.float64]]:
-        hyperparams: list[npt.NDArray[np.float64]] = []
+        self, mean: NDArray, cov: NDArray
+    ) -> NDArray:
+        if self.bounds is None:
+            raise OptimizerError('This optimizer requires bounds')
+
+        # TODO
+        hyperparams: list[NDArray] = []
         while len(hyperparams) < self.samples_per_epoch:
             point = np.random.multivariate_normal(mean, cov)
             if (
@@ -64,12 +66,12 @@ class CEM(Optimizer):
             ):
                 hyperparams.append(point)
 
-        return hyperparams
+        return np.vstack(hyperparams)
 
-    def minimize(
+    def _minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
-        init: npt.NDArray[np.float64],
+        func: Callable[[NDArray], OptimizationResult],
+        init: NDArray,
     ) -> OptimizationResult:
         """Returns hyperparameters which lead to the lowest values
             returned by optimizer
@@ -102,7 +104,7 @@ class CEM(Optimizer):
         mean = _init.flatten()
         cov = np.identity(len(mean))
         best_hyperparams = _init
-        best_result = None
+        best_result = OptimizationResult(np.inf, _init, [])
         history: list[list[OptimizationResult]] = []
 
         for i in range(self.epochs):
@@ -110,23 +112,19 @@ class CEM(Optimizer):
                 print(f'Epoch {i+1}/{self.epochs}')
 
             hyperparams = self._get_points(mean, cov)
-            with mp.Pool(processes=self.processes) as p:
-                results = list(tqdm.tqdm(
-                    p.imap(func,
-                           [h.reshape(_init.shape) for h in hyperparams]),
-                    total=len(hyperparams),
-                    disable=self.disable_tqdm,
-                ))
+            results = run_parallel(func, hyperparams, self.processes,
+                                   self.disable_tqdm)
+
             elite_ids = np.array(
                 [x.value for x in results]).argsort()[:self.n_elite]
 
             elite_weights = [hyperparams[i].flatten() for i in elite_ids]
+            elite_weights = hyperparams[elite_ids]
 
             if self.verbose:
                 print(f'Values: {sorted([x.value for x in results])}')
 
-            if (best_result is None
-                    or results[elite_ids[0]].value < best_result.value):
+            if results[elite_ids[0]].value < best_result.value:
                 if self.verbose:
                     print(f'New best result: {results[elite_ids[0]].value}')
 
@@ -137,4 +135,5 @@ class CEM(Optimizer):
             mean = np.mean(elite_weights, axis=0)
             cov = np.cov(np.stack((elite_weights), axis=1), bias=True)
 
-        return OptimizationResult(best_result.value, best_hyperparams, history)
+        return OptimizationResult(
+                best_result.value, best_hyperparams, history)

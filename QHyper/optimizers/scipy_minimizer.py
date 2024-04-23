@@ -3,15 +3,17 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-import numpy.typing as npt
-from typing import Optional, Callable, Any
+from dataclasses import dataclass, field
+from numpy.typing import NDArray
+from typing import Callable, Any
 
 import scipy
 import numpy as np
 
-from .base import Optimizer, OptimizationResult
+from .base import Optimizer, OptimizationResult, OptimizerError
 
 
+@dataclass
 class ScipyOptimizer(Optimizer):
     """
     Class for the SciPy minimizer.
@@ -29,22 +31,13 @@ class ScipyOptimizer(Optimizer):
         Additional keyword arguments for the SciPy minimizer.
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     """
-    def __init__(
-            self,
-            maxfun: int,
-            bounds: Optional[list[tuple[float, float]]] = None,
-            verbose: bool = False,
-            **kwargs: Any
-    ) -> None:
-        self.maxfun = maxfun
-        self.bounds = bounds
-        self.optimizer_kwargs = kwargs
-        self.verbose = verbose
+    maxfun: int
+    kwargs: dict[str, Any] = field(default_factory=dict)
 
-    def minimize(
+    def _minimize(
         self,
-        func: Callable[[npt.NDArray[np.float64]], OptimizationResult],
-        init: npt.NDArray[np.float64]
+        func: Callable[[NDArray], OptimizationResult],
+        init: NDArray
     ) -> OptimizationResult:
         """
         Minimize the given function using the SciPy minimize.
@@ -65,8 +58,11 @@ class ScipyOptimizer(Optimizer):
             A tuple containing the minimum function value and the
             corresponding optimal point.
         """
-        def wrapper(params: npt.NDArray[np.float64]) -> float:
-            return func(np.array(params).reshape(np.array(init).shape)).value
+        if self.bounds is None:
+            raise OptimizerError("This optimizer requires bounds")
+
+        def wrapper(params: NDArray) -> float:
+            return func(params).value
 
         history: list[OptimizationResult] = []
 
@@ -77,20 +73,16 @@ class ScipyOptimizer(Optimizer):
             history.append(OptimizationResult(
                 intermediate_result.fun, np.copy(intermediate_result.x)))
 
-        if 'options' not in self.optimizer_kwargs:
-            self.optimizer_kwargs['options'] = {}
-        if 'maxfun' not in self.optimizer_kwargs['options']:
-            self.optimizer_kwargs['options']['maxfun'] = self.maxfun
+        if 'options' not in self.kwargs:
+            self.kwargs['options'] = {}
+        if 'maxfun' not in self.kwargs['options']:
+            self.kwargs['options']['maxfun'] = self.maxfun
 
         result = scipy.optimize.minimize(
-            wrapper,
-            np.array(init).flatten(),
-            bounds=(
-                self.bounds if self.bounds is not None
-                else [(0, 2*np.pi)]*len(np.array(init).flatten())
-            ),
+            wrapper, init,
+            bounds=(self.bounds),
             callback=callback,
-            **self.optimizer_kwargs
+            **self.kwargs
         )
         if self.verbose:
             print(f"Success: {result.success}. Message: {result.message}")

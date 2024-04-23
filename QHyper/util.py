@@ -2,7 +2,13 @@
 # Smart Growth Operational Programme (2014-2020), Measure 4.2
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
-from typing import Callable
+import numpy.typing as npt
+
+from typing import Callable, NewType
+
+Array1D = NewType("Array1D", npt.NDArray)
+Array2D = NewType("Array2D", npt.NDArray)
+ArrayND = NewType("ArrayND", npt.NDArray)
 
 
 def weighted_avg_evaluation(

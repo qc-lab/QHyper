@@ -7,10 +7,8 @@ from dataclasses import dataclass, field
 import pennylane as qml
 from pennylane import numpy as np
 
-import numpy.typing as npt
+from numpy.typing import NDArray
 from typing import Any, Callable, cast, Optional
-
-from pennylane import wires
 
 from QHyper.problems.base import Problem
 from QHyper.optimizers import OptimizationResult
@@ -27,20 +25,29 @@ class QAOA(PQC):
     layers: int = 3
     backend: str = "default.qubit"
     mixer: str = "pl_x_mixer"
-    qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(default_factory=dict)
+    qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
+        default_factory=dict)
     dev: qml.Device | None = None
 
-    def create_cost_operator(self, problem: Problem, weights: list[float]
+    def _get_num_of_wires(self) -> int:
+        if self.dev is None:
+            raise ValueError("Device not initialized")
+        return len(self.dev.wires)
+
+    def create_cost_operator(self, problem: Problem, weights: NDArray
                              ) -> qml.Hamiltonian:
-        if tuple(weights) not in self.qubo_cache:
-            qubo = Converter.create_qubo(problem, weights)
+        if weights.ndim != 1:
+            raise ValueError("Weights should be 1D array")
+
+        _weights = weights.tolist()
+        if tuple(_weights) not in self.qubo_cache:
+            qubo = Converter.create_qubo(problem, _weights)
             self.qubo_cache[tuple(weights)] = self._create_cost_operator(qubo)
         return self.qubo_cache[tuple(weights)]
 
     def _create_cost_operator(self, qubo: Polynomial) -> qml.Hamiltonian:
         result: qml.Hamiltonian | None = None
         const = 0
-        print('qubo:', type(qubo))
 
         for variables, coeff in qubo.terms.items():
             if not variables:
@@ -56,48 +63,55 @@ class QAOA(PQC):
                     0.5 * qml.Identity(str(var)) - 0.5 * qml.PauliZ(str(var))
                 )
 
-                summand = summand @ encoded_var if summand else coeff * encoded_var
+                summand = (summand @ encoded_var if summand
+                           else coeff * encoded_var)
             result = result + summand if result else summand
+
+        assert result is not None
         return result + const * qml.Identity(result.wires[0])
 
     def _hadamard_layer(self, cost_operator: qml.Hamiltonian) -> None:
         for i in cost_operator.wires:
             qml.Hadamard(str(i))
 
-    def _create_mixing_hamiltonian(self, cost_operator: qml.Hamiltonian) -> qml.Hamiltonian:
+    def _create_mixing_hamiltonian(self, cost_operator: qml.Hamiltonian
+                                   ) -> qml.Hamiltonian:
         if self.mixer not in MIXERS_BY_NAME:
             raise Exception(f"Unknown {self.mixer} mixer")
-        return MIXERS_BY_NAME[self.mixer]([str(v) for v in cost_operator.wires])
+        return MIXERS_BY_NAME[self.mixer](
+            [str(v) for v in cost_operator.wires])
 
     def _circuit(
         self,
-        params: list[float],
+        params: NDArray,
         cost_operator: qml.Hamiltonian,
     ) -> None:
-        def qaoa_layer(gamma: list[float], beta: list[float]) -> None:
+        def qaoa_layer(gamma: NDArray, beta: NDArray) -> None:
             qml.qaoa.cost_layer(gamma, cost_operator)
-            qml.qaoa.mixer_layer(beta, self._create_mixing_hamiltonian(cost_operator))
+            qml.qaoa.mixer_layer(
+                beta, self._create_mixing_hamiltonian(cost_operator))
 
         self._hadamard_layer(cost_operator)
+        params = params.reshape(2, -1)
         qml.layer(qaoa_layer, self.layers, params[0], params[1])
 
     def get_expval_circuit(
-        self, problem: Problem, weights: list[float]
-    ) -> Callable[[list[float]], float]:
+        self, problem: Problem, weights: NDArray
+    ) -> Callable[[NDArray], float]:
         cost_operator = self.create_cost_operator(problem, weights)
 
         self.dev = qml.device(self.backend, wires=cost_operator.wires)
 
         @qml.qnode(self.dev)
-        def expval_circuit(params: list[float]) -> float:
+        def expval_circuit(params: NDArray) -> float:
             self._circuit(params, cost_operator)
             return cast(float, qml.expval(cost_operator))
 
-        return cast(Callable[[list[float]], float], expval_circuit)
+        return cast(Callable[[NDArray], float], expval_circuit)
 
     def get_probs_func(
-        self, problem: Problem, weights: list[float]
-    ) -> Callable[[list[float]], list[float]]:
+        self, problem: Problem, weights: NDArray
+    ) -> Callable[[NDArray], NDArray]:
         """Returns function that takes angles and returns probabilities
 
         Parameters
@@ -112,54 +126,58 @@ class QAOA(PQC):
         """
         cost_operator = self.create_cost_operator(problem, weights)
 
+        self.dev = qml.device(self.backend, wires=cost_operator.wires)
+
         @qml.qnode(self.dev)
-        def probability_circuit(params: list[float]) -> list[float]:
+        def probability_circuit(params: NDArray) -> NDArray:
             self._circuit(params, cost_operator)
             return cast(
-                list[float], qml.probs(wires=cost_operator.wires)
+                NDArray, qml.probs(wires=cost_operator.wires)
             )
 
-        return cast(
-            Callable[[list[float]], list[float]], probability_circuit
-        )
+        return probability_circuit
 
     def run_opt(
         self,
         problem: Problem,
-        opt_args: list[float],
-        hyper_args: list[float],
+        opt_args: NDArray,
+        hyper_args: NDArray,
     ) -> OptimizationResult:
-        # self.dev = qml.device(self.backend, wires=[str(x) for x in problem.variables])
         results = self.get_expval_circuit(problem, hyper_args)(opt_args)
         return OptimizationResult(results, opt_args)
 
     def run_with_probs(
         self,
         problem: Problem,
-        opt_args: npt.NDArray[np.float64],
-        hyper_args: npt.NDArray[np.float64],
+        opt_args: NDArray,
+        hyper_args: NDArray,
     ) -> dict[str, float]:
-        self.dev = qml.device(self.backend, wires=[str(x) for x in problem.variables])
-        probs = self.get_probs_func(problem, list(hyper_args))(opt_args.reshape(2, -1))
+        probs = self.get_probs_func(problem, hyper_args)(
+            opt_args.reshape(2, -1))
+
+        vars_num = self._get_num_of_wires()
         return {
-            format(result, "b").zfill(len(problem.variables)): float(prob)
+            format(result, "b").zfill(vars_num): float(prob)
             for result, prob in enumerate(probs)
         }
 
     def get_opt_args(
         self,
         params_init: dict[str, Any],
-        args: Optional[npt.NDArray[np.float64]] = None,
-        hyper_args: Optional[npt.NDArray[np.float64]] = None,
-    ) -> npt.NDArray[np.float64]:
-        return args if args is not None else np.array(params_init["angles"])
+        args: Optional[NDArray] = None,
+        hyper_args: Optional[NDArray] = None,
+    ) -> NDArray:
+        return np.array(
+            args if args is not None
+            else np.array(params_init["angles"])
+        ).flatten()
 
     def get_hopt_args(
         self,
         params_init: dict[str, Any],
-        args: Optional[npt.NDArray[np.float64]] = None,
-        hyper_args: Optional[npt.NDArray[np.float64]] = None,
-    ) -> npt.NDArray[np.float64]:
+        args: Optional[NDArray] = None,
+        hyper_args: Optional[NDArray] = None,
+    ) -> NDArray:
         return (
             hyper_args
             if hyper_args is not None
@@ -167,7 +185,7 @@ class QAOA(PQC):
         )
 
     def get_params_init_format(
-        self, opt_args: npt.NDArray[np.float64], hyper_args: npt.NDArray[np.float64]
+        self, opt_args: NDArray, hyper_args: NDArray
     ) -> dict[str, Any]:
         return {
             "angles": opt_args,
