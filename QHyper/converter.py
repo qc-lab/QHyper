@@ -3,7 +3,7 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from typing import Any, cast
+from typing import cast
 
 import dimod
 from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
@@ -12,6 +12,7 @@ from QHyper.constraint import (
     Constraint, SLACKS_LOG_2, UNBALANCED_PENALIZATION, Operator)
 from QHyper.problems.base import Problem
 import numpy as np
+
 
 class Converter:
     @staticmethod
@@ -124,7 +125,6 @@ class Converter:
         )
         cqm = dimod.make_quadratic_cqm(binary_polynomial)
 
-        # todo this cqm can probably be initialized in some other way
         variables = problem.objective_function.get_variables()
         for constraint in problem.constraints:
             variables.update(constraint.lhs.get_variables())
