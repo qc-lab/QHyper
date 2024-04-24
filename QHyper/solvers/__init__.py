@@ -8,6 +8,7 @@ import copy
 from typing import Type, Any
 
 from QHyper.problems import problem_from_config, ProblemConfigException
+from QHyper.util import search_for
 
 from .base import Solver, SolverResult, SolverConfigException  # noqa F401
 
@@ -21,6 +22,7 @@ SOLVERS: dict[str, Type[Solver]] = {
     'gurobi': Gurobi,
     'cqm': CQM,
 }
+search_for(Solver, 'QHyper/solvers')
 
 
 def solver_from_config(config: dict[str, Any]) -> Solver:
