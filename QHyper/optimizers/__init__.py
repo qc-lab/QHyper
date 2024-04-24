@@ -5,7 +5,9 @@
 
 from typing import Type
 
-from .base import Optimizer, OptimizationResult  # noqa: F401
+from QHyper.util import search_for
+
+from QHyper.optimizers.base import Optimizer, OptimizationResult  # noqa: F401
 
 from .cem import CEM
 from .qml_gradient_descent import QmlGradientDescent
@@ -24,3 +26,5 @@ OPTIMIZERS_BY_NAME: dict[str, Type[Optimizer]] = {
     'grid': GridSearch,
     'dummy': Dummy,
 }
+OPTIMIZERS_BY_NAME.update(search_for(Optimizer, 'QHyper/custom/optimizers'))
+OPTIMIZERS_BY_NAME.update(search_for(Optimizer, 'custom/optimizers'))

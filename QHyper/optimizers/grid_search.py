@@ -10,7 +10,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from QHyper.optimizers.util import run_parallel
-from .base import OptimizationResult, Optimizer, OptimizerError
+from QHyper.optimizers.base import (
+    OptimizationResult, Optimizer, OptimizerError)
 
 
 @dataclass

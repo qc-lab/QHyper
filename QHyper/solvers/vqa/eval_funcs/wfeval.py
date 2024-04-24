@@ -8,7 +8,7 @@ from QHyper.problems.base import Problem
 
 
 class WFEval(EvalFunc):
-    def __init__(self, penalty: float = 0, 
+    def __init__(self, penalty: float = 0,
                  limit_results: int | None = None) -> None:
         self.penalty = penalty
         self.limit_results = limit_results

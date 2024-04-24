@@ -8,7 +8,7 @@ from typing import Callable
 
 from numpy.typing import NDArray
 
-from .base import Optimizer, OptimizationResult
+from QHyper.optimizers.base import Optimizer, OptimizationResult
 
 
 @dataclass
