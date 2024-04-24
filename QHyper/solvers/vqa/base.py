@@ -12,7 +12,7 @@ from QHyper.problems.base import Problem
 
 from QHyper.optimizers import (
     OPTIMIZERS_BY_NAME, Dummy, Optimizer, OptimizationResult)
-from .pqc.base import PQC
+from QHyper.solvers.vqa.pqc.base import PQC
 
 from QHyper.solvers.base import Solver, SolverResult, SolverConfigException, SolverException
 from QHyper.solvers.vqa.pqc import PQC_BY_NAME

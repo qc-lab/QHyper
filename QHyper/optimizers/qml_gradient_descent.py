@@ -10,7 +10,8 @@ from numpy.typing import NDArray
 import pennylane as qml
 from pennylane import numpy as np
 
-from .base import Optimizer, OptimizationResult, OptimizerError
+from QHyper.optimizers.base import (
+    Optimizer, OptimizationResult, OptimizerError)
 
 
 QML_GRADIENT_DESCENT_OPTIMIZERS: dict[str, Type[qml.GradientDescentOptimizer]] = {

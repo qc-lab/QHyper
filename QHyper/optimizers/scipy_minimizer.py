@@ -10,7 +10,8 @@ from typing import Callable, Any
 import scipy
 import numpy as np
 
-from .base import Optimizer, OptimizationResult, OptimizerError
+from QHyper.optimizers.base import (
+    Optimizer, OptimizationResult, OptimizerError)
 
 
 @dataclass

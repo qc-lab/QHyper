@@ -32,8 +32,6 @@ class Problem(ABC):
         list of constraints in SymPy syntax
     variables : list[Any]
         list of variables in the problem
-    name: str
-        helps to differentiate various problems (default "")
     cases: int
         number of variable cases (values)
         (default 1 - denoting binary variable)
@@ -41,7 +39,6 @@ class Problem(ABC):
 
     objective_function: Polynomial
     constraints: list[Constraint] = []
-    name: str = ""
     cases: int = 1
 
     def get_score(self, result: str, penalty: float = 0) -> float:
@@ -63,6 +60,4 @@ class Problem(ABC):
         raise NotImplementedError("Unimplemented")
 
     def __repr__(self) -> str:
-        if self.name == "":
-            return super().__repr__()
-        return f"{self.__class__.__name__}_{self.name}"
+        return f"{self.__class__.__name__}"
