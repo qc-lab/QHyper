@@ -12,6 +12,8 @@ from .maxcut import MaxCutProblem
 from .workflow_scheduling import WorkflowSchedulingProblem
 from .community_detection import CommunityDetectionProblem, Network
 
+from QHyper.util import search_for
+
 from .base import Problem
 
 
@@ -22,6 +24,11 @@ PROBLEMS_BY_NAME: dict[str, Type[Problem]] = {
     "workflow_scheduling": WorkflowSchedulingProblem,
     'community_detection': CommunityDetectionProblem
 }
+users_problems = search_for(Problem, 'QHyper/problems')
+PROBLEMS_BY_NAME.update({
+    problem.__name__.lower(): problem
+    for problem in users_problems
+})
 
 
 class ProblemConfigException(Exception):
@@ -41,9 +48,10 @@ def problem_from_config(config: dict[str, dict[str, any]]) -> Problem:
         Initialized Problem object
     """
     _config = copy.deepcopy(config)
+    error_msg = ""
     try:
         error_msg = "Problem configuration was not provided"
-        problem_type = _config.pop('type')
+        problem_type = str(_config.pop('type'))
         error_msg = f"There is no {problem_type} problem type"
         problem_class = PROBLEMS_BY_NAME[problem_type]
     except KeyError:

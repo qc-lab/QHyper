@@ -5,6 +5,8 @@
 
 from typing import Type
 
+from QHyper.util import search_for
+
 from .base import Optimizer, OptimizationResult  # noqa: F401
 
 from .cem import CEM
@@ -24,3 +26,8 @@ OPTIMIZERS_BY_NAME: dict[str, Type[Optimizer]] = {
     'grid': GridSearch,
     'dummy': Dummy,
 }
+users_optimizers = search_for(Optimizer, 'QHyper/optimizers')
+OPTIMIZERS_BY_NAME.update({
+    optimizer.__name__.lower(): optimizer
+    for optimizer in users_optimizers
+})
