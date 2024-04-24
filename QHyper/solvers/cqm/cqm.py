@@ -17,6 +17,7 @@ DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
 
 
 class CQM(Solver):
+    name = "CQM1"
     """
     Class for solving a problem using the
     Constrained Quadratic Model (CQM) approach.

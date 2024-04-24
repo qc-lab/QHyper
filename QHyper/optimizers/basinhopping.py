@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 from typing import Callable, Any
 
-from .base import Optimizer
+from QHyper.optimizers import Optimizer
 
 
 class Basinhopping(Optimizer):
