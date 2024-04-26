@@ -140,6 +140,22 @@ Here are some key steps to get started:
     # Result: 11110, Prob: 0.028006, Evaluation: 2
     # Result: 00010, Prob: 0.011519, Evaluation: 2
 
+Solver configurations quide
+---------------
+1. You begin with definition of solver type which is obligatory setting. Possible types include:
+ * 'vga' for variational algorithms
+ * 'cqm' for D-Wave CQM
+ * 'dqm' for D-Wave DQM
+ * 'advantage' for D-Wave Advantage (currently default advantage_system5.4. is supported)
+
+Sample code for defining type advantage solver
+
+.. code-block:: python
+
+    solver:
+    type: advantage
+
+2.  
 
 Conclusion
 ----------
