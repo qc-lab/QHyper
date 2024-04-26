@@ -142,6 +142,7 @@ Here are some key steps to get started:
 
 Solver configuration tutorial
 ---------------
+
 This tutorial assumes following sample optimization problem definition:
 
 .. code-block:: python
