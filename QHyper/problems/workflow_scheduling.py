@@ -21,7 +21,7 @@ from typing import cast
 from QHyper.constraint import Constraint, Operator, UNBALANCED_PENALIZATION
 from QHyper.parser import from_sympy
 from QHyper.polynomial import Polynomial
-from .base import Problem, ProblemException
+from QHyper.problems.base import Problem, ProblemException
 
 
 @dataclass

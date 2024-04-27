@@ -9,7 +9,7 @@ from collections import namedtuple
 
 from typing import cast
 
-from .base import Problem
+from QHyper.problems.base import Problem
 from QHyper.constraint import Constraint
 from QHyper.parser import from_sympy
 

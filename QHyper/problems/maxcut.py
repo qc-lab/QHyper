@@ -9,7 +9,7 @@ import sympy
 
 from QHyper.parser import from_sympy
 
-from .base import Problem
+from QHyper.problems.base import Problem
 
 
 class MaxCutProblem(Problem):
