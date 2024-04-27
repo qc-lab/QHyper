@@ -15,7 +15,8 @@ def get_problem_config():
     problem_config = {
         "type": "knapsack",
         "max_weight": 2,
-        "items": [(1, 2), (1, 2), (1, 1)]
+        "items_weights": [1, 1, 1],
+        "items_values": [2, 2, 1],
     }
 
     params_config = {
@@ -49,7 +50,7 @@ def test_qaoa():
     }
 
     solver_results = run_solver(solver_config)
-    assert_probabilities(solver_results.results_probabilities, {
+    assert_probabilities(solver_results.probabilities, {
         '00000': 0.052147632,
         '00001': 0.047456206,
         '00010': 0.067478508,
@@ -104,7 +105,7 @@ def test_wfqaoa():
     }
 
     solver_results = run_solver(solver_config)
-    assert_probabilities(solver_results.results_probabilities, {
+    assert_probabilities(solver_results.probabilities, {
         '00000': 0.052147632,
         '00001': 0.047456206,
         '00010': 0.067478508,
@@ -159,7 +160,7 @@ def test_hqaoa():
     }
 
     solver_results = run_solver(solver_config)
-    assert_probabilities(solver_results.results_probabilities, {
+    assert_probabilities(solver_results.probabilities, {
         '00000': 0.052147632,
         '00001': 0.047456206,
         '00010': 0.067478508,

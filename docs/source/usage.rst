@@ -92,7 +92,7 @@ Here are some key steps to get started:
 
     solver_results = vqa.solve(params_config)
     print("Solver results:")
-    print(f"Probabilities: {solver_results.results_probabilities}")
+    print(f"Probabilities: {solver_results.probabilities}")
     print(f"Best params: {solver_results.params}")
 
     # Solver results:
@@ -111,12 +111,12 @@ Here are some key steps to get started:
 
     print("Evaluation:")
     print(weighted_avg_evaluation(
-        solver_results.results_probabilities, problem.get_score,
+        solver_results.probabilities, problem.get_score,
         penalty=0, limit_results=10, normalize=True
     ))
     print("Sort results:")
     sorted_results = sort_solver_results(
-        solver_results.results_probabilities, limit_results=10)
+        solver_results.probabilities, limit_results=10)
 
     results_with_evaluation = add_evaluation_to_results(
         sorted_results, problem.get_score, penalty=penalty)

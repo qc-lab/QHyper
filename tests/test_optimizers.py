@@ -31,7 +31,7 @@ def run_solver(solver_config):
     vqa = solver_from_config(solver_config)
     results = vqa.solve()
     return weighted_avg_evaluation(
-        results.results_probabilities, vqa.problem.get_score, 0)
+        results.probabilities, vqa.problem.get_score, 0)
 
 
 def function(args) -> OptimizationResult:

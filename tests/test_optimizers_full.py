@@ -10,7 +10,8 @@ def get_problem_config():
     problem_config = {
         "type": "knapsack",
         "max_weight": 2,
-        "items": [(1, 2), (1, 2), (1, 1)]
+        "items_weights": [1, 1, 1],
+        "items_values": [2, 2, 1],
     }
 
     params_config = {
@@ -29,7 +30,7 @@ def run_solver(solver_config):
     vqa = solver_from_config(solver_config)
     results = vqa.solve()
     return weighted_avg_evaluation(
-        results.results_probabilities, vqa.problem.get_score, 0)
+        results.probabilities, vqa.problem.get_score, 0)
 
 
 def test_scipy():
