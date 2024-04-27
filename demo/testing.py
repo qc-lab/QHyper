@@ -18,20 +18,20 @@ if __name__ == '__main__':
 
     with open('config.yaml', 'r') as f:
         config = yaml.load(f, Loader=yaml.SafeLoader)
-        print(f"Config: {config}")  
+        print(f"Config: {config}")
     vqa = Solver.from_config(problem, config)
     # best_result = 0
     # for i in range(200):
     #     params_cofing = {
     #         'angles': np.random.uniform(0, np.pi/2, (LAYERS, 2)),
     #         'hyper_args': [1, 5, 5],
-    #     } 
+    #     }
     #     # params_cofing = {
     #     #     'angles': [[1, 0.8, 0.6, 0.4, 0.2], [1]*LAYERS],
     #     #     'hyper_args': [1, 5, 5],
     #     # }
     #     # hyper_optimizer_bounds = 3*[(1, 10)]
-        
+
     #     # result_params = vqa.solve(params_cofing)
     #     # print(f"Best params: {best_params}")
 
@@ -43,18 +43,18 @@ if __name__ == '__main__':
         'angles': [[1, 0.8, 0.6, 0.4, 0.2], [1]*LAYERS],
         'hyper_args': [1, 5, 5],
     }
-   
+
     for _ in range(10):
         solver_results = vqa.solve(params_config)
 
     print("Evaluation:")
     print(weighted_avg_evaluation(
-        solver_results.results_probabilities, problem.get_score,
+        solver_results.probabilities, problem.get_score,
         penalty=0, limit_results=10, normalize=True
     ))
     print("Sort results:")
     sorted_results = sort_solver_results(
-        solver_results.results_probabilities, limit_results=10)
+        solver_results.probabilities, limit_results=10)
 
     results_with_evaluation = add_evaluation_to_results(
         sorted_results, problem.get_score, penalty=1)

@@ -36,7 +36,7 @@ class SolverResult:
         of the objective function at each iteration - there can be multiple
         results per each iteration (epoch).
     """
-    results_probabilities: dict[str, float]
+    probabilities: dict[str, float]
     params: dict[Any, Any]
     history: list[list[OptimizationResult]] = field(default_factory=list)
 

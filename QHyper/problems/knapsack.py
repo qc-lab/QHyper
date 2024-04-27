@@ -34,7 +34,8 @@ class Knapsack:
         max_weight: int,
         max_item_value: int = 10,
         items_amount: int = 0,
-        items: list[tuple[int, int]] = []
+        items_weights: list[int] = [],
+        items_values: list[int] = []
     ) -> None:
         """
         Parameters
@@ -51,8 +52,11 @@ class Knapsack:
         self.items: list[Item] = []
         self.max_weight: int = max_weight
         self.max_item_value: int = max_item_value
-        if items:
-            self.set_knapsack(items)
+        if items_weights and items_values:
+            if len(items_weights) != len(items_values):
+                raise ValueError(
+                    "Weights and values must have the same length")
+            self.set_knapsack(items_weights, items_values)
         else:
             self.generate_knapsack(items_amount)
 
@@ -63,8 +67,10 @@ class Knapsack:
                 random.randint(1, self.max_item_value)
             ))
 
-    def set_knapsack(self, items: list[tuple[int, int]]) -> None:
-        self.items = [Item(weight, value) for weight, value in items]
+    def set_knapsack(self, weights: list[int], values: list[int]
+                     ) -> None:
+        self.items = [Item(weight, value)
+                      for weight, value in zip(weights, values)]
 
     def __len__(self) -> int:
         return len(self.items)
@@ -91,7 +97,8 @@ class KnapsackProblem(Problem):
         max_weight: int,
         max_item_value: int = 10,
         items_amount: int = 0,
-        items: list[tuple[int, int]] = []
+        items_weights: list[int] = [],
+        items_values: list[int] = []
     ) -> None:
         """
         Parameters
@@ -105,8 +112,8 @@ class KnapsackProblem(Problem):
         items: list[tuple[int, int]]
             set items in knapsack (default [])
         """
-        self.knapsack = Knapsack(
-            max_weight, max_item_value, items_amount, items)
+        self.knapsack = Knapsack(max_weight, max_item_value,
+                                 items_amount, items_weights, items_values)
         # self.variables = len(self.knapsack) + self.knapsack.max_weight
         self.variables: tuple[sympy.Symbol] = sympy.symbols(' '.join(
             [f'x{i}' for i

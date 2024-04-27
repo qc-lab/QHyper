@@ -8,7 +8,8 @@ np.random.seed(1244)
 
 
 def test_knapsack():
-    problem = KnapsackProblem(max_weight=2, items=[(1, 2), (1, 2), (1, 1)])
+    problem = KnapsackProblem(max_weight=2, items_weights=[1, 1, 1],
+                              items_values=[2, 2, 1])
 
     assert problem.knapsack.items == [
         Item(weight=1, value=2), Item(weight=1, value=2),
@@ -94,11 +95,11 @@ def test_CDP():
     problem = CommunityDetectionProblem(Network(G), 2)
 
     assert problem.objective_function == {
-        ('s0', 's2'): -1.0, ('s1', 's3'): -1.0, 
-        ('s0', 's4'): 1.0, ('s1', 's5'): 1.0, 
-        ('s0', 's6'): -1.0, ('s1', 's7'): -1.0, 
-        ('s2', 's4'): -1.0, ('s3', 's5'): -1.0, 
-        ('s2', 's6'): 1.0, ('s3', 's7'): 1.0, 
+        ('s0', 's2'): -1.0, ('s1', 's3'): -1.0,
+        ('s0', 's4'): 1.0, ('s1', 's5'): 1.0,
+        ('s0', 's6'): -1.0, ('s1', 's7'): -1.0,
+        ('s2', 's4'): -1.0, ('s3', 's5'): -1.0,
+        ('s2', 's6'): 1.0, ('s3', 's7'): 1.0,
         ('s4', 's6'): -1.0, ('s5', 's7'): -1.0
     }
 
@@ -108,15 +109,15 @@ def test_CDP():
         {('s4',): 1.0, ('s5',): 1.0, (): -1.0},
         {('s6',): 1.0, ('s7',): 1.0, (): -1.0}
      ]
-    
+
     problem_no_one_hot = CommunityDetectionProblem(Network(G), 2, False)
 
     assert problem_no_one_hot.objective_function == {
-        ('x0', 'x0'): 0.5, ('x0', 'x1'): -1.0, 
-        ('x0', 'x2'): 1.0, ('x0', 'x3'): -1.0, 
-        ('x1', 'x1'): 0.5, ('x1', 'x2'): -1.0, 
-        ('x1', 'x3'): 1.0, ('x2', 'x2'): 0.5, 
+        ('x0', 'x0'): 0.5, ('x0', 'x1'): -1.0,
+        ('x0', 'x2'): 1.0, ('x0', 'x3'): -1.0,
+        ('x1', 'x1'): 0.5, ('x1', 'x2'): -1.0,
+        ('x1', 'x3'): 1.0, ('x2', 'x2'): 0.5,
         ('x2', 'x3'): -1.0, ('x3', 'x3'): 0.5
     }
-    
+
     assert problem_no_one_hot.constraints == []
