@@ -106,7 +106,7 @@ Information on how to install and use QHyper for conducting experiments.
 .. toctree::
     :maxdepth: 2
 
-    usage
+    user_guide/index
 
 Contribution Guide
 ------------------
