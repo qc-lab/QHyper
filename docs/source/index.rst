@@ -50,9 +50,12 @@ Architecture
 ================
 
 QHyper consists with three main components:
-    * :ref:`README Problems` - classes describing different types of problems e.g. Knapsack problem or Travelling Salesman Problem
-    * :ref:`README Solvers` - classes definng differnt types of solvers e.g. quantum solvers like QAOA or CQM, but also classical algorithms like Gurobi
-    * :ref:`README Optimizers` - classes implementing different types of optimizer
+
+* :ref:`README Problems` - classes describing different types of problems e.g. Knapsack problem or Travelling Salesman Problem
+
+* :ref:`README Solvers` - classes definng differnt types of solvers e.g. quantum solvers like QAOA or CQM, but also classical algorithms like Gurobi
+
+* :ref:`README Optimizers` - classes implementing different types of optimizer
 
 Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
 
@@ -89,13 +92,36 @@ More detailed information can be found on :ref:`generated/qhyper.optimizers.base
 
 
 Contents
---------
+========
 .. toctree::
+    :hidden:
 
-   Home <self>
-   usage
-   contribution
+    Home <self>
+
+
+User Guide
+----------
+Information on how to install and use QHyper for conducting experiments.
+
+.. toctree::
+    :maxdepth: 2
+
+    usage
+
+Contribution Guide
+------------------
+Information on how to contribute to the QHyper library.
+
+.. toctree::
+    :maxdepth: 2
+
+    contribution
+
+API Reference
+-------------
+Detailed information on the classes and methods available in the QHyper library.
+
+.. toctree::
+   :maxdepth: 2
+
    api
-   changelog
-
-
