@@ -56,7 +56,7 @@ In the example below, the constraint penalties  are set as ``hyper_args``
         params_inits:
             hyper_args: [1, 2.5, 2.5]
 
-Adding hyperoptimiser
+Adding hyperoptimizer
 ---------------------
 
 Since guessing correct penalties is often difficult, there is also option to define ``hyper_optimiser`` to search for appropriate settings.
@@ -118,6 +118,7 @@ type <https://pennylane.ai/plugins/>`_ for ``qaoa``  using ``backend`` keyword
 
 Customizing optimizers
 ----------------------
+
 Customising ``optimizer`` settings is also possible. Below, more detailed sample configuration is shown. Please note that adding all
 native function options is possible (e.g. ``stepsize`` in this example are native
 from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/pennylane.AdamOptimizer.html>`_   )
@@ -142,8 +143,8 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
 Combining optimizers and hyperoptimizers
 ----------------------------------------
 
-It is also possible to make use of both ``optimizer`` and ``hyper_optimizer`` functionality. The example below is similar to that in point 6.
-However, as in point 3, penalties  are searched by ``hiper_optimizer`` within specified  ``bounds``. In this example it is done  by Cross Entropy Search  method (configured as ``cem``).  ``processes``, ``samples_per_epoch`` and ``epochs`` are parameters specific for ``cem``.
+It is also possible to make use of both ``optimizer`` and ``hyper_optimizer`` functionality. The example below is similar to that in `Customizing optimizers`_.
+However, as in `Adding hyperoptimizer`_, penalties  are searched by ``hiper_optimizer`` within specified  ``bounds``. In this example it is done  by Cross Entropy Search  method (configured as ``cem``).  ``processes``, ``samples_per_epoch`` and ``epochs`` are parameters specific for ``cem``.
 
 .. code-block:: yaml
 
