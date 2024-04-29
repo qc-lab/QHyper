@@ -28,6 +28,7 @@ Basic solver definition requires providing its type. Currently supported types a
 * ``cqm`` for `D-Wave CQM <https://docs.dwavesys.com/docs/latest/doc_leap_hybrid.html#leap-s-hybrid-solvers>`_
 * ``dqm`` for `D-Wave DQM <https://docs.dwavesys.com/docs/latest/doc_leap_hybrid.html#leap-s-hybrid-solvers>`_
 * ``advantage`` for `D-Wave Advantage <https://docs.dwavesys.com/docs/latest/c_gs_4.html>`_ (currently default advantage_system5.4. is supported)
+* ``gurobi`` for `Gurobi Optimizer <https://www.gurobi.com/solutions/gurobi-optimizer/>`_
 
 Sample code for defining type advantage solver
 
