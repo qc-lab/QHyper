@@ -72,7 +72,7 @@ In the example below, the constraint penalties  are set as ``hyper_args``
 Adding hyperoptimizer
 ---------------------
 
-Since guessing correct penalties is often difficult, there is also option to define ``hyper_optimiser`` to search for appropriate settings.
+Since guessing correct penalties is often difficult, there is also option to define ``hyper_optimizer`` to search for appropriate settings.
 In the example below, ``grid`` search hyperoptimizer is applied to find  proper penalties  of the  knapsack optimized function.
 The penalties are searched within specified  ``bounds`` with ``steps`` defined in the configuration.
 
@@ -95,7 +95,7 @@ Typical example of QAOA configuration is shown below. The parametrized quantum c
 `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/pennylane.AdamOptimizer.html>`_ ``optimizer``
 from `Pennylane <https://pennylane.ai/>`_ (``type: qml``) with default options is used.
 
-Initial variational parameters optimised by Adam method are set as ``angles``.   Penalty weights are initialized  as ``hyper_args``.
+Initial variational parameters optimized by Adam method are set as ``angles``.   Penalty weights are initialized  as ``hyper_args``.
 
 .. code-block:: yaml
 
