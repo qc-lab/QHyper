@@ -42,11 +42,23 @@ Configuring initial QUBO penalties (Lagrangian multipliers)
 -----------------------------------------------------------
 
 ``advantage`` solver requires problem definition in the `QUBO <https://arxiv.org/pdf/1811.11538>`_ form. QHyper automatically creates the QUBO for
-knapsack problem (for details see
-`Software Aided Approach for Constrained Optimization Based on QAOA Modifications <https://link.springer.com/chapter/10.1007/978-3-031-36030-5_10>`_. )
+knapsack problem 
 
-This, however, requires setting  three penalties (Lagrangian multipliers) i.e. hyperparameters
-for the cost function and two constraints: ensuring that problem encoding is correct and that knapsack weight fullfils ```max_weight``` requirement .
+.. math::
+   f(\boldsymbol{x}, \boldsymbol{y}) = 
+   - \alpha_0 \underbrace{\sum_{i = 1}^N c_i x_i}_{\text{cost function}} + \alpha_1 \underbrace{(1 - \sum_{i=1}^W y_i)^2}_{\text{coding constraint}} + \alpha_1 \underbrace{(\sum_{i=1}^W iy_i - \sum_{i=1}^N w_ix_i)^2}_{\text{weight constraint}},
+   
+where 
+ * :math:`N=3` is the number of items available, 
+ * :math:`W=` ``max_weight`` is the maximum weight of the knapsack, 
+ * :math:`c_i` and :math:`w_i` are the costs and weights specified in ``items_costs`` and ``items_weights`` lists of the configuration. 
+ * The goal is to optimize :math:`\boldsymbol{x} = [x_i]_N` which is a Boolean vector, where :math:`x_i = 1`  if and only if the item :math:`i` was selected to be inserted into the knapsack. 
+ * :math:`\boldsymbol{y} = [y_i]_W` is a one-hot vector where :math:`y_i = 1` if and only if the weight of the knapsack is equal to :math:`i`; 
+ * :math:`\alpha_j` are penalty weights  (i.e. Lagrangian multipliers, hyperparameters of the optimized function).
+
+Therefore, the proper function definition  requires setting  three :math:`\alpha_j` penalties  i.e. hyperparameters
+for the cost function and two constraints: ensuring that problem encoding is correct and that knapsack weight fullfils 
+``max_weight`` requirement .
 
 In the example below, the constraint penalties  are set as ``hyper_args``
 
@@ -76,7 +88,7 @@ The penalties are searched within specified  ``bounds`` with ``steps`` defined i
 Configuring variational quantum algorithms
 ------------------------------------------
 
-``vqa`` solver type is a  set containing solvers based on  gate-based variational algorithms. Currenly `QAOA <https://arxiv.org/abs/1411.4028>`_, `WF-QAOA and H-QAOA <https://link.springer.com/chapter/10.1007/978-3-031-36030-5_10>`_
+``vqa`` solver type is a  set containing solvers based on  gate-based variational algorithms. Currenly `QAOA <https://arxiv.org/abs/1411.4028>`_, `WF-QAOA and H-QAOA <https://www.iccs-meeting.org/archive/iccs2023/papers/140770117.pdf>`_
 are supported obtained by setting ``pqc type`` to  ``qaoa``, ``wfqaoa`` and ``hqaoa`` repectively.
 
 Typical example of QAOA configuration is shown below. The parametrized quantum circuit is configured for  5 ``layers``.  Default local
