@@ -13,13 +13,13 @@ Welcome to QHyper's documentation!
 .. image:: https://user-images.githubusercontent.com/38388283/226841016-711112a8-09d1-4a83-8aab-6e305cb24edb.png
     :width: 40
 
-QHyper - a software framework for hybrid quantum-classical optimization.
+QHyper - a software framework for hybrid quantum-classical combinatorial optimization.
 
 Introduction to QHyper Library
 ==============================
 
 Welcome to the documentation for the **QHyper** library, a powerful tool designed
-to simplify the process of conducting experiments in the realm of quantum
+to simplify the process of conducting combinatorial optimization experiments in the realm of quantum
 algorithms. The primary aim of QHyper is to provide a
 user-friendly framework that simplifies the execution of experiments, focusing on
 quantum algorithms while also allowing classical approaches.
@@ -28,7 +28,7 @@ Key Features
 ------------
 
 - **Quantum Algorithm Emphasis:** QHyper is tailored for researchers and
-  developers interested in exploring quantum algorithms. It offers an environment
+  developers interested in exploring quantum combinatorial optimization algorithms. It offers an environment
   that facilitates the implementation of quantum-based solvers.
 
 - **Classical Solver Support:** While the focus is on quantum algorithms,
@@ -44,6 +44,8 @@ Key Features
 - **Simplified Experimentation:** With QHyper, the experimentation process is
   made more accessible. Researchers can define, execute, and analyze experiments
   efficiently, allowing them to focus on the insights derived from the results.
+
+- **Hyperparameters optimization:**  QHyper offers set of hyperoptimizers with easy configuration when proper formulation of a constrained optimization problem is needed by quantum  solver accepting unconstrained forms only.
 
 
 Architecture
