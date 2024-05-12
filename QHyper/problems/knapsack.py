@@ -79,16 +79,27 @@ class Knapsack:
 class KnapsackProblem(Problem):
     """Objective function and constraints for the knapsack problem
 
+    Parameters
+    ----------
+    max_weight: int
+        maximum weight of an item
+    max_item_value: int, default 10
+        maximum value of an item
+    items_amount: int, optional
+        items amount, used only for random knapsack. If not provided,
+        then items_weights and items_values must be specified
+    items_weights: list[int], optional
+        list of items weights
+    items_values: list[int], optional
+        list of items values
+
     Attributes
     ----------
-    objective_function : Expression
+    objective_function : Polynomial
         objective function in SymPy syntax wrapped in Expression class
-    constraints : list[Expression]
+    constraints : list[Polynomial]
         list of constraints in SymPy syntax wrapped in Expression class
-    variables : int
-        number of qubits in the circuit, equals to sum of the number
-        of items in the knapsack the max weight of a knapsack
-    knapsack: Knapsack
+    knapsack: :py:class:`Knapsack`
         Knapsack instance
     """
 
@@ -100,18 +111,6 @@ class KnapsackProblem(Problem):
         items_weights: list[int] = [],
         items_values: list[int] = []
     ) -> None:
-        """
-        Parameters
-        ----------
-        max_weight: int
-            maximum weight of an item
-        max_item_value: int
-            maximum value of an item (default 10)
-        items_amount: int
-            items amount, used only for random knapsack (default 0)
-        items: list[tuple[int, int]]
-            set items in knapsack (default [])
-        """
         self.knapsack = Knapsack(max_weight, max_item_value,
                                  items_amount, items_weights, items_values)
         # self.variables = len(self.knapsack) + self.knapsack.max_weight

@@ -96,6 +96,27 @@ def calc_slack_coefficients(constant: int) -> list[int]:
 
 
 class WorkflowSchedulingProblem(Problem):
+    """Workflow Scheduling Problem
+
+    Parameters
+    ----------
+    encoding : str
+        Encoding used for the problem (one-hot or binary)
+    tasks_file : str
+        Path to the tasks file
+    machines_file : str
+        Path to the machines file
+    deadline : float
+        Deadline for the workflow
+
+    Attributes
+    ----------
+    objective_function: Polynomial
+        Objective_function represented as a Polynomial
+    constraints : list[Polynomial]
+        List of constraints represented as a Polynomials
+    """
+
     def __new__(
         cls, encoding: str, tasks_file: str, machines_file: str, deadline: float
     ) -> 'WorkflowSchedulingOneHot | WorkflowSchedulingBinary':

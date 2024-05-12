@@ -16,25 +16,26 @@ class Problem(ABC):
     """Interface for different combinatorial optimization problems
 
     Objective function and constrians are the main components
-    and should be written in the SymPy syntax.
+    and are represented as :py:class:`~QHyper.polynomial.Polynomial`.
     Depending on the selcted solver, these parts can be used
     separately or, e.g., as a Quadratic Unconstrained
     Binary Optimization (QUBO) formularion.
 
     If the QUBO is provided, it should be passed to the
     objective_function and the constraints should be empty.
+    Same applies for the situation when the problem doesn't
+    have constraints.
 
     Attributes
     ----------
-    objective_function: Expression
-        objective function in SymPy syntax
-    constraints : list[Expression]
-        list of constraints in SymPy syntax
-    variables : list[Any]
-        list of variables in the problem
-    cases: int
-        number of variable cases (values)
+    objective_function: Polynomial
+        Objective_function represented as a Polynomial
+    constraints : list[Polynomial], optional
+        List of constraints represented as a Polynomials
+    cases: int, default 1
+        Number of variable cases (values)
         (default 1 - denoting binary variable)
+        Currently only used for :py:class:`.CommunityDetectionProblem`
     """
 
     objective_function: Polynomial
@@ -44,12 +45,19 @@ class Problem(ABC):
     def get_score(self, result: str, penalty: float = 0) -> float:
         """Returns score of the outcome provided as a binary string
 
-        Necessary to evaluate results.
+        Necessary to evaluate results. It's not possible to calculate the
+        score based on the objective function directly, because that is
+        highly dependent on the problem. That's why this method requires
+        user to implement it.
+        This method is used in optimization process where evaluating QUBO
+        or expectation value is not enough.
 
         Parameters
         ----------
         result : str
             outcome as a string of zeros and ones
+        penalty : float, default 0
+            penalty for the constraint violation
 
         Returns
         -------

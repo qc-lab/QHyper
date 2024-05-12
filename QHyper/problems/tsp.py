@@ -12,6 +12,7 @@ from typing import cast
 from QHyper.constraint import Constraint
 
 from QHyper.parser import from_sympy
+from QHyper.polynomial import Polynomial
 from QHyper.problems.base import Problem
 
 
@@ -89,44 +90,43 @@ class TSP:
 
 
 class TSPProblem(Problem):
-    """Class defining objective function and constraints for TSP problem
+    """
+    Class defining objective function and constraints for TSP
+
+    Parameters
+    ----------
+    number_of_cities : int
+        Number of cities
+    cities_coords : list[tuple[float, float]], default []
+        List of cities coordinates. If not provided, random cities
+        coordinates are generated.
 
     Attributes
     ----------
-    objective_function : Expression
-        objective function in SymPy syntax
-    constraints : list[Expression]
-        list of constraints in SymPy syntax
-    variables : int
-        number of qubits in the circuit, equals to number of cities
-        to the power of 2
-    tsp_instance: TSP
+    objective_function : Polynomial
+        Objective function represented as a Polynomial
+    constraints : list[Polynomial]
+        List of constraints represented as a Polynomials
+    tsp_instance: :py:class:`TSP`
         TSP problem instace
     """
 
     def __init__(
-            self,
-            number_of_cities: int,
-            cities_coords: list[tuple[float, float]] = [],
+        self,
+        number_of_cities: int,
+        cities_coords: list[tuple[float, float]] = [],
     ) -> None:
-        """
-        Parameters
-        ----------
-        number_of_cities : int
-            number of cities
-        """
-
         self.tsp_instance = TSP(
             number_of_cities, cities_coords=cities_coords)
         self.variables: tuple[sympy.Symbol] = sympy.symbols(
             ' '.join([f'x{i}' for i in range(number_of_cities ** 2)]))
-        self._set_objective_function()
-        self._set_constraints()
+        self.objective_function = self._get_objective_function()
+        self.constraints = self._get_constraints()
 
     def _calc_bit(self, i: int, t: int) -> int:
         return i + t * self.tsp_instance.number_of_cities
 
-    def _set_objective_function(self) -> None:
+    def _get_objective_function(self) -> Polynomial:
         equation = cast(sympy.Expr, 0)
         for i, j in itertools.permutations(
             range(0, self.tsp_instance.number_of_cities), 2
@@ -143,21 +143,22 @@ class TSPProblem(Problem):
             equation += (
                 self.tsp_instance.normalized_distance_matrix[i][j] * curr
             )
-        self.objective_function = from_sympy(equation)
+        return from_sympy(equation)
 
-    def _set_constraints(self) -> None:
-        self.constraints: list[Constraint] = []
+    def _get_constraints(self) -> list[Constraint]:
+        constraints: list[Constraint] = []
         for i in range(self.tsp_instance.number_of_cities):
             equation = cast(sympy.Expr, 1)
             for t in range(self.tsp_instance.number_of_cities):
                 equation -= self.variables[self._calc_bit(i, t)]
-            self.constraints.append(Constraint(from_sympy(equation), group=0))
+            constraints.append(Constraint(from_sympy(equation), group=0))
 
         for t in range(self.tsp_instance.number_of_cities):
             equation = cast(sympy.Expr, 1)
             for i in range(self.tsp_instance.number_of_cities):
                 equation -= self.variables[self._calc_bit(i, t)]
-            self.constraints.append(Constraint(from_sympy(equation), group=1))
+            constraints.append(Constraint(from_sympy(equation), group=1))
+        return constraints
 
     def _get_distance(self, key: str) -> float:
         results = np.array_split(list(key), self.tsp_instance.number_of_cities)
@@ -190,6 +191,8 @@ class TSPProblem(Problem):
         ----------
         result : str
             route as a string of zeros and ones
+        penalty : float, default 0
+            penalty for the constraint violation
 
         Returns
         -------

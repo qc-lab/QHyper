@@ -3,13 +3,13 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 
-from typing import Any, Optional
+from typing import Any
 
 from QHyper.problems.base import Problem
-from QHyper.optimizers import Optimizer, OptimizationResult
+from QHyper.optimizers import OptimizationResult
 
 
 class SolverConfigException(Exception):
@@ -41,7 +41,7 @@ class SolverResult:
     history: list[list[OptimizationResult]] = field(default_factory=list)
 
 
-class Solver:
+class Solver(ABC):
     """
     Abstract base class for solvers.
 
@@ -49,18 +49,9 @@ class Solver:
     ----------
     problem : Problem
         The problem to be solved.
-    hyper_optimizer: Optimizer, optional
-        Hyperparameter optmizer.
-    params_init: dict[str, Any], optional
-        Initial parameters for the optimization.
     """
 
     problem: Problem
-    hyper_optimizer: Optional[Optimizer] = None
-    params_inits: Optional[dict[str, Any]] = None
-
-    def __init__(self, problem: Problem, **kwargs: Any) -> None:
-        pass
 
     @classmethod
     def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'Solver':

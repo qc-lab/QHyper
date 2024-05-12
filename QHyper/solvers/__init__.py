@@ -2,6 +2,28 @@
 # Smart Growth Operational Programme (2014-2020), Measure 4.2
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
+"""
+===============================
+Solvers (:mod:`QHyper.solvers`)
+===============================
+
+.. currentmodule:: QHyper.solvers
+
+Package Content
+===============
+
+.. autosummary::
+    :toctree: generated/
+
+    Solver  -- Base class for solvers.
+    SolverResult -- Dataclass for storing
+
+    VQA -- Variational Quantum Algorithm solver.
+    Gurobi -- Gurobi solver.
+    CQM -- CQM solver.
+    DQM -- DQM solver.
+    Advantage -- Advantage solver.
+"""
 
 import copy
 
@@ -14,14 +36,18 @@ from QHyper.solvers.base import (
     Solver, SolverResult, SolverConfigException)  # noqa F401
 
 from .vqa.base import VQA
-from .gurobi.gurobi import Gurobi
-from .cqm.cqm import CQM
+from .classical.gurobi import Gurobi
+from .quantum_annealing.cqm import CQM
+from .quantum_annealing.dqm import DQM
+from .quantum_annealing.advantage import Advantage
 
 
 SOLVERS: dict[str, Type[Solver]] = {
     'vqa': VQA,
     'gurobi': Gurobi,
     'cqm': CQM,
+    'dqm': DQM,
+    'advantage': Advantage
 }
 SOLVERS.update(search_for(Solver, 'QHyper/custom/solvers'))
 SOLVERS.update(search_for(Solver, 'custom/solvers'))
@@ -56,6 +82,7 @@ def solver_from_config(config: dict[str, Any]) -> Solver:
             'Problem configuration was not provided')
     problem = problem_from_config(problem_config)
 
+    error_msg = ""
     try:
         error_msg = "Solver configuration was not provided"
         solver_config = config.pop('solver')

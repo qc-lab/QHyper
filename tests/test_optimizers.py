@@ -43,9 +43,7 @@ def test_scipy():
     minimizer = ScipyOptimizer(
         maxfun=100,
         bounds=np.array([(-1, 1), (-1, 1), (-1, 1)]),
-        kwargs={
-            'method': 'L-BFGS-B',
-        }
+        method='L-BFGS-B'
     )
     result = minimizer.minimize(function, np.array([1., 0.5, -0.3]))
     assert result.value == pytest.approx(0, rel=1e-6, abs=1e-6)

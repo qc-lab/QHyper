@@ -2,6 +2,28 @@
 # Smart Growth Operational Programme (2014-2020), Measure 4.2
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
+"""
+=================================
+Problems (:mod:`QHyper.problems`)
+=================================
+
+.. currentmodule:: QHyper.problems
+
+Package Content
+===============
+
+.. autosummary::
+    :toctree: generated/
+
+    Problem  -- Base class for problems.
+
+    KnapsackProblem -- Knapsack problem.
+    TSPProblem -- Traveling Salesman Problem.
+    MaxCutProblem -- Max-Cut problem.
+    WorkflowSchedulingProblem -- Workflow Scheduling problem.
+    CommunityDetectionProblem -- Community Detection problem.
+
+"""
 
 from typing import Type, Any
 import copy

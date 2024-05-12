@@ -3,7 +3,6 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from dataclasses import dataclass, field
 from numpy.typing import NDArray
 from typing import Callable, Any
 
@@ -14,31 +13,51 @@ from QHyper.optimizers.base import (
     Optimizer, OptimizationResult, OptimizerError)
 
 
-@dataclass
 class ScipyOptimizer(Optimizer):
     """
     Class for the SciPy minimizer.
 
     Attributes
     ----------
+    bounds : numpy.ndarray, optional
+        The bounds for the optimization algorithm. Not all optimizers
+        support bounds. The shape of the array should be (n, 2), where
+        n is the number of parameters (`init` in method :meth:`minimize`).
+    verbose : bool, default False
+        Whether to print the optimization progress.
+    disable_tqdm : bool, default True
+        Whether to disable the tqdm progress bar.
     maxfun : int
         Maximum number of function evaluations.
-    bounds : list[tuple[float, float]] or None
-        A list of tuples specifying the lower and upper bounds for each
-        dimension of the search space, or None if no bounds are provided.
-    verbose : bool
-        If set to True, additional information will be printed (default False).
     kwargs : dict[str, Any]
         Additional keyword arguments for the SciPy minimizer.
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     """
-    maxfun: int
-    kwargs: dict[str, Any] = field(default_factory=dict)
 
-    def _minimize(
+    bounds: NDArray
+    verbose: bool
+    disable_tqdm: bool
+    maxfun: int
+    kwargs: dict[str, Any]
+
+    def __init__(
+        self,
+        bounds: NDArray,
+        verbose: bool = False,
+        disable_tqdm: bool = True,
+        maxfun: int = 200,
+        **kwargs: Any
+    ) -> None:
+        self.bounds = bounds
+        self.verbose = verbose
+        self.disable_tqdm = disable_tqdm
+        self.maxfun = maxfun
+        self.kwargs = kwargs
+
+    def minimize_(
         self,
         func: Callable[[NDArray], OptimizationResult],
-        init: NDArray
+        init: NDArray | None
     ) -> OptimizationResult:
         """
         Minimize the given function using the SciPy minimize.
@@ -59,8 +78,9 @@ class ScipyOptimizer(Optimizer):
             A tuple containing the minimum function value and the
             corresponding optimal point.
         """
-        if self.bounds is None:
-            raise OptimizerError("This optimizer requires bounds")
+        if init is None:
+            raise OptimizerError("Initial point must be provided.")
+        self.check_bounds(init)
 
         def wrapper(params: NDArray) -> float:
             return func(params).value

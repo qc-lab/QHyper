@@ -30,12 +30,14 @@ extensions = [
     'sphinx_copybutton',
 ]
 
+autodoc_typehints = 'none'
+
 pygments_style = 'sphinx'
 
 templates_path = ['_templates']
 exclude_patterns = []
 
-numpydoc_show_class_members = False
+# numpydoc_show_class_members = False
 autosectionlabel_prefix_document = True
 
 # -- Options for HTML output -------------------------------------------------

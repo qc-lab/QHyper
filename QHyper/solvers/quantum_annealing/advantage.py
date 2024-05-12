@@ -6,10 +6,17 @@ from QHyper.converter import Converter
 
 from dwave.system import DWaveSampler, EmbeddingComposite
 
+
 class Advantage(Solver):
     """
-    Class for solving a problem using
-    Advantage
+    Class for solving a problem using Advantage
+
+    Attributes
+    ----------
+    problem : Problem
+        The problem to be solved.
+    region : str, default 'eu-central-1'
+        The region in which D-Wave Advantage is available.
     """
 
     def __init__(self, problem: Problem, region: str = "eu-central-1") -> None:
@@ -17,9 +24,10 @@ class Advantage(Solver):
         self.region = region
 
     def solve(self, params_inits: dict[str, Any] = {}) -> Any:
-        sampler = DWaveSampler(region=self.region, solver='Advantage_system5.4')
-        qubo = Converter.create_qubo(self.problem, params_inits.get("weights", []))
+        sampler = DWaveSampler(
+            region=self.region, solver='Advantage_system5.4')
+        qubo = Converter.create_qubo(
+            self.problem, params_inits.get("weights", []))
         sampleset = EmbeddingComposite(sampler).sample_qubo(qubo.terms)
 
         return sampleset
-

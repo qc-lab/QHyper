@@ -2,6 +2,6 @@
 
 pydata-sphinx-theme==0.15.2
 sphinx-copybutton==0.5.2
-Sphinx==5.3.0
+Sphinx==7.3.7
 numpydoc==1.5.0
 graphviz==0.20.1

@@ -13,6 +13,23 @@ from QHyper.problems.base import Problem
 
 
 class MaxCutProblem(Problem):
+    """MaxCut problem
+
+    Parameters
+    ----------
+    edges : list[tuple[int, int]]
+        List of edges in the graph
+
+    Attributes
+    ----------
+    objective_function: Polynomial
+        Objective_function represented as a Polynomial
+    constraints : list[Polynomial]
+        For MaxCut problem, there are no constraints, so it's empty list
+    edges : list[tuple[int, int]]
+        List of edges in the graph
+    """
+
     def __init__(self, edges: list[tuple[int, int]]) -> None:
         self.edges = edges
         self.variables = sympy.symbols(

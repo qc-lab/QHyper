@@ -23,11 +23,28 @@ def polynomial_to_gurobi(gurobi_vars: dict[str, Any], poly: Polynomial) -> Any:
 
 
 class Gurobi(Solver):  # todo works only for quadratic expressions
-    def __init__(self, problem: Problem,
-                 model_name: str = "") -> None:
-        self.problem: Problem = problem
-        self.model_name: str = model_name
-        self.mip_gap: float | None = None
+    """
+    Gurobi solver class.
+
+    Attributes
+    ----------
+    problem : Problem
+        The problem to be solved.
+    model_name : str, optional
+        The name of the gurobi model.
+    mip_gap : float | None, optional
+        The MIP gap.
+    """
+
+    problem: Problem
+    model_name: str
+    mip_gap: float | None
+
+    def __init__(self, problem: Problem, model_name: str = "",
+                 mip_gap: float | None = None) -> None:
+        self.problem = problem
+        self.model_name = model_name
+        self.mip_gap = mip_gap
 
     def solve(self, params_inits: Optional[dict[str, Any]] = None) -> Any:
         gpm = gp.Model(self.model_name)
