@@ -14,7 +14,8 @@ from QHyper.optimizers import (
     OPTIMIZERS_BY_NAME, Dummy, Optimizer, OptimizationResult)
 from QHyper.solvers.vqa.pqc.base import PQC
 
-from QHyper.solvers.base import Solver, SolverResult, SolverConfigException, SolverException
+from QHyper.solvers.base import (
+    Solver, SolverResult, SolverConfigException, SolverException)
 from QHyper.solvers.vqa.pqc import PQC_BY_NAME
 
 
@@ -41,13 +42,45 @@ class GlobalOptimizerFunction:
         return self.optimizer.minimize(opt_wrapper, opt_args)
 
 
-@dataclass
 class VQA(Solver):
+    """
+    Variational Quantum Algorithm solver.
+
+    Attributes
+    ----------
+
+    problem : Problem
+        The problem to be solved.
+    pqc : PQC
+        The parameterized quantum circuit. It should be a subclass of
+        :py:class:`.PQC`.
+    optimizer : Optimizer, default :py:class:`.Dummy`
+        The optimizer to be used. It should be a subclass of
+        :py:class:`.Optimizer`.
+    hyper_optimizer : Optimizer, optional
+        The hyper optimizer to be used. It should be a subclass of
+        :py:class:`.Optimizer`.
+    params_inits : dict[str, Any], optional
+        Initial parameters for the solver. They might be overwritten by the
+        parameters provided in the :py:meth:`.solve` method.
+    """
+
     problem: Problem
     pqc: PQC
-    optimizer: Optimizer = Dummy()
-    hyper_optimizer: Optimizer | None = None
-    params_inits: Optional[dict[str, Any]] = None
+    optimizer: Optimizer
+    hyper_optimizer: Optimizer | None
+    params_inits: dict[str, Any] | None
+
+    def __init__(
+            self, problem: Problem, pqc: PQC, optimizer: Optimizer = Dummy(),
+            hyper_optimizer: Optimizer | None = None,
+            params_inits: dict[str, Any] | None = None
+    ) -> None:
+        self.problem = problem
+        self.pqc = pqc
+        self.optimizer = optimizer
+        self.hyper_optimizer = hyper_optimizer
+        self.params_inits = params_inits
 
     @classmethod
     def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'VQA':

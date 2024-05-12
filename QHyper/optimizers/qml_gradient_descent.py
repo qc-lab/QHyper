@@ -3,7 +3,6 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from dataclasses import dataclass
 from typing import Callable, Any, Type
 from numpy.typing import NDArray
 
@@ -14,7 +13,8 @@ from QHyper.optimizers.base import (
     Optimizer, OptimizationResult, OptimizerError)
 
 
-QML_GRADIENT_DESCENT_OPTIMIZERS: dict[str, Type[qml.GradientDescentOptimizer]] = {
+QML_GRADIENT_DESCENT_OPTIMIZERS: dict[
+        str, Type[qml.GradientDescentOptimizer]] = {
     'adam': qml.AdamOptimizer,
     'adagrad': qml.AdagradOptimizer,
     'rmsprop': qml.RMSPropOptimizer,
@@ -25,25 +25,28 @@ QML_GRADIENT_DESCENT_OPTIMIZERS: dict[str, Type[qml.GradientDescentOptimizer]] =
 }
 
 
-@dataclass
 class QmlGradientDescent(Optimizer):
     """Gradient Descent Optimizer
 
-    Using GradientDescentOptimizer from library PennyLane.
+    This minimizer is a wrapper for gradient descent optmizers
+    provided by PennyLane.
 
     Attributes
     ----------
     optimizer : qml.GradientDescentOptimizer
         object of class GradientDescentOptimizer or inheriting from this class
-    steps : int
+    steps : int, default 200
         number of optimization steps
-    stepsize : float
+    stepsize : float, default 0.005
         stepsize for the optimizer
-    verbose : bool
-        if set to True, additional information will be printed (default False)
-    **kwargs : Any
-        additional arguments for the optimizer
+    verbose : bool, default False
+        if set to True, additional information will be printed
     """
+
+    optimizer: qml.GradientDescentOptimizer
+    steps: int
+    stepsize: float
+    verbose: bool
 
     def __init__(
         self,
@@ -56,12 +59,18 @@ class QmlGradientDescent(Optimizer):
         """
         Parameters
         ----------
-        optimizer : str
+        optimizer : str, default 'adam'
             name of the gradient descent optimizer provided by PennyLane
-        steps : int
+        steps : int, default 200
             number of optimization steps
-        stepsize : float
+        stepsize : float, default 0.005
             stepsize for the optimizer
+        verbose : bool, default False
+            if set to True, additional information will be printed
+        **kwargs : Any
+            Additional arguments that will be passed to the PennyLane
+            optimizer. More infomation can be found in the PennyLane
+            documentation.
         """
         if optimizer not in QML_GRADIENT_DESCENT_OPTIMIZERS:
             raise ValueError(
@@ -77,27 +86,14 @@ class QmlGradientDescent(Optimizer):
         self.steps = steps
         self.verbose = verbose
 
-    def _minimize(
+    def minimize_(
         self,
         func: Callable[[NDArray], OptimizationResult],
-        init: NDArray
+        init: NDArray | None
     ) -> OptimizationResult:
-        """Returns params which lead to the lowest value of
-            the provided function and cost history
+        if init is None:
+            raise OptimizerError("Initial point must be provided.")
 
-        Parameters
-        ----------
-        func : Callable[[ArgsType], float]
-            function which will be minimized
-        init : ArgsType
-            initial args for optimizer
-
-        Returns
-        -------
-        tuple[ArgsType, Any]
-            Returns tuple which contains params taht lead to the lowest value
-            of the provided function and cost history
-        """
         if isinstance(self.optimizer, qml.QNGOptimizer):
             raise OptimizerError(
                 'QNG is not supported via optimizer, use qml_qaoa instead')
@@ -129,6 +125,10 @@ class QmlGradientDescent(Optimizer):
     def minimize_expval_func(
             self, func: qml.QNode, init: NDArray
     ) -> OptimizationResult:
+        """
+        Used in :py:class:`.QML_QAOA` to minimize the
+        expectation value function.
+        """
 
         cost_history = []
         cost = float('inf')

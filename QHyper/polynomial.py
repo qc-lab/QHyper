@@ -6,6 +6,28 @@ from typing import overload
 
 @dataclass
 class Polynomial:
+    """
+    Class for representing polynomials.
+
+    A Polynomial is comprised of a dictionary where the keys are tuples
+    containing variables, and the values represent their coefficients.
+    Using dictionaries allows for efficient arithmetic operations
+    on Polynomials, simplification of terms, and extraction of relevant
+    information such as constants, degree, and variables.
+    The core functionality includes addition, subtraction,
+    multiplication, exponentiation, and negation. This representation
+    can store higher-order polynomials. The creation of a Polynomial
+    can be done manually by providing a dictionary or by translating
+    it from SymPy syntax. Additionally, users can implement the
+    translation into Polynomial from their own data source
+
+    Attributes
+    ----------
+    terms : dict[tuple[str, ...], float]
+        dictionary of terms and their coefficients
+
+    """
+
     terms: dict[tuple[str, ...], float] = field(default_factory=dict)
 
     @overload

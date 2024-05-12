@@ -74,7 +74,7 @@ class CommunityDetectionProblem(Problem):
     Problem class instance
     - objective function for network community detection
 
-    Attributes:
+    Attributes
     ----------
     cases: int
         number of communities into which the graph shall be divided

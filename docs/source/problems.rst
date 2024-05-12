@@ -1,23 +1,4 @@
-Problems
-========
-
-.. currentmodule:: QHyper.problems
-
-Interfaces
-----------
-
-.. autosummary::
-   :toctree: generated
-
-   base.Problem
-
-Classes
--------
-
-.. autosummary::
-   :toctree: generated
-
-   knapsack
-   tsp
-   workflow_scheduling
-   maxcut
+.. automodule:: QHyper.problems
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:

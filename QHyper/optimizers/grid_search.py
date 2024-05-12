@@ -3,8 +3,6 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from dataclasses import dataclass
-
 from typing import Callable
 import numpy as np
 from numpy.typing import NDArray
@@ -14,35 +12,50 @@ from QHyper.optimizers.base import (
     OptimizationResult, Optimizer, OptimizerError)
 
 
-@dataclass
 class GridSearch(Optimizer):
     """
-    Parameters
+    Grid search optimizer
+
+    Attributes
     ----------
-    bounds : list[tuple[float, float]]
-        list of tuples with lower and upper bounds for each variable
+    bounds : numpy.ndarray, optional
+        The bounds for the optimization algorithm. Not all optimizers
+        support bounds. The shape of the array should be (n, 2), where
+        n is the number of parameters (`init` in method :meth:`minimize`).
     steps : list[float]
-        step for each variable bound
-    processes : int
-        number of processors that will be used (default cpu count)
-    disable_tqdm: bool
-        if set to True, tdqm will be disabled (default False)
-    verbose: bool
-        if set to True, additional information will be printed
-        (default False)
+        The step for each bound. The length of the list should be equal
+        to the number of bounds. E.g. for bounds [[0, 1]]
+        the steps could be [0.1].
+        The searching space will be: [0, 0.1, 0.2, ..., 0.9]
+    verbose : bool, default False
+        Whether to print the optimization progress.
+    disable_tqdm : bool, default True
+        Whether to disable the tqdm progress bar.
+    processes : int, default 1
+        The number of processes to use for parallel computation.
     """
+
+    bounds: NDArray
     steps: list[float]
+    verbose: bool
+    disable_tqdm: bool
     processes: int = 1
 
-    def generate_grid(self) -> NDArray:
-        """
-        Generates grid of hyperparameters based on bounds and steps
+    def __init__(
+        self,
+        bounds: NDArray,
+        steps: list[float],
+        verbose: bool = False,
+        disable_tqdm: bool = True,
+        processes: int = 1,
+    ) -> None:
+        self.bounds = bounds
+        self.steps = steps
+        self.verbose = verbose
+        self.disable_tqdm = disable_tqdm
+        self.processes = processes
 
-        Returns
-        -------
-        numpy.ndarray
-            grid of hyperparameters
-        """
+    def _generate_grid(self) -> NDArray:
         if self.bounds is None:
             raise OptimizerError("This optimizer requires bounds")
 
@@ -53,17 +66,17 @@ class GridSearch(Optimizer):
             ), axis=-1
         ).reshape(-1, len(self.bounds))
 
-    def _minimize(
+    def minimize_(
             self,
             func: Callable[[NDArray], OptimizationResult],
-            init: NDArray
+            init: NDArray | None
     ) -> OptimizationResult:
-        if self.bounds is None:
-            raise OptimizerError("This optimizer requires bounds")
+        self.check_bounds(None)
 
-        hyperparams = self.generate_grid()
+        hyperparams = self._generate_grid()
 
-        results = run_parallel(func, hyperparams, self.processes, self.disable_tqdm)
+        results = run_parallel(
+            func, hyperparams, self.processes, self.disable_tqdm)
         min_idx = np.argmin([result.value for result in results])
 
         if self.verbose:

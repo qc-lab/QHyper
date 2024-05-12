@@ -48,11 +48,9 @@ def test_scipy():
                 "type": "scipy",
                 "maxfun": 10,
                 "bounds": [(0, 2*np.pi)]*10,
-                "kwargs": {
-                    'method': 'L-BFGS-B',
-                    'options': {
-                        'maxiter': 10,
-                    }
+                'method': 'L-BFGS-B',
+                'options': {
+                    'maxiter': 10,
                 }
             },
             "params_inits": params_config,

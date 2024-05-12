@@ -3,9 +3,6 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-import multiprocessing as mp
-from dataclasses import dataclass, field
-
 from typing import Callable
 
 import numpy as np
@@ -17,39 +14,75 @@ from QHyper.optimizers.base import (
     Optimizer, OptimizationResult, OptimizerError)
 
 
-@dataclass
 class CEM(Optimizer):
-    epochs: int = 5
-    samples_per_epoch: int = 100
-    elite_frac: float = 0.1
-    processes: int = mp.cpu_count()
-    n_elite: int = field(init=False)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        self.n_elite: int = max(
-            int(self.samples_per_epoch * self.elite_frac), 1)
-
     """Implementation of the Cross Entropy Method for hyperparameter tuning
 
     Attributes
     ----------
-    epochs : int
-        number of epochs (default 10)
-    samples_per_epoch : int
-        number of samples in each epoch (default 100)
-    elite_frac : float
-        indicate the percent of how many top samples will be used to calculate
-        the mean and cov for the next epoch (default 0.1)
-    processes : int
-        number of processors that will be used (default cpu count)
+    bounds : numpy.ndarray, optional
+        The bounds for the optimization algorithm. Not all optimizers
+        support bounds. The shape of the array should be (n, 2), where
+        n is the number of parameters (`init` in method :meth:`minimize`).
+    verbose : bool, default False
+        Whether to print the optimization progress.
+    disable_tqdm : bool, default True
+        Whether to disable the tqdm progress bar.
+    epochs : int, default 5
+        The number of epochs.
+    samples_per_epoch : int, default 100
+        The number of samples per epoch.
+    elite_frac : float, default 0.1
+        The fraction of elite samples that will be used to update the
+        mean and covariance for next epoch.
+    processes : int, default 1
+        The number of processes to use for parallel computation.
     n_elite : int
-        calulated by multiplying samples_per_epoch by elite_frac
-    disable_tqdm: bool
-        if set to True, tdqm will be disabled
-    verbose: bool
-        if set to True, additional information will be printed (default False)
+        The number of elite samples. Calculated as
+        `samples_per_epoch * elite_frac`.
     """
+
+    bounds: NDArray
+    verbose: bool
+    disable_tqdm: bool
+    epochs: int
+    samples_per_epoch: int
+    elite_frac: float
+    processes: int
+    n_elite: int
+
+    def __init__(
+        self,
+        bounds: NDArray,
+        verbose: bool = False,
+        disable_tqdm: bool = True,
+        epochs: int = 5,
+        samples_per_epoch: int = 100,
+        elite_frac: float = 0.1,
+        processes: int = 1,
+    ) -> None:
+        """
+        Parameters
+        ----------
+
+        bounds : numpy.ndarray
+        verbose : bool, default False
+        disable_tqdm : bool, default True
+        epochs : int, default 5
+        samples_per_epoch : int, default 100
+        elite_frac : float, default 0.1
+        processes : int, default 1
+        """
+
+        self.bounds = bounds
+        self.verbose = verbose
+        self.disable_tqdm = disable_tqdm
+        self.epochs = epochs
+        self.samples_per_epoch = samples_per_epoch
+        self.elite_frac = elite_frac
+        self.processes = processes
+
+        self.n_elite: int = max(
+            int(self.samples_per_epoch * self.elite_frac), 1)
 
     def _get_points(
         self, mean: NDArray, cov: NDArray
@@ -69,43 +102,20 @@ class CEM(Optimizer):
 
         return np.vstack(hyperparams)
 
-    def _minimize(
+    def minimize_(
         self,
         func: Callable[[NDArray], OptimizationResult],
-        init: NDArray,
+        init: NDArray | None,
     ) -> OptimizationResult:
-        """Returns hyperparameters which lead to the lowest values
-            returned by optimizer
+        if init is None:
+            raise OptimizerError("Initial point must be provided.")
 
-        Parameters
-        ----------
-        func_creator : Callable[[ArgsType], Callable[[ArgsType], float]]
-            function which receives hyperparameters, and returns
-            a function which will be optimized using an optimizer
-        optimizer : Optimizer
-            object of the Optimizer class
-        init : ArgsType
-            initial args for optimizer
-        hyperparams_init : ArgsType
-            initial hyperparameters
-        evaluation_func : Callable[[ArgsType], Callable[[ArgsType], float]]
-            function, which receives hyperparameters, and returns
-            function which receives params and return evaluation
-        bounds : list[float]
-            bounds for hyperparameters (default None)
+        self.check_bounds(init)
 
-        Returns
-        -------
-        ArgsType
-            hyperparameters which lead to the lowest values
-            returned by the optimizer
-        """
-
-        _init = np.array(init)
-        mean = _init.flatten()
+        mean = init.flatten()
         cov = np.identity(len(mean))
-        best_hyperparams = _init
-        best_result = OptimizationResult(np.inf, _init, [])
+        best_hyperparams = init
+        best_result = OptimizationResult(np.inf, init, [])
         history: list[list[OptimizationResult]] = []
 
         for i in range(self.epochs):

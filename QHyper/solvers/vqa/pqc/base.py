@@ -4,6 +4,7 @@
 
 
 from abc import abstractmethod
+import abc
 
 import numpy as np
 from numpy.typing import NDArray
@@ -16,7 +17,7 @@ from QHyper.optimizers import OptimizationResult
 PQCResults = tuple[dict[str, float], list[float]]
 
 
-class PQC:
+class PQC(abc.ABC):
     """
     Abstract base class for Parameterized Quantum Circuit (PQC).
 
@@ -27,9 +28,6 @@ class PQC:
     """
 
     pqc_type: str
-
-    @abstractmethod
-    def __init__(self, **kwargs: Any) -> None: ...
 
     @abstractmethod
     def run_opt(

@@ -3,12 +3,13 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
+import abc
 import dataclasses
 
 from abc import abstractmethod
 import numpy as np
 
-from typing import Callable, Optional, cast
+from typing import Callable, cast, overload
 from numpy.typing import NDArray
 
 
@@ -30,9 +31,9 @@ class OptimizationResult:
         The minimum function value found by the optimization algorithm.
     params : numpy.ndarray
         The optimal point found by the optimization algorithm.
-    history : list[list[float]]
+    history : list[list[OptimizationResult]]
         The history of the optimization algorithm. Each element of the list
-        represents the values of the objective function at each
+        represents the results of the objective function at each
         iteration - there can be multiple results per each iteration (epoch).
     """
 
@@ -50,24 +51,31 @@ class OptimizationResult:
         return self
 
 
-@dataclasses.dataclass(kw_only=True)
-class Optimizer:
-    bounds: Optional[NDArray] = None
-    verbose: bool = False
-    disable_tqdm: bool = True
+class Optimizer(abc.ABC):
+    """
+    Base class for Optimizer.
 
-    def __post_init__(self):
-        if self.bounds is not None and not isinstance(self.bounds, np.ndarray):
-            self.bounds = np.array(self.bounds)
+    """
+
+    @overload
+    def minimize(self, func: Callable[[NDArray], OptimizationResult]
+                 ) -> OptimizationResult:
+        ...
+
+    @overload
+    def minimize(self, func: Callable[[NDArray], OptimizationResult],
+                 init: NDArray) -> OptimizationResult:
+        ...
 
     def minimize(
         self,
         func: Callable[[NDArray], OptimizationResult],
-        init: NDArray
+        init: NDArray | None = None
     ) -> OptimizationResult:
         """
-        Abstract method that minimizes the given function using the
-        implemented optimization algorithm.
+        Method that minimizes the given function using the
+        implemented optimization algorithm. This method checks
+        the arguments and calls the abstract method :py:meth:`_minimize`.
 
         Parameters
         ----------
@@ -75,6 +83,7 @@ class Optimizer:
             The objective function to be minimized.
         init : numpy.ndarray
             The initial point for the optimization algorithm.
+            Some algorithms requires init just to obtain the shape.
 
         Returns
         -------
@@ -82,27 +91,45 @@ class Optimizer:
             A tuple containing the minimum function value and the
             corresponding optimal point.
         """
+        if init is None:
+            return self.minimize_(func, None)
+
         _init = np.copy(init).flatten()
 
-        if _init.ndim != 1:
-            raise OptimizerError("Init should be a 1D array.")
-        if self.bounds is not None:
-            if self.bounds.shape[-1] != 2:
-                raise OptimizerError("Bounds should be a 2D "
-                                     "array with shape (n, 2).")
-
-            if self.bounds.shape[:-1] != _init.shape:
-                raise OptimizerError(
-                    f"Bounds shape {self.bounds.shape[:-1]} "
-                    f"does not match init shape {_init.shape}."
-                )
-        result = self._minimize(func, _init)
+        result = self.minimize_(func, _init)
         return result.fix_dims(cast(tuple[int], init.shape))
 
+    def check_bounds(self, init: NDArray | None) -> None:
+        """
+        Check if the bounds are correctly set. This method should be
+        called before the optimization starts.
+        """
+        if not hasattr(self, "bounds"):
+            raise OptimizerError("This optimizer requires bounds.")
+
+        bounds = getattr(self, "bounds")
+        if isinstance(bounds, list):
+            print("WARNING: bounds should be a numpy array. "
+                  "Converting to numpy array.")
+            setattr(self, "bounds", np.array(bounds))
+            bounds = getattr(self, "bounds")
+
+        if bounds.shape[-1] != 2:
+            raise OptimizerError("Bounds should be a 2D "
+                                 "array with shape (n, 2).")
+
+        if init is not None and bounds.shape[:-1] != init.shape:
+            raise OptimizerError(
+                f"Bounds shape {bounds.shape[:-1]} "
+                f"does not match init shape {init.shape}."
+            )
+
     @abstractmethod
-    def _minimize(
+    def minimize_(
         self,
         func: Callable[[NDArray], OptimizationResult],
-        init: NDArray
+        init: NDArray | None
     ) -> OptimizationResult:
-        ...
+        """
+        Abstract method that should be implemented by the subclass.
+        """

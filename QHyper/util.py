@@ -11,7 +11,7 @@ import re
 
 import numpy.typing as npt
 
-from typing import Callable, NewType
+from typing import Callable, NewType, Optional, Any
 
 Array1D = NewType("Array1D", npt.NDArray)
 Array2D = NewType("Array2D", npt.NDArray)

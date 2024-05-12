@@ -1,41 +1,38 @@
-{{ fullname | escape | underline}}
+{{ fullname }}
+{{ underline }}
 
 .. currentmodule:: {{ module }}
 
+.. autoclass:: {{ objname }}
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:
 
-{%- if autotype is defined %}
-{%- set objtype = autotype.get(name) or objtype %}
-{%- endif %}
+  {% block methods %}
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      {% for item in all_methods %}
+         {%- if not item.startswith('_') or item in ['__call__', '__mul__', '__getitem__', '__len__', '__pow__'] %}
+         {{ name }}.{{ item }}
+         {%- endif -%}
+      {%- endfor %}
+      {% for item in inherited_members %}
+         {%- if item in ['__call__', '__mul__', '__getitem__', '__len__', '__pow__'] %}
+         {{ name }}.{{ item }}
+         {%- endif -%}
+      {%- endfor %}
+  {% endblock %}
 
-.. auto{{ objtype }}:: {{ objname }}
-   :show-inheritance:
-
-   {% for item in ['__new__', '__init__'] %}
-     {%- if item in members and item not in inherited_members %}
-   .. automethod:: {{item}}
-     {%- endif %}
-   {%- endfor %}
-
-   {%- for item in inherited_members %}
-     {%- if item in methods %}
-       {%- set dummy = methods.remove(item) %}
-     {%- endif %}
-     {%- if item in attributes %}
-       {%- set dummy = attributes.remove(item) %}
-     {%- endif %}
-   {%- endfor %}
-   {%- for item in ['__new__', '__init__'] %}
-     {%- if item in methods %}
-       {%- set dummy = methods.remove(item) %}
-     {%- endif %}
-   {%- endfor %}
-
-   {% block methods_documentation %}
-   {%- if methods %}
-   .. rubric:: Methods
-   {% for item in methods %}
-   .. automethod:: {{ item }}
-   {%- endfor %}
-   {%- endif %}
-   {%- endblock %}
-{# #}
+  {% block attributes %}
+  {% if attributes %}
+   .. HACK -- the point here is that we don't want this to appear in the output, but the autosummary should still generate the pages.
+      .. autosummary::
+         :toctree:
+      {% for item in all_attributes %}
+         {%- if not item.startswith('_') %}
+         {{ name }}.{{ item }}
+         {%- endif -%}
+      {%- endfor %}
+  {% endif %}
+  {% endblock %}

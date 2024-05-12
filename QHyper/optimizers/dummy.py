@@ -3,20 +3,29 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from dataclasses import dataclass
 from typing import Callable
 
 from numpy.typing import NDArray
 
-from QHyper.optimizers.base import Optimizer, OptimizationResult
+from QHyper.optimizers.base import (
+    Optimizer, OptimizationResult, OptimizerError)
 
 
-@dataclass
 class Dummy(Optimizer):
-    def _minimize(
-            self,
-            func: Callable[[NDArray], OptimizationResult],
-            init: NDArray
+    """
+    Dummy optimizer.
+
+    This optimizer is used as a default optimizer in the case
+    when no optimizer is selected.
+    """
+
+    def minimize_(
+        self,
+        func: Callable[[NDArray], OptimizationResult],
+        init: NDArray | None,
     ) -> OptimizationResult:
+        if init is None:
+            raise OptimizerError("Initial point must be provided.")
+
         result = func(init)
         return OptimizationResult(result.value, result.params, [[result]])
