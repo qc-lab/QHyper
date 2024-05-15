@@ -12,7 +12,6 @@ from QHyper.constraint import (
     Constraint, SLACKS_LOG_2, UNBALANCED_PENALIZATION, Operator)
 from QHyper.problems.base import Problem
 import numpy as np
-from collections import defaultdict
 
 
 class Converter:
@@ -189,7 +188,7 @@ class Converter:
             else:
                 dqm.set_linear(
                     dqm.variables[xi_idx],
-                    [bias for _ in range(problem.cases + cases_offset)],
+                    [bias] * (problem.cases + cases_offset),
                 )
 
         return dqm

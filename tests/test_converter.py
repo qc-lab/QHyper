@@ -10,12 +10,10 @@ from QHyper.constraint import Constraint, Operator, MethodsForInequalities
 
 class SimpleProblem(Problem):
     def __init__(self, objective_function,
-                 constraints, method_for_inequalities,
-                 one_hot_encoding = True) -> None:
+                 constraints, method_for_inequalities) -> None:
         self.objective_function = objective_function
         self.constraints = constraints
         self.method_for_inequalities = method_for_inequalities
-        self.one_hot_encoding = one_hot_encoding
 
     def get_score(self, result: str, penalty: float = 0) -> float:
         # todo implement
@@ -228,7 +226,6 @@ def test_to_dqm():
     problem = SimpleProblem(
         objective_function, constraint_le,
         MethodsForInequalities.SLACKS_LOG_2)
-
 
     dqm = Converter.to_dqm(problem)
 
