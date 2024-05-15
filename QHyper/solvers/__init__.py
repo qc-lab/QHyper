@@ -9,8 +9,8 @@ Solvers (:mod:`QHyper.solvers`)
 
 .. currentmodule:: QHyper.solvers
 
-Package Content
-===============
+Interfaces
+==========
 
 .. autosummary::
     :toctree: generated/
@@ -18,11 +18,35 @@ Package Content
     Solver  -- Base class for solvers.
     SolverResult -- Dataclass for storing
 
-    VQA -- Variational Quantum Algorithm solver.
+
+Classical Solvers
+=================
+
+.. autosummary::
+    :toctree: generated/
+
     Gurobi -- Gurobi solver.
+
+
+Quantum Annealing Solvers
+=========================
+
+.. autosummary::
+    :toctree: generated/
+
     CQM -- CQM solver.
     DQM -- DQM solver.
     Advantage -- Advantage solver.
+
+
+Variational Quantum Algorithm Solvers
+=====================================
+
+.. autosummary::
+    :toctree: generated/
+    :recursive:
+
+    vqa -- VQA solver.
 """
 
 import copy

@@ -19,6 +19,23 @@ from QHyper.solvers.vqa.pqc.qaoa import QAOA
 
 @dataclass
 class QML_QAOA(QAOA):
+    """
+    QAOA implementation with additonal support for PennyLane optimizers.
+
+    Attributes
+    ----------
+    layers : int, default 3
+        Number of layers.
+    mixer : str, default "pl_x_mixer"
+        Mixer name.
+    backend : str, default "default.qubit"
+        Backend device for PennyLane.
+    optimizer : str, default ""
+        Optimizer name.
+    optimizer_args : dict[str, Any], default {}
+        Optimizer arguments.
+    """
+
     layers: int = 3
     mixer: str = "pl_x_mixer"
     backend: str = "default.qubit"
