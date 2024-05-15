@@ -160,9 +160,13 @@ class Converter:
 
         dqm = dimod.DiscreteQuadraticModel()
 
+        objective_function_variables = sorted(problem.objective_function.get_variables(),
+                     key=lambda x: int(x[1:]))
+
         variables = [
-            binary_to_discrete(str(v)) for v in list(problem.objective_function.get_variables())[:: problem.cases]
+            binary_to_discrete(str(v)) for v in objective_function_variables[:: problem.cases]
             ]
+
         cases_offset = 1 if problem.cases == 1 else 0
 
         for variable in variables:
