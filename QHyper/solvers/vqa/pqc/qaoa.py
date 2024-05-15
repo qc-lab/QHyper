@@ -3,7 +3,6 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from dataclasses import dataclass, field
 import pennylane as qml
 from pennylane import numpy as np
 
@@ -20,14 +19,32 @@ from QHyper.polynomial import Polynomial
 from .mixers import MIXERS_BY_NAME
 
 
-@dataclass
 class QAOA(PQC):
-    layers: int = 3
-    backend: str = "default.qubit"
-    mixer: str = "pl_x_mixer"
-    qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
-        default_factory=dict)
+    """
+    Clasic QAOA implementation.
+
+    Attributes
+    ----------
+    layers : int
+        Number of layers.
+    backend : str
+        Backend for PennyLane.
+    mixer : str
+        Mixer name.
+    qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
+        Cache for QUBO.
+    dev : qml.Device
+        PennyLane device instance.
+    """
+
+    qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = {}
     dev: qml.Device | None = None
+
+    def __init__(self, layers: int = 3, backend: str = "default.qubit",
+                 mixer: str = "pl_x_mixer") -> None:
+        self.layers = layers
+        self.backend = backend
+        self.mixer = mixer
 
     def _get_num_of_wires(self) -> int:
         if self.dev is None:

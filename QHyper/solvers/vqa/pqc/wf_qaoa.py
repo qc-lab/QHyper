@@ -20,6 +20,25 @@ from QHyper.util import weighted_avg_evaluation
 
 @dataclass
 class WFQAOA(QAOA):
+    """
+    WFQAOA implementation.
+    Different Hamiltonian for caluculating expectation value than QAOA.
+
+    Attributes
+    ----------
+    layers : int, default 3
+        Number of layers.
+    penalty : float, default 0
+        Penalty for constraints violation.
+        Used in calculating expectation value.
+    mixer : str, default "pl_x_mixer"
+        Mixer name.
+    backend : str, default "default.qubit"
+        Backend device for PennyLane.
+    limit_results : int | None, default None
+        Limit of results that will be considered in the evaluation.
+    """
+
     layers: int = 3
     penalty: float = 0
     mixer: str = "pl_x_mixer"
