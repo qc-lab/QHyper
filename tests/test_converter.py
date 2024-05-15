@@ -1,6 +1,7 @@
 import sympy
-from QHyper.polynomial import Polynomial
+from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
 
+from QHyper.polynomial import Polynomial
 from QHyper.problems.base import Problem
 from QHyper.parser import from_sympy
 from QHyper.converter import Converter
@@ -9,10 +10,12 @@ from QHyper.constraint import Constraint, Operator, MethodsForInequalities
 
 class SimpleProblem(Problem):
     def __init__(self, objective_function,
-                 constraints, method_for_inequalities) -> None:
+                 constraints, method_for_inequalities,
+                 one_hot_encoding = True) -> None:
         self.objective_function = objective_function
         self.constraints = constraints
         self.method_for_inequalities = method_for_inequalities
+        self.one_hot_encoding = one_hot_encoding
 
     def get_score(self, result: str, penalty: float = 0) -> float:
         # todo implement
@@ -209,3 +212,43 @@ def test_example_4():
     })
 
     assert qubo == expected
+
+
+def test_to_dqm():
+    num_variables = 2
+    variables = sympy.symbols(
+        " ".join([f"x{i}" for i in range(num_variables)])
+    )
+    objective_function = from_sympy(variables[0] + variables[1])
+    print(objective_function)
+
+    constraint_le = Constraint(objective_function, [Polynomial(1)],
+                               Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "s",)
+
+    problem = SimpleProblem(
+        objective_function, constraint_le,
+        MethodsForInequalities.SLACKS_LOG_2)
+
+
+    dqm = Converter.to_dqm(problem)
+
+    assert isinstance(dqm, DiscreteQuadraticModel)
+
+
+def test_to_cqm():
+    num_variables = 2
+    variables = sympy.symbols(
+        " ".join([f"x{i}" for i in range(num_variables)])
+    )
+    objective_function = from_sympy(variables[0] + variables[1])
+
+    constraint_le = Constraint(objective_function, Polynomial(1),
+                               Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "s",)
+
+    problem = SimpleProblem(
+        objective_function, [constraint_le],
+        MethodsForInequalities.SLACKS_LOG_2)
+
+    cqm = Converter.to_cqm(problem)
+
+    assert isinstance(cqm, ConstrainedQuadraticModel)

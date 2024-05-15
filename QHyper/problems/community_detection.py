@@ -35,11 +35,13 @@ class Network:
 
     def calculate_modularity_matrix(self) -> np.ndarray:
         adj_matrix: np.ndarray = nx.to_numpy_array(self.graph, weight=self.weight)
-        degree_matrix: np.ndarray = adj_matrix.sum(axis=1)
-        m: int = np.sum(degree_matrix)
+        in_degree_matrix: np.ndarray = adj_matrix.sum(axis=1)
+        out_degree_matrix: np.ndarray = adj_matrix.sum(axis=0)
+        m: int = np.sum(adj_matrix)
 
         full_modularity_matrix = (
-            adj_matrix - self.resolution * np.outer(degree_matrix, degree_matrix) / m
+            adj_matrix
+            - self.resolution * np.outer(in_degree_matrix, out_degree_matrix) / m
         )
 
         B_bis = full_modularity_matrix[self.community, :]
