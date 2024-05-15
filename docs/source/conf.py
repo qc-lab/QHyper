@@ -28,6 +28,7 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinx.ext.autosectionlabel',
     'sphinx_copybutton',
+    'nbsphinx',
 ]
 
 autodoc_typehints = 'none'
