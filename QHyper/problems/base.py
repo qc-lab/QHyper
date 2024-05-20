@@ -41,7 +41,6 @@ class Problem(ABC):
 
     objective_function: Polynomial
     constraints: list[Constraint] = []
-    cases: int = 1
 
     def get_score(self, result: np.record, penalty: float = 0) -> float:
         """Returns score of the outcome provided as a binary string

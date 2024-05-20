@@ -15,24 +15,14 @@ DWAVE_API_TOKEN = os.environ.get("DWAVE_API_TOKEN")
 
 
 class DQM(Solver):
-    """
-    DQM solver class.
-
-    Attributes
-    ----------
-    problem : Problem
-        The problem to be solved.
-    time : float
-        Maximum run time in seconds.
-    """
-
-    def __init__(self, problem: Problem, time: float) -> None:
+    def __init__(self, problem: Problem, time: float, cases: int = 1) -> None:
         self.problem: Problem = problem
         self.time: float = time
+        self.cases: int = cases
 
     def solve(self, params_inits: dict[str, Any] = {}) -> Any:
         converter = Converter()
-        dqm = converter.to_dqm(self.problem)
+        dqm = converter.to_dqm(self.problem, self.cases)
         sampler = LeapHybridDQMSampler(token=DWAVE_API_TOKEN)
         sampleset = sampler.sample_dqm(dqm, self.time)
 

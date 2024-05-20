@@ -6,6 +6,8 @@
 from typing import cast
 
 import dimod
+import re
+import warnings
 from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
 from QHyper.polynomial import Polynomial
 from QHyper.constraint import (
@@ -13,6 +15,9 @@ from QHyper.constraint import (
 from QHyper.problems.base import Problem
 import numpy as np
 
+
+class ProblemWarning(Warning):
+    pass
 
 class Converter:
     @staticmethod
@@ -129,13 +134,12 @@ class Converter:
         for constraint in problem.constraints:
             variables.update(constraint.lhs.get_variables())
 
-        for var in variables:
-            cqm.add_variable(dimod.BINARY, str(var))
+        for variable in variables:
+            cqm.add_variable(dimod.BINARY, str(variable))
 
         for i, constraint in enumerate(problem.constraints):
-            lhs = [tuple([*key, val]) for key, val in constraint.lhs.terms.items()]
-            cqm.add_constraint(
-                lhs, constraint.operator.value, label=i)
+            lhs = [tuple([*key, value]) for key, value in constraint.lhs.terms.items()]
+            cqm.add_constraint(lhs, constraint.operator.value, label=i)
 
         return cqm
 
@@ -150,28 +154,37 @@ class Converter:
 
 
     @staticmethod
-    def to_dqm(problem: Problem) -> DiscreteQuadraticModel:
+    def to_dqm(problem: Problem, cases: int = 1) -> DiscreteQuadraticModel:
 
         def binary_to_discrete(v: str) -> str:
             id = int(v[1:])
-            discrete_id = id // problem.cases
+            discrete_id = id // cases
             return f"x{discrete_id}"
 
-        dqm = dimod.DiscreteQuadraticModel()
+        def extract_number(element) -> int:
+            match = re.search(r'(\d+)', element)
+            return int(match.group(1))
 
+        if problem.constraints:
+            warnings.warn(
+                "Defined problem has constraints. DQM does not support constraints, it only supports objective functions!",
+                ProblemWarning
+            )
+
+        dqm = dimod.DiscreteQuadraticModel()
         objective_function_variables = sorted(problem.objective_function.get_variables(),
-                     key=lambda x: int(x[1:]))
+                     key=extract_number)
 
         variables = [
-            binary_to_discrete(str(v)) for v in objective_function_variables[:: problem.cases]
+            binary_to_discrete(str(v)) for v in objective_function_variables[:: cases]
             ]
 
-        cases_offset = 1 if problem.cases == 1 else 0
+        cases_offset = 1 if cases == 1 else 0
 
         for variable in variables:
-                variable = str(variable)
-                if variable not in dqm.variables:
-                    dqm.add_variable(problem.cases + cases_offset, variable)
+            variable = str(variable)
+            if variable not in dqm.variables:
+                dqm.add_variable(cases + cases_offset, variable)
 
         for vars, bias in problem.objective_function.terms.items():
             s_i, *s_j = vars
@@ -183,12 +196,12 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
-                    {(case, case): bias for case in range(problem.cases + cases_offset)},
+                    {(case, case): bias for case in range(cases + cases_offset)},
                 )
             else:
                 dqm.set_linear(
                     dqm.variables[xi_idx],
-                    [bias] * (problem.cases + cases_offset),
+                    [bias] * (cases + cases_offset),
                 )
 
         return dqm

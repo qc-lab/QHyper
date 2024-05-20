@@ -1,5 +1,5 @@
 import sympy
-from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel
+from dimod import ConstrainedQuadraticModel, DiscreteQuadraticModel, BinaryPolynomial, make_quadratic_cqm, BINARY
 
 from QHyper.polynomial import Polynomial
 from QHyper.problems.base import Problem
@@ -218,7 +218,6 @@ def test_to_dqm():
         " ".join([f"x{i}" for i in range(num_variables)])
     )
     objective_function = from_sympy(variables[0] + variables[1])
-    print(objective_function)
 
     constraint_le = Constraint(objective_function, [Polynomial(1)],
                                Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "s",)
@@ -229,7 +228,18 @@ def test_to_dqm():
 
     dqm = Converter.to_dqm(problem)
 
+    created_dqm = DiscreteQuadraticModel()
+    for variable in variables:
+        added_variable = created_dqm.add_variable(2, str(variable))
+        created_dqm.set_linear(
+            added_variable,
+            [1.0, 1.0]
+        )
+
+    print(created_dqm.variables == dqm.variables)
+
     assert isinstance(dqm, DiscreteQuadraticModel)
+    assert created_dqm.variables == dqm.variables
 
 
 def test_to_cqm():
@@ -248,4 +258,20 @@ def test_to_cqm():
 
     cqm = Converter.to_cqm(problem)
 
+    created_cqm = make_quadratic_cqm(
+        BinaryPolynomial(
+            objective_function.terms,
+            BINARY
+    ))
+
+    created_variables = objective_function.get_variables()
+    created_variables.update(constraint_le.lhs.get_variables())
+
+    for variable in created_variables:
+        created_cqm.add_variable(BINARY, str(variable))
+
+    lhs = [tuple([*key, value]) for key, value in constraint_le.lhs.terms.items()]
+    created_cqm.add_constraint(lhs, constraint_le.operator.value, label=0)
+
     assert isinstance(cqm, ConstrainedQuadraticModel)
+    assert created_cqm.variables == cqm.variables
