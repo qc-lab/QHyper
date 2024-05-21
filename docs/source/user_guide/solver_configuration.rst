@@ -24,11 +24,11 @@ Solver types
 
 Basic solver definition requires providing its type. Currently supported types are:
 
-* ``vga`` for variational algorithms
-* ``cqm`` for `D-Wave CQM <https://docs.dwavesys.com/docs/latest/doc_leap_hybrid.html#leap-s-hybrid-solvers>`_
-* ``dqm`` for `D-Wave DQM <https://docs.dwavesys.com/docs/latest/doc_leap_hybrid.html#leap-s-hybrid-solvers>`_
-* ``advantage`` for `D-Wave Advantage <https://docs.dwavesys.com/docs/latest/c_gs_4.html>`_ (currently default advantage_system5.4. is supported)
-* ``gurobi`` for `Gurobi Optimizer <https://www.gurobi.com/solutions/gurobi-optimizer/>`_
+* :py:class:`vqa<.VQA>` for variational algorithms
+* :py:class:`cqm<.CQM>` for `D-Wave CQM <https://docs.dwavesys.com/docs/latest/doc_leap_hybrid.html#leap-s-hybrid-solvers>`_
+* :py:class:`dqm<.DQM>` for `D-Wave DQM <https://docs.dwavesys.com/docs/latest/doc_leap_hybrid.html#leap-s-hybrid-solvers>`_
+* :py:class:`advantage<.Advantage>` for `D-Wave Advantage <https://docs.dwavesys.com/docs/latest/c_gs_4.html>`_ (currently default advantage_system5.4. is supported)
+* :py:class:`gurobi<.Gurobi>` for `Gurobi Optimizer <https://www.gurobi.com/solutions/gurobi-optimizer/>`_
 
 Sample code for defining type advantage solver
 
@@ -42,22 +42,22 @@ Configuring initial QUBO penalties (Lagrangian multipliers)
 -----------------------------------------------------------
 
 ``advantage`` solver requires problem definition in the `QUBO <https://arxiv.org/pdf/1811.11538>`_ form. QHyper automatically creates the QUBO for
-knapsack problem 
+knapsack problem
 
 .. math::
-   f(\boldsymbol{x}, \boldsymbol{y}) = 
+   f(\boldsymbol{x}, \boldsymbol{y}) =
    - \alpha_0 \underbrace{\sum_{i = 1}^N c_i x_i}_{\text{cost function}} + \alpha_1 \underbrace{(1 - \sum_{i=1}^W y_i)^2}_{\text{coding constraint}} + \alpha_1 \underbrace{(\sum_{i=1}^W iy_i - \sum_{i=1}^N w_ix_i)^2}_{\text{weight constraint}},
-   
-where 
- * :math:`N=3` is the number of items available, 
- * :math:`W=` ``max_weight`` is the maximum weight of the knapsack, 
- * :math:`c_i` and :math:`w_i` are the costs and weights specified in ``items_costs`` and ``items_weights`` lists of the configuration. 
- * The goal is to optimize :math:`\boldsymbol{x} = [x_i]_N` which is a Boolean vector, where :math:`x_i = 1`  if and only if the item :math:`i` was selected to be inserted into the knapsack. 
- * :math:`\boldsymbol{y} = [y_i]_W` is a one-hot vector where :math:`y_i = 1` if and only if the weight of the knapsack is equal to :math:`i`; 
+
+where
+ * :math:`N=3` is the number of items available,
+ * :math:`W=` ``max_weight`` is the maximum weight of the knapsack,
+ * :math:`c_i` and :math:`w_i` are the costs and weights specified in ``items_costs`` and ``items_weights`` lists of the configuration.
+ * The goal is to optimize :math:`\boldsymbol{x} = [x_i]_N` which is a Boolean vector, where :math:`x_i = 1`  if and only if the item :math:`i` was selected to be inserted into the knapsack.
+ * :math:`\boldsymbol{y} = [y_i]_W` is a one-hot vector where :math:`y_i = 1` if and only if the weight of the knapsack is equal to :math:`i`;
  * :math:`\alpha_j` are penalty weights  (i.e. Lagrangian multipliers, hyperparameters of the optimized function).
 
 Therefore, the proper function definition  requires setting  three :math:`\alpha_j` penalties  i.e. hyperparameters
-for the cost function and two constraints: ensuring that problem encoding is correct and that knapsack weight fullfils 
+for the cost function and two constraints: ensuring that problem encoding is correct and that knapsack weight fullfils
 ``max_weight`` requirement .
 
 In the example below, the constraint penalties  are set as ``hyper_args``
@@ -73,7 +73,7 @@ Adding hyperoptimizer
 ---------------------
 
 Since guessing correct penalties is often difficult, there is also option to define ``hyper_optimizer`` to search for appropriate settings.
-In the example below, ``grid`` search hyperoptimizer is applied to find  proper penalties  of the  knapsack optimized function.
+In the example below, :py:class:`grid<.GridSearch>`) search hyperoptimizer is applied to find  proper penalties  of the  knapsack optimized function.
 The penalties are searched within specified  ``bounds`` with ``steps`` defined in the configuration.
 
 .. code-block:: yaml
@@ -88,12 +88,12 @@ The penalties are searched within specified  ``bounds`` with ``steps`` defined i
 Configuring variational quantum algorithms
 ------------------------------------------
 
-``vqa`` solver type is a  set containing solvers based on  gate-based variational algorithms. Currenly `QAOA <https://arxiv.org/abs/1411.4028>`_, `WF-QAOA and H-QAOA <https://www.iccs-meeting.org/archive/iccs2023/papers/140770117.pdf>`_
-are supported obtained by setting ``pqc type`` to  ``qaoa``, ``wfqaoa`` and ``hqaoa`` repectively.
+:py:class:`.VQA` solver type is a  set containing solvers based on  gate-based variational algorithms. Currenly `QAOA <https://arxiv.org/abs/1411.4028>`_, `WF-QAOA and H-QAOA <https://www.iccs-meeting.org/archive/iccs2023/papers/140770117.pdf>`_
+are supported obtained by setting ``pqc.type`` to :py:class:`qaoa<.QAOA>`, :py:class:`wfqaoa<.WFQAOA>` and :py:class:`hqaoa<.HQAOA>` repectively.
 
 Typical example of QAOA configuration is shown below. The parametrized quantum circuit is configured for  5 ``layers``.  Default local
 `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/pennylane.AdamOptimizer.html>`_ ``optimizer``
-from `Pennylane <https://pennylane.ai/>`_ (``type: qml``) with default options is used.
+from `Pennylane <https://pennylane.ai/>`_ (``type:`` :py:class:`qml<.QmlGradientDescent>`) with default options is used.
 
 Initial variational parameters optimized by Adam method are set as ``angles``.   Penalty weights are initialized  as ``hyper_args``.
 
@@ -111,8 +111,8 @@ Initial variational parameters optimized by Adam method are set as ``angles``.  
             hyper_args: [1, 2.5, 2.5]
 
 
-It is possible to further customized ``pqc`` with additional keyword arguments (see QHyper API documentation). Below example of setting `Pennylane simulator
-type <https://pennylane.ai/plugins/>`_ for ``qaoa``  using ``backend`` keyword
+It is possible to further customized :py:class:`pqc<.PQC>` with additional keyword arguments (see QHyper API documentation). Below example of setting `Pennylane simulator
+type <https://pennylane.ai/plugins/>`_ for :py:class:`qaoa<.QAOA>` using ``backend`` keyword
 
 .. code-block:: yaml
 
@@ -157,7 +157,7 @@ Combining optimizers and hyperoptimizers
 ----------------------------------------
 
 It is also possible to make use of both ``optimizer`` and ``hyper_optimizer`` functionality. The example below is similar to that in `Customizing optimizers`_.
-However, as in `Adding hyperoptimizer`_, penalties  are searched by ``hiper_optimizer`` within specified  ``bounds``. In this example it is done  by Cross Entropy Search  method (configured as ``cem``).  ``processes``, ``samples_per_epoch`` and ``epochs`` are parameters specific for ``cem``.
+However, as in `Adding hyperoptimizer`_, penalties  are searched by ``hyper_optimizer`` within specified  ``bounds``. In this example it is done  by Cross Entropy Search  method (configured as :py:class:`cem<.CEM>`).  ``processes``, ``samples_per_epoch`` and ``epochs`` are parameters specific for ``cem``.
 
 .. code-block:: yaml
 
@@ -190,13 +190,12 @@ Variety of (hyper)optimizers. In QHyper both ``hyper_optimizer`` and ``optimizer
 .. note::
     Please note that additional keyword arguments for each ``optimizer`` or ``hyper_optimizer`` configuration can be taken directly from native  function definition (refer to indicated  API documentation).
 
-*  ``qml``  customizable gradient descent set of optimizers from Pennylane  (see below)
-* ``scipy``: `Scipy gradient descent set of optimizers <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
-* ``basinhopping``: `Scipy global Basinhopping optimizer <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.basinhopping.html>`_
-* ``random``: random optimizer (see QHyper API doc)
-* ``grid``:  grid search optimizer (see QHyper API doc)
-* ``cem``: Cross Entropy Optimizer (see QHyper API doc)
-* ``dummy``: dummy optimizer (see QHyper API doc)
+* :py:class:`.QmlGradientDescent`: customizable gradient descent set of optimizers from Pennylane  (see below)
+* :py:class:`.ScipyOptimizer`: `Scipy gradient descent set of optimizers <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
+* :py:class:`.Random`: Random optimizer (see QHyper API doc)
+* :py:class:`.GridSearch`:  Grid search optimizer (see QHyper API doc)
+* :py:class:`.CEM`: Cross Entropy Optimizer (see QHyper API doc)
+* :py:class:`.Dummy`: Dummy optimizer (see QHyper API doc)
 
 Additionally, ``qml`` set of optimizers can be further specified  (e.g. ``adam`` configuration was shown in point 6 above) using following keyword arguments (for details see `Pennylane documentation <https://docs.pennylane.ai/en/stable/introduction/interfaces.html#numpy>`_ ):
 

@@ -143,7 +143,7 @@ can offer. By following this guide, you've learned how to install the library,
 embrace quantum algorithm and set up your initial
 experiments.
 
-For more advanced usage and examples, explore the
-`demos <https://github.com/qc-lab/QHyper/tree/main/demo>` available on github.
+.. For more advanced usage and examples, explore the
+.. `demos <https://github.com/qc-lab/QHyper/tree/main/demo>` available on github.
 
 Happy experimenting with `QHyper`!
