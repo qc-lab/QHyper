@@ -73,8 +73,8 @@ SOLVERS: dict[str, Type[Solver]] = {
     'dqm': DQM,
     'advantage': Advantage
 }
-SOLVERS.update(search_for(Solver, 'QHyper/custom/solvers'))
-SOLVERS.update(search_for(Solver, 'custom/solvers'))
+SOLVERS.update(search_for(Solver, 'QHyper/custom'))
+SOLVERS.update(search_for(Solver, 'custom'))
 
 
 def solver_from_config(config: dict[str, Any]) -> Solver:

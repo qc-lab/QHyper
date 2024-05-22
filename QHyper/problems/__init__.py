@@ -46,8 +46,8 @@ PROBLEMS_BY_NAME: dict[str, Type[Problem]] = {
     "workflow_scheduling": WorkflowSchedulingProblem,
     'community_detection': CommunityDetectionProblem
 }
-PROBLEMS_BY_NAME.update(search_for(Problem, 'QHyper/custom/problems'))
-PROBLEMS_BY_NAME.update(search_for(Problem, 'custom/problems'))
+PROBLEMS_BY_NAME.update(search_for(Problem, 'QHyper/custom'))
+PROBLEMS_BY_NAME.update(search_for(Problem, 'custom'))
 
 
 class ProblemConfigException(Exception):

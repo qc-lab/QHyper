@@ -50,5 +50,5 @@ OPTIMIZERS_BY_NAME: dict[str, Type[Optimizer]] = {
     'grid': GridSearch,
     'dummy': Dummy,
 }
-OPTIMIZERS_BY_NAME.update(search_for(Optimizer, 'QHyper/custom/optimizers'))
-OPTIMIZERS_BY_NAME.update(search_for(Optimizer, 'custom/optimizers'))
+OPTIMIZERS_BY_NAME.update(search_for(Optimizer, 'QHyper/custom'))
+OPTIMIZERS_BY_NAME.update(search_for(Optimizer, 'custom'))
