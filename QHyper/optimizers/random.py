@@ -31,6 +31,7 @@ class Random(Optimizer):
         The number of samples to generate.
     processes : int, default 1
         The number of processes to use for parallel computation.
+        If the value is set to 0, it works in series.
     """
 
     bounds: NDArray

@@ -9,9 +9,16 @@ from QHyper.optimizers.base import OptimizationResult
 
 def run_parallel(
         func: Callable[[npt.NDArray], OptimizationResult],
-        args: npt.NDArray, processes: int,
+        args: npt.NDArray,
+        processes: int,
         disable_tqdm: bool = True
 ) -> list[OptimizationResult]:
+    if processes == 0:
+        results = []
+        for arg in tqdm(args, disable=disable_tqdm):
+            result = func(arg)
+            results.append(result)
+        return results
     if processes == -1:
         return list(tqdm((func(arg) for arg in args),
                          total=len(args), disable=disable_tqdm))
