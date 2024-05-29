@@ -15,6 +15,20 @@ DWAVE_API_TOKEN = os.environ.get("DWAVE_API_TOKEN")
 
 
 class DQM(Solver):
+    """
+    DQM solver class.
+
+    Attributes
+    ----------
+    problem : Problem
+        The problem to be solved.
+    time : float
+        Maximum run time in seconds
+    cases: int, default 1
+        Number of variable cases (values)
+        1 is denoting binary variable.
+    """
+
     def __init__(self, problem: Problem, time: float, cases: int = 1) -> None:
         self.problem: Problem = problem
         self.time: float = time

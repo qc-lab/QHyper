@@ -157,9 +157,17 @@ class Converter:
     def to_dqm(problem: Problem, cases: int = 1) -> DiscreteQuadraticModel:
 
         def binary_to_discrete(v: str) -> str:
-            id = int(v[1:])
-            discrete_id = id // cases
-            return f"x{discrete_id}"
+            for i in range(len(v)):
+                if v[i].isdigit():
+                    break
+
+            prefix = v[:i]
+            numeric_part = v[i:]
+
+            discrete_id = int(numeric_part) // cases
+            new_v = prefix + str(discrete_id)
+
+            return new_v
 
         def extract_number(element) -> int:
             match = re.search(r'(\d+)', element)

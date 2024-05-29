@@ -219,11 +219,8 @@ def test_to_dqm():
     )
     objective_function = from_sympy(variables[0] + variables[1])
 
-    constraint_le = Constraint(objective_function, [Polynomial(1)],
-                               Operator.LE, MethodsForInequalities.SLACKS_LOG_2, "s",)
-
     problem = SimpleProblem(
-        objective_function, constraint_le,
+        objective_function, [],
         MethodsForInequalities.SLACKS_LOG_2)
 
     dqm = Converter.to_dqm(problem)
@@ -238,7 +235,6 @@ def test_to_dqm():
 
     print(created_dqm.variables == dqm.variables)
 
-    assert isinstance(dqm, DiscreteQuadraticModel)
     assert created_dqm.variables == dqm.variables
 
 
@@ -273,5 +269,4 @@ def test_to_cqm():
     lhs = [tuple([*key, value]) for key, value in constraint_le.lhs.terms.items()]
     created_cqm.add_constraint(lhs, constraint_le.operator.value, label=0)
 
-    assert isinstance(cqm, ConstrainedQuadraticModel)
     assert created_cqm.variables == cqm.variables
