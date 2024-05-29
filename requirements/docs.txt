@@ -7,3 +7,4 @@ numpydoc==1.5.0
 graphviz==0.20.1
 nbsphinx==0.9.4
 ipykernel==6.29.2
+sphinx-tabs==3.4.5

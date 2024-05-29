@@ -22,3 +22,4 @@ researcher, this guide will help you navigate the features and capabilities of t
     custom_definition
 
     demo/different_configurations
+    demo/defining_problems

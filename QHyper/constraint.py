@@ -20,6 +20,9 @@ class Operator(Enum):
 
 
 class Constraint:
+    """
+    A class to represent a constraint.
+    """
     def __init__(
         self,
         lhs: Polynomial,

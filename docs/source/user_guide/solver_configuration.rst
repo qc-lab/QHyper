@@ -7,13 +7,27 @@ Problem definition
 
 This tutorial assumes following sample optimization problem definition:
 
-.. code-block:: yaml
+.. tabs::
 
-    problem:
-        type: knapsack
-        max_weight: 2
-        items_weights: [1, 1, 1]
-        items_costs: [2, 2, 1]
+    .. code-tab:: yaml
+
+        problem:
+            type: knapsack
+            max_weight: 2
+            items_weights: [1, 1, 1]
+            items_costs: [2, 2, 1]
+
+    .. code-tab:: json
+
+        {
+            "problem": {
+                "type": "knapsack",
+                "max_weight": 2,
+                "items_weights": [1, 1, 1],
+                "items_costs": [2, 2, 1]
+            }
+        }
+
 
 Which defines `knapsack problem <https://en.wikipedia.org/wiki/Knapsack_problem>`_ of filling a knapsack with three items, each characterized with weight and cost.
 The goal is to put chosen items in the knapsack to achieve maximal cost  with total weight not exceeding  ``max_weight``
@@ -32,10 +46,20 @@ Basic solver definition requires providing its type. Currently supported types a
 
 Sample code for defining type advantage solver
 
-.. code-block:: yaml
-
-    solver:
-        type: advantage
+.. tabs::
+    
+        .. code-tab:: yaml
+    
+            solver:
+                type: advantage
+    
+        .. code-tab:: json
+    
+            {
+                "solver": {
+                    "type": "advantage"
+                }
+            }
 
 
 Configuring initial QUBO penalties (Lagrangian multipliers)
@@ -62,12 +86,26 @@ for the cost function and two constraints: ensuring that problem encoding is cor
 
 In the example below, the constraint penalties  are set as ``hyper_args``
 
-.. code-block:: yaml
+.. tabs::
+    
+    .. code-tab:: yaml
 
-    solver:
-        type: advantage
-        params_inits:
-            hyper_args: [1, 2.5, 2.5]
+        solver:
+            type: advantage
+            params_inits:
+                hyper_args: [1, 2.5, 2.5]
+
+    .. code-tab:: json
+
+        {
+            "solver": {
+                "type": "advantage",
+                "params_inits": {
+                    "hyper_args": [1, 2.5, 2.5]
+                }
+            }
+        }
+
 
 Adding hyperoptimizer
 ---------------------
@@ -76,14 +114,29 @@ Since guessing correct penalties is often difficult, there is also option to def
 In the example below, :py:class:`grid<.GridSearch>`) search hyperoptimizer is applied to find  proper penalties  of the  knapsack optimized function.
 The penalties are searched within specified  ``bounds`` with ``steps`` defined in the configuration.
 
-.. code-block:: yaml
+.. tabs::
 
-    solver:
-        type: advantage
-        hyper_optimizer:
-            type: grid
-            steps: [0.01, 0.01, 0.01]
-            bounds: [[1, 10], [1, 10], [1, 10]]
+    .. code-tab:: yaml
+
+        solver:
+            type: advantage
+            hyper_optimizer:
+                type: grid
+                steps: [0.01, 0.01, 0.01]
+                bounds: [[1, 10], [1, 10], [1, 10]]
+
+    .. code-tab:: json
+    
+        {
+            "solver": {
+                "type": "advantage",
+                "hyper_optimizer": {
+                    "type": "grid",
+                    "steps": [0.01, 0.01, 0.01],
+                    "bounds": [[1, 10], [1, 10], [1, 10]]
+                }
+            }
+        }
 
 Configuring variational quantum algorithms
 ------------------------------------------
@@ -97,36 +150,83 @@ from `Pennylane <https://pennylane.ai/>`_ (``type:`` :py:class:`qml<.QmlGradient
 
 Initial variational parameters optimized by Adam method are set as ``angles``.   Penalty weights are initialized  as ``hyper_args``.
 
-.. code-block:: yaml
+.. tabs::
 
-    solver:
-        type: vqa
-        pqc:
-            type: qaoa
-            layers: 5
-        optimizer:
-            type: qml
-        params_inits:
-            angles: [[0.5, 0.5, 0.5, 0.5, 0.5], [1, 1, 1, 1, 1]]
-            hyper_args: [1, 2.5, 2.5]
+    .. code-tab:: yaml
+
+        solver:
+            type: vqa
+            pqc:
+                type: qaoa
+                layers: 5
+            optimizer:
+                type: qml
+            params_inits:
+                angles: [[0.5, 0.5, 0.5, 0.5, 0.5], [1, 1, 1, 1, 1]]
+                hyper_args: [1, 2.5, 2.5]
+
+    .. code-tab:: json
+    
+        {
+            "solver": {
+                "type": "vqa",
+                "pqc": {
+                    "type": "qaoa",
+                    "layers": 5
+                },
+                "optimizer": {
+                    "type": "qml"
+                },
+                "params_inits": {
+                    "angles": [[0.5, 0.5, 0.5, 0.5, 0.5], [1, 1, 1, 1, 1]],
+                    "hyper_args": [1, 2.5, 2.5]
+                }
+            }
+        }
 
 
 It is possible to further customized :py:class:`pqc<.PQC>` with additional keyword arguments (see QHyper API documentation). Below example of setting `Pennylane simulator
 type <https://pennylane.ai/plugins/>`_ for :py:class:`qaoa<.QAOA>` using ``backend`` keyword
 
-.. code-block:: yaml
+.. tabs::
 
-    solver:
-        type: vqa
-        pqc:
-            type: qaoa
-            layers: 5
-            backend: default.qubit
-        optimizer:
-            type: qml
-        params_inits:
-            angles: [[0.5, 0.5, 0.5, 0.5, 0.5], [1, 1, 1, 1, 1]]
-            hyper_args: [1, 2.5, 2.5]
+    .. code-tab:: yaml
+
+        solver:
+            type: vqa
+            pqc:
+                type: qaoa
+                layers: 5
+                backend: default.qubit
+            optimizer:
+                type: qml
+            params_inits:
+                angles: [[0.5, 0.5, 0.5, 0.5, 0.5], [1, 1, 1, 1, 1]]
+                hyper_args: [1, 2.5, 2.5]
+
+    .. code-tab:: json
+    
+        {
+            "solver": {
+                "type": "vqa",
+                "pqc": {
+                    "type": "qaoa",
+                    "layers": 5,
+                    "backend": "default.qubit"
+                },
+                "optimizer": {
+                    "type": "qml"
+                },
+                "params_inits": {
+                    "angles": [
+                        [0.5, 0.5, 0.5, 0.5, 0.5],
+                        [1, 1, 1, 1, 1]
+                    ],
+                    "hyper_args": [1, 2.5, 2.5]
+                }
+            }
+        }
+
 
 
 Customizing optimizers
@@ -136,21 +236,49 @@ Customising ``optimizer`` settings is also possible. Below, more detailed sample
 native function options is possible (e.g. ``stepsize`` in this example are native
 from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/pennylane.AdamOptimizer.html>`_   )
 
-.. code-block:: yaml
+.. tabs::
 
-    solver:
-        type: vqa
-        pqc:
-            type: qaoa
-            layers: 5
-        optimizer:
-            type: qml
-            optimizer: adam
-            steps: 200
-            stepsize: 0.005
-        params_inits:
-            angles: [[0.5, 0.5, 0.5, 0.5, 0.5], [1, 1, 1, 1, 1]]
-            hyper_args: [1, 2.5, 2.5]
+    .. code-tab:: yaml
+
+        solver:
+            type: vqa
+            pqc:
+                type: qaoa
+                layers: 5
+            optimizer:
+                type: qml
+                optimizer: adam
+                steps: 200
+                stepsize: 0.005
+            params_inits:
+                angles: [[0.5, 0.5, 0.5, 0.5, 0.5], [1, 1, 1, 1, 1]]
+                hyper_args: [1, 2.5, 2.5]
+
+    .. code-tab:: json
+
+        {
+            "solver": {
+                "type": "vqa",
+                "pqc": {
+                    "type": "qaoa",
+                    "layers": 5
+                },
+                "optimizer": {
+                    "type": "qml",
+                    "optimizer": "adam",
+                    "steps": 200,
+                    "stepsize": 0.005
+                },
+                "params_inits": {
+                    "angles": [
+                        [0.5, 0.5, 0.5, 0.5, 0.5],
+                        [1, 1, 1, 1, 1]
+                    ],
+                    "hyper_args": [1, 2.5, 2.5]
+                }
+            }
+        }
+
 
 
 Combining optimizers and hyperoptimizers
@@ -159,7 +287,9 @@ Combining optimizers and hyperoptimizers
 It is also possible to make use of both ``optimizer`` and ``hyper_optimizer`` functionality. The example below is similar to that in `Customizing optimizers`_.
 However, as in `Adding hyperoptimizer`_, penalties  are searched by ``hyper_optimizer`` within specified  ``bounds``. In this example it is done  by Cross Entropy Search  method (configured as :py:class:`cem<.CEM>`).  ``processes``, ``samples_per_epoch`` and ``epochs`` are parameters specific for ``cem``.
 
-.. code-block:: yaml
+.. tabs::
+
+    .. code-tab:: yaml
 
         solver:
         type: vqa
@@ -180,6 +310,43 @@ However, as in `Adding hyperoptimizer`_, penalties  are searched by ``hyper_opti
         params_inits:
             angles: [[0.5, 0.5, 0.5, 0.5, 0.5], [1, 1, 1, 1, 1]]
             hyper_args: [1, 2.5, 2.5]
+
+    .. code-tab:: json
+
+        {
+            "solver": {
+                "type": "vqa",
+                "pqc": {
+                    "type": "wfqaoa",
+                    "layers": 5
+                },
+                "optimizer": {
+                    "type": "qml",
+                    "optimizer": "adam",
+                    "steps": 200,
+                    "stepsize": 0.005
+                },
+                "hyper_optimizer": {
+                    "type": "cem",
+                    "processes": 4,
+                    "samples_per_epoch": 1000,
+                    "epochs": 10,
+                    "bounds": [
+                        [1, 10],
+                        [1, 10],
+                        [1, 10]
+                    ]
+                },
+                "params_inits": {
+                    "angles": [
+                        [0.5, 0.5, 0.5, 0.5, 0.5],
+                        [1, 1, 1, 1, 1]
+                    ],
+                    "hyper_args": [1, 2.5, 2.5]
+                }
+            }
+        }
+
 
 
 Supported optimizers
