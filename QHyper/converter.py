@@ -101,7 +101,8 @@ class Converter:
             constraints_weights, problem.constraints
         ):
             if constraint.operator == Operator.EQ:
-                result += float(weight[0]) * (constraint.lhs - constraint.rhs) ** 2
+                result += float(weight[0]) * (
+                    constraint.lhs - constraint.rhs) ** 2
                 continue
 
             lhs = constraint.lhs - constraint.rhs
@@ -157,7 +158,8 @@ class Converter:
         return Converter._dqm_from_one_hot_representation(problem)
 
     @staticmethod
-    def _dqm_from_discrete_representation(problem: Problem) -> DiscreteQuadraticModel:
+    def _dqm_from_discrete_representation(
+            problem: Problem) -> DiscreteQuadraticModel:
         dqm = dimod.DiscreteQuadraticModel()
 
         for var in problem.variables:
@@ -183,7 +185,8 @@ class Converter:
         return dqm
 
     @staticmethod
-    def _dqm_from_one_hot_representation(problem: Problem) -> DiscreteQuadraticModel:
+    def _dqm_from_one_hot_representation(
+            problem: Problem) -> DiscreteQuadraticModel:
         dqm = dimod.DiscreteQuadraticModel()
 
         CASES_OFFSET = 1 if problem.cases == 1 else 0
@@ -194,7 +197,8 @@ class Converter:
             return f"x{discrete_id}"
 
         variables_discrete = [
-            binary_to_discrete(str(v)) for v in problem.variables[:: problem.cases]
+            binary_to_discrete(str(v))
+            for v in problem.variables[:: problem.cases]
         ]
         for var in variables_discrete:
             if var not in dqm.variables:
@@ -210,7 +214,8 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
-                    {(case, case): bias for case in range(problem.cases + CASES_OFFSET)},
+                    {(case, case): bias for case in range(problem.cases
+                                                          + CASES_OFFSET)},
                 )
             else:
                 dqm.set_linear(

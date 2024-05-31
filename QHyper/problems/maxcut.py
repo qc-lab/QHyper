@@ -5,6 +5,7 @@
 
 from typing import cast
 
+import numpy as np
 import sympy
 
 from QHyper.parser import from_sympy
@@ -34,7 +35,8 @@ class MaxCutProblem(Problem):
         self.edges = edges
         self.variables = sympy.symbols(
             " ".join(
-                [f"x{i}" for i in range(max(v for edge in edges for v in edge))]
+                [f"x{i}" for i in range(max(v for edge in edges
+                                            for v in edge))]
             )
         )
 
@@ -50,11 +52,11 @@ class MaxCutProblem(Problem):
 
         self.objective_function = from_sympy(equation)
 
-    def get_score(self, result: str, penalty: float = 0) -> float:
+    def get_score(self, result: np.record, penalty: float = 0) -> float:
         sum = 0
 
         for e in self.edges:
-            x_i, x_j = int(result[e[0] - 1]), int(result[e[1] - 1])
+            x_i, x_j = int(result[f"x{e[0] - 1}"]), int(result[f"x{e[1] - 1}"])
             sum += x_i * (1 - x_j) + x_j * (1 - x_i)
 
         return sum

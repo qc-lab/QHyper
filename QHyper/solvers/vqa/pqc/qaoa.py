@@ -168,15 +168,17 @@ class QAOA(PQC):
         problem: Problem,
         opt_args: NDArray,
         hyper_args: NDArray,
-    ) -> dict[str, float]:
+    ) -> np.recarray:
         probs = self.get_probs_func(problem, hyper_args)(
             opt_args.reshape(2, -1))
 
-        vars_num = self._get_num_of_wires()
-        return {
-            format(result, "b").zfill(vars_num): float(prob)
-            for result, prob in enumerate(probs)
-        }
+        recarray = np.recarray((len(probs),),
+                               dtype=[(wire, 'i4') for wire in
+                                      self.dev.wires]+[('probability', 'f8')])
+        for i, probability in enumerate(probs):
+            solution = format(i, "b").zfill(self._get_num_of_wires())
+            recarray[i] = *solution, probability
+        return recarray
 
     def get_opt_args(
         self,

@@ -7,8 +7,9 @@ np.random.seed(1244)
 
 
 def assert_probabilities(probabilities, expected_probabilities):
-    for key, value in probabilities.items():
-        assert value == pytest.approx(expected_probabilities[key])
+    for rec in probabilities:
+        key = ''.join([str(rec[f'x{i}']) for i in range(5)])
+        assert rec.probability == pytest.approx(expected_probabilities[key])
 
 
 def get_problem_config():

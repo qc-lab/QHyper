@@ -5,6 +5,7 @@
 
 import random
 import sympy
+import numpy as np
 from collections import namedtuple
 
 from typing import cast
@@ -154,7 +155,7 @@ class KnapsackProblem(Problem):
         # equation = equation
         self.constraints.append(Constraint(from_sympy(equation)))
 
-    def get_score(self, result: str, penalty: float = 0) -> float:
+    def get_score(self, result: np.record, penalty: float = 0) -> float:
         """Returns score of the provided outcome in bits
 
         Parameters
@@ -173,16 +174,16 @@ class KnapsackProblem(Problem):
         sum = 0
         weight = 0
         for i, item in enumerate(self.knapsack.items):
-            if result[i] == '1':
+            if result[f'x{i}'] == 1:
                 sum += item.value
                 weight += item.weight
         if weight > self.knapsack.max_weight:
             return penalty
 
         for i in range(self.knapsack.max_weight):
-            if result[i + len(self.knapsack)] == '1' and i + 1 != weight:
+            if result[f'x{i + len(self.knapsack)}'] == 1 and i + 1 != weight:
                 return penalty
-        if weight != 0 and result[weight + len(self.knapsack) - 1] != '1':
+        if weight != 0 and result[f'x{weight + len(self.knapsack) - 1}'] != 1:
             return penalty
 
         return -sum

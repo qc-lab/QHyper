@@ -9,9 +9,10 @@ import os
 import inspect
 import re
 
+import numpy as np
 import numpy.typing as npt
 
-from typing import Callable, NewType, Optional, Any
+from typing import Callable, NewType
 
 Array1D = NewType("Array1D", npt.NDArray)
 Array2D = NewType("Array2D", npt.NDArray)
@@ -19,8 +20,8 @@ ArrayND = NewType("ArrayND", npt.NDArray)
 
 
 def weighted_avg_evaluation(
-    results: dict[str, float],
-    score_function: Callable[[str, float], float],
+    results: np.recarray,
+    score_function: Callable[[np.record, float], float],
     penalty: float = 0,
     limit_results: int | None = None,
     normalize: bool = True,
@@ -29,48 +30,39 @@ def weighted_avg_evaluation(
 
     sorted_results = sort_solver_results(results, limit_results)
     if normalize:
-        scaler = 1 / sum([v for v in sorted_results.values()])
+        scaler = 1 / sorted_results.probability.sum()
     else:
         scaler = 1
-
-    for result, prob in sorted_results.items():
-        score += scaler * prob * score_function(result, penalty)
+    for rec in sorted_results:
+        score += scaler * rec.probability * score_function(rec, penalty)
     return score
 
 
 def sort_solver_results(
-    results: dict[str, float],
+    results: np.recarray,
     limit_results: int | None = None,
-) -> dict[str, float]:
+) -> np.recarray:
     limit_results = limit_results or len(results)
-    return {
-        k: v for k, v
-        in sorted(results.items(), key=lambda item: item[1],
-                  reverse=True)[:limit_results]
-    }
+    results_ = np.sort(results, order='probability')
+    return results_[::-1][:limit_results]
 
 
 def add_evaluation_to_results(
-    results: dict[str, float],
-    score_function: Callable[[str, float], float],
+    results: np.recarray,
+    score_function: Callable[[np.record, float], float],
     penalty: float = 0,
-) -> dict[str, tuple[float, float]]:
-    """
-    Parameters
-    ----------
-    results : dict[str, float]
-        dictionary of results
-    score_function : Callable[[str, float], float]
-        function that receives result and penalty and returns score, probably
-        will be passed from Problem.get_score
+) -> np.recarray:
+    if 'evaluation' in results.dtype.names:
+        return results
 
-    Returns
-    -------
-    dict[str, tuple[float, float]]
-        dictionary of results with scores
-    """
+    new_dtype = np.dtype(results.dtype.descr + [('evaluation', 'f8')])
+    new_results = np.empty(results.shape, dtype=new_dtype)
+    new_results['evaluation'] = [score_function(x, penalty) for x in results]
 
-    return {k: (v, score_function(k, penalty)) for k, v in results.items()}
+    for dtype in results.dtype.names:
+        new_results[dtype] = results[dtype]
+
+    return new_results
 
 
 def class_to_snake(cls: type) -> str:

@@ -160,12 +160,11 @@ class TSPProblem(Problem):
             constraints.append(Constraint(from_sympy(equation), group=1))
         return constraints
 
-    def _get_distance(self, key: str) -> float:
-        results = np.array_split(list(key), self.tsp_instance.number_of_cities)
+    def _get_distance(self, order_result: np.ndarray) -> float:
         dist: float = 0
         tab = []
-        for result in results:
-            tab.append(list(result).index('1'))
+        for result in order_result:
+            tab.append(list(result).index(1))
 
         for i in range(len(tab)):
             j = i - 1
@@ -174,23 +173,19 @@ class TSPProblem(Problem):
             )
         return dist
 
-    def _valid(self, result: str) -> bool:
-        result_bools = np.reshape(
-            list(result),
-            (-1, self.tsp_instance.number_of_cities)
-            ).astype(np.bool8)
+    def _valid(self, order_result: np.ndarray) -> bool:
         return cast(bool, (
-            result_bools.sum(0) == 1).all()
-            and (result_bools.sum(1) == 1).all()
+            order_result.sum(0) == 1).all()
+            and (order_result.sum(1) == 1).all()
         )
 
-    def get_score(self, result: str, penalty: float = 0) -> float:
+    def get_score(self, result: np.record, penalty: float = 0) -> float:
         """Returns length of the route based on provided outcome in bits.
 
         Parameters
         ----------
-        result : str
-            route as a string of zeros and ones
+        result : np.record
+            route as a numpy record with values of the variables
         penalty : float, default 0
             penalty for the constraint violation
 
@@ -199,6 +194,14 @@ class TSPProblem(Problem):
         float
             Returns length of the route, or 0 if route wasn't correct
         """
-        if not self._valid(result):
+        order_result = np.zeros((self.tsp_instance.number_of_cities,
+                                 self.tsp_instance.number_of_cities))
+
+        for i in range(self.tsp_instance.number_of_cities):
+            for j in range(self.tsp_instance.number_of_cities):
+                order_result[i][j] = result[
+                    f"x{i*self.tsp_instance.number_of_cities + j}"]
+
+        if not self._valid(order_result):
             return penalty  # Bigger value that possible distance
-        return self._get_distance(result)
+        return self._get_distance(order_result)

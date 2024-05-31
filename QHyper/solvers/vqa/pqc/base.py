@@ -61,7 +61,7 @@ class PQC(abc.ABC):
         problem: Problem,
         opt_args: NDArray[np.float64],
         hyper_args: NDArray[np.float64]
-    ) -> dict[str, float]:
+    ) -> np.recarray:
         """
         Run optimization using the PQC and return probabilities.
 
@@ -76,7 +76,7 @@ class PQC(abc.ABC):
 
         Returns
         -------
-        dict[str, float]
+        np.recarray
             Probabilities of the results.
         """
         ...

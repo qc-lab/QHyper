@@ -5,6 +5,7 @@
 
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
+import numpy as np
 
 from typing import Any
 
@@ -27,8 +28,9 @@ class SolverResult:
 
     Attributes
     ----------
-    results_probabilities : dict[str, float]
-        Dictionary with results and their probabilities.
+    results_probabilities : np.recarray
+        Record array with the results of the solver. Contains column for each
+        variable and the probability of the solution.
     params : dict[Any, Any]
         Dictionary with the best parameters for the solver.
     history : list[list[float]]
@@ -36,7 +38,7 @@ class SolverResult:
         of the objective function at each iteration - there can be multiple
         results per each iteration (epoch).
     """
-    probabilities: dict[str, float]
+    probabilities: np.recarray
     params: dict[Any, Any]
     history: list[list[OptimizationResult]] = field(default_factory=list)
 

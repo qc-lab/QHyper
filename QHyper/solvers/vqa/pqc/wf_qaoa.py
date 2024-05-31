@@ -75,32 +75,22 @@ class WFQAOA(QAOA):
         problem: Problem,
         opt_args: npt.NDArray,
         hyper_args: npt.NDArray,
-        print_probabilities: bool = False
     ) -> OptimizationResult:
         probs = self.get_probs_func(problem, hyper_args)(
             opt_args.reshape(2, -1))
 
         if isinstance(probs, np.numpy_boxes.ArrayBox):
             probs = probs._value
-        vars_num = self._get_num_of_wires()
-        results_by_probabilites = {
-            format(result, 'b').zfill(vars_num): float(prob)
-            for result, prob in enumerate(probs)
-        }
-        if print_probabilities:
-            sorted_results = {
-                k: v for k, v in
-                sorted(
-                    results_by_probabilites.items(),
-                    key=lambda item: item[1],
-                    reverse=True
-                )[:8]
-            }
-            for k, v in sorted_results.items():
-                print(f'{k}, {v:.3f}, {problem.get_score(k)}')
+
+        dtype = [
+            (wire, 'i4') for wire in self.dev.wires]+[('probability', 'f8')]
+        recarray = np.recarray((len(probs),), dtype=dtype)
+        for i, probability in enumerate(probs):
+            solution = format(i, "b").zfill(self._get_num_of_wires())
+            recarray[i] = *solution, probability
 
         result = weighted_avg_evaluation(
-            results_by_probabilites, problem.get_score, self.penalty,
+            recarray, problem.get_score, self.penalty,
             limit_results=self.limit_results
         )
         return OptimizationResult(result, opt_args)

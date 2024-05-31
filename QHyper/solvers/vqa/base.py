@@ -5,7 +5,7 @@
 
 from dataclasses import dataclass
 import numpy as np
-from typing import Any, Optional
+from typing import Any
 import numpy.typing as npt
 
 from QHyper.problems.base import Problem

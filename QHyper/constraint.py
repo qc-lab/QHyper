@@ -4,15 +4,16 @@ from enum import Enum
 from QHyper.polynomial import Polynomial
 
 
-class MethodsForInequalities(Enum):  # todo penalization method
+class MethodsForInequalities(Enum):
     SLACKS_LOG_2 = 0
     UNBALANCED_PENALIZATION = 1
+
 
 SLACKS_LOG_2 = MethodsForInequalities.SLACKS_LOG_2
 UNBALANCED_PENALIZATION = MethodsForInequalities.UNBALANCED_PENALIZATION
 
 
-class Operator(Enum):  # todo comparison operator
+class Operator(Enum):
     EQ = "=="
     GE = ">="
     LE = "<="
@@ -28,14 +29,19 @@ class Constraint:
         label: str = "",
         group: int = -1,
     ) -> None:
-        """For now, we assume that the constraint is in the form of: sum of something <= number"""
+        """
+            For now, we assume that the constraint is in
+            the form of: sum of something <= number
+        """
+
         self.lhs: Polynomial = lhs
         self.rhs: Polynomial = rhs
         self.operator: Operator = operator
 
         if operator != Operator.EQ and method_for_inequalities is None:
             raise Exception(
-                f"Method for inequalities must be provided when operator is not =="
+                "Method for inequalities must be "
+                "provided when operator is not =="
             )
         self.method_for_inequalities = method_for_inequalities
         self._set_label(label)

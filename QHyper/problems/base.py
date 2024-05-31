@@ -4,6 +4,7 @@
 
 
 from abc import ABC
+import numpy as np
 
 from QHyper.constraint import Constraint, Polynomial
 
@@ -42,7 +43,7 @@ class Problem(ABC):
     constraints: list[Constraint] = []
     cases: int = 1
 
-    def get_score(self, result: str, penalty: float = 0) -> float:
+    def get_score(self, result: np.record, penalty: float = 0) -> float:
         """Returns score of the outcome provided as a binary string
 
         Necessary to evaluate results. It's not possible to calculate the
@@ -54,8 +55,8 @@ class Problem(ABC):
 
         Parameters
         ----------
-        result : str
-            outcome as a string of zeros and ones
+        result : np.record
+            outcome as a numpy record with values of the variables
         penalty : float, default 0
             penalty for the constraint violation
 
