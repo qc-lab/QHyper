@@ -19,6 +19,7 @@ import numpy as np
 class ProblemWarning(Warning):
     pass
 
+
 class Converter:
     @staticmethod
     def calc_slack_coefficients(constant: int) -> list[int]:
@@ -138,7 +139,8 @@ class Converter:
             cqm.add_variable(dimod.BINARY, str(variable))
 
         for i, constraint in enumerate(problem.constraints):
-            lhs = [tuple([*key, value]) for key, value in constraint.lhs.terms.items()]
+            lhs = [tuple([*key, value])
+                   for key, value in constraint.lhs.terms.items()]
             cqm.add_constraint(lhs, constraint.operator.value, label=i)
 
         return cqm
@@ -151,7 +153,6 @@ class Converter:
             cqm, lagrange_multiplier=lagrange_multiplier)
         return cast(tuple[dict[tuple[str, ...], float], float],
                     bqm.to_qubo())  # (qubo, offset)
-
 
     @staticmethod
     def to_dqm(problem: Problem, cases: int = 1) -> DiscreteQuadraticModel:
@@ -175,17 +176,19 @@ class Converter:
 
         if problem.constraints:
             warnings.warn(
-                "Defined problem has constraints. DQM does not support constraints, it only supports objective functions!",
+                "Defined problem has constraints. DQM does not support"
+                " constraints, it only supports objective functions!",
                 ProblemWarning
             )
 
         dqm = dimod.DiscreteQuadraticModel()
-        objective_function_variables = sorted(problem.objective_function.get_variables(),
-                     key=extract_number)
+        objective_function_variables = sorted(
+            problem.objective_function.get_variables(), key=extract_number)
 
         variables = [
-            binary_to_discrete(str(v)) for v in objective_function_variables[:: cases]
-            ]
+            binary_to_discrete(str(v))
+            for v in objective_function_variables[:: cases]
+        ]
 
         cases_offset = 1 if cases == 1 else 0
 
@@ -204,7 +207,8 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
-                    {(case, case): bias for case in range(cases + cases_offset)},
+                    {(case, case): bias
+                     for case in range(cases + cases_offset)},
                 )
             else:
                 dqm.set_linear(
