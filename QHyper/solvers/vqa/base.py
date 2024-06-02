@@ -11,7 +11,7 @@ import numpy.typing as npt
 from QHyper.problems.base import Problem
 
 from QHyper.optimizers import (
-    OPTIMIZERS_BY_NAME, Dummy, Optimizer, OptimizationResult)
+    OPTIMIZERS, Dummy, Optimizer, OptimizationResult)
 from QHyper.solvers.vqa.pqc.base import PQC
 
 from QHyper.solvers.base import (
@@ -99,7 +99,7 @@ class VQA(Solver):
             optimizer = Dummy()
         elif not (optimizer_type := optimizer_config.pop('type', None)):
             raise SolverConfigException("Optimizer type was not provided")
-        elif not (optimizer_class := OPTIMIZERS_BY_NAME.get(
+        elif not (optimizer_class := OPTIMIZERS.get(
                 optimizer_type, None)):
             raise SolverConfigException(
                 f"There is no {optimizer_type} optimizer type")
@@ -112,7 +112,7 @@ class VQA(Solver):
                 'type', None)):
             raise SolverConfigException(
                 "Hyper optimizer type was not provided")
-        elif not (hyper_optimizer_class := OPTIMIZERS_BY_NAME.get(
+        elif not (hyper_optimizer_class := OPTIMIZERS.get(
                 hyper_optimizer_type, None)):
             raise SolverConfigException(
                 f"There is no {hyper_optimizer_type} hyper optimizer type")

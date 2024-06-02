@@ -22,6 +22,25 @@ class Operator(Enum):
 class Constraint:
     """
     A class to represent a constraint.
+
+    Attributes
+    ----------
+    lhs : Polynomial
+        The left-hand side of the constraint.
+    rhs : Polynomial, default Polynomial(0)
+        The right-hand side of the constraint.
+    operator : Operator, default Operator.EQ
+        The operator of the constraint. It can be ==, >=, <=.
+    method_for_inequalities : MethodsForInequalities, optional
+        The method to be used for inequalities. It can be SLACKS_LOG_2 or
+        UNBALANCED_PENALIZATION. It is required when the operator is not ==.
+    label : str, optional
+        The label of the constraint. If not provided, it will be set to a
+        random string.
+    group : int, default -1
+        The group of the constraint. It is used to group constraints together.
+        Example use is assigning same weight to the constraints with the same
+        group when creating qubo.
     """
     def __init__(
         self,
@@ -32,11 +51,6 @@ class Constraint:
         label: str = "",
         group: int = -1,
     ) -> None:
-        """
-            For now, we assume that the constraint is in
-            the form of: sum of something <= number
-        """
-
         self.lhs: Polynomial = lhs
         self.rhs: Polynomial = rhs
         self.operator: Operator = operator

@@ -19,7 +19,6 @@ researcher, this guide will help you navigate the features and capabilities of t
     :caption: Tutorials:
 
     solver_configuration
-    custom_definition
 
     demo/different_configurations
     demo/defining_problems
