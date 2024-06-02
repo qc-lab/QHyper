@@ -105,10 +105,10 @@ You can also create a solver from a config file. That's also suggested way to cr
     print(f"Best params: {solver_results.params}")
 
     # Solver results:
-    # Probabilities: [(0, 0, 0, 0, 0, 0.00812924) (0, 0, 0, 0, 1, 0.01734155)
-    #                 (0, 0, 0, 1, 0, 0.01178566) (0, 0, 0, 1, 1, 0.00071086)
+    # Probabilities: [(0, 0, 0, 0, 0, 0.00392139), (0, 0, 0, 0, 1, 0.01346938),
+    #                 (0, 0, 0, 1, 0, 0.05722635), (0, 0, 0, 1, 1, 0.0166838 ),
     #
-    #                 (1, 1, 1, 1, 0, 0.0651882 ) (1, 1, 1, 1, 1, 0.00498148)]
+    #                 (1, 1, 1, 1, 0, 0.02977723), (1, 1, 1, 1, 1, 0.02197872)]
     #
     # Best params: {'angles': array([0.27298414, 2.2926187 , 0.        , 0.76391714, 0.15569598,
     #                                0.4237506 , 0.93474157, 1.39996954, 1.38701602, 0.36818742]),
@@ -133,6 +133,7 @@ By using the `QHyper` library, you can easily evaluate and show the results of y
     print("Sort results:")
     sorted_results = sort_solver_results(
         solver_results.probabilities, limit_results=10)
+    print(sorted_results)
 
     results_with_evaluation = add_evaluation_to_results(
         sorted_results, problem.get_score, penalty=0)
@@ -143,18 +144,19 @@ By using the `QHyper` library, you can easily evaluate and show the results of y
             f"Evaluation: {rec['evaluation']:.5}")
 
     # Evaluation:
-    # -2.755139878381576
+    # -1.669217721264391
+
     # Sort results:
-    # Result: (1, 1, 0, 0, 1, 0.49483852, -4.), Prob: 0.49484, Evaluation: -4.0
-    # Result: (1, 1, 1, 1, 0, 0.0651882, 0.), Prob: 0.065188, Evaluation: 0.0
-    # Result: (1, 0, 1, 0, 1, 0.05076165, -3.), Prob: 0.050762, Evaluation: -3.0
-    # Result: (0, 1, 1, 0, 1, 0.05076165, -3.), Prob: 0.050762, Evaluation: -3.0
-    # Result: (1, 1, 1, 0, 0, 0.04691337, 0.), Prob: 0.046913, Evaluation: 0.0
-    # Result: (0, 0, 1, 1, 0, 0.03270284, -1.), Prob: 0.032703, Evaluation: -1.0
-    # Result: (1, 1, 0, 0, 0, 0.02985095, 0.), Prob: 0.029851, Evaluation: 0.0
-    # Result: (1, 1, 1, 0, 1, 0.02574434, 0.), Prob: 0.025744, Evaluation: 0.0
-    # Result: (1, 1, 0, 1, 1, 0.02405322, 0.), Prob: 0.024053, Evaluation: 0.0
-    # Result: (0, 0, 1, 1, 1, 0.02002345, 0.), Prob: 0.020023, Evaluation: 0.0
+    # Sorted results:
+    # [(1, 1, 0, 0, 1, 0.14605589) (1, 0, 1, 0, 1, 0.09231208)
+    #  (0, 1, 1, 0, 1, 0.09231208) (1, 0, 1, 1, 0, 0.06831021)
+    #  (0, 1, 1, 1, 0, 0.06831021)]
+
+    # Result: (1, 1, 0, 0, 1, 0.14605589, -4.), Prob: 0.14606, Evaluation: -4.0
+    # Result: (1, 0, 1, 0, 1, 0.09231208, -3.), Prob: 0.092312, Evaluation: -3.0
+    # Result: (0, 1, 1, 0, 1, 0.09231208, -3.), Prob: 0.092312, Evaluation: -3.0
+    # Result: (1, 0, 1, 1, 0, 0.06831021, 0.), Prob: 0.06831, Evaluation: 0.0
+    # Result: (0, 1, 1, 1, 0, 0.06831021, 0.), Prob: 0.06831, Evaluation: 0.0
 
 
 **Conclusion**
