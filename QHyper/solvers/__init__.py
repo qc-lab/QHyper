@@ -9,6 +9,11 @@ Solvers (:mod:`QHyper.solvers`)
 
 .. currentmodule:: QHyper.solvers
 
+Any solver that is in directory 'QHyper/custom' or 'custom' will be
+automatically imported and available for use. Add 'name' attribute to the
+class to make it available in the SOLVERS dictionary (if not solver will be
+available by its class name).
+
 Interfaces
 ==========
 
@@ -56,8 +61,8 @@ from typing import Type, Any
 from QHyper.problems import problem_from_config, ProblemConfigException
 from QHyper.util import search_for
 
-from QHyper.solvers.base import (
-    Solver, SolverResult, SolverConfigException)  # noqa F401
+from QHyper.solvers.base import (  # noqa F401
+    Solver, SolverResult, SolverConfigException)
 
 from .vqa.base import VQA
 from .classical.gurobi import Gurobi
@@ -73,8 +78,8 @@ SOLVERS: dict[str, Type[Solver]] = {
     'dqm': DQM,
     'advantage': Advantage
 }
-SOLVERS.update(search_for(Solver, 'QHyper/custom/solvers'))
-SOLVERS.update(search_for(Solver, 'custom/solvers'))
+SOLVERS.update(search_for(Solver, 'QHyper/custom'))
+SOLVERS.update(search_for(Solver, 'custom'))
 
 
 def solver_from_config(config: dict[str, Any]) -> Solver:

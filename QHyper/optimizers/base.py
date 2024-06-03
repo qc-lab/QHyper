@@ -4,6 +4,7 @@
 
 
 import abc
+import warnings
 import dataclasses
 
 from abc import abstractmethod
@@ -109,8 +110,8 @@ class Optimizer(abc.ABC):
 
         bounds = getattr(self, "bounds")
         if isinstance(bounds, list):
-            print("WARNING: bounds should be a numpy array. "
-                  "Converting to numpy array.")
+            # warnings.warn("WARNING: bounds should be a numpy array. "
+            #               "Converting to numpy array.")
             setattr(self, "bounds", np.array(bounds))
             bounds = getattr(self, "bounds")
 

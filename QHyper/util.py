@@ -73,8 +73,7 @@ def class_to_snake(cls: type) -> str:
     return re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
 
 
-def search_for(class_type: type, path: str,  depth: int = 0
-               ) -> dict[str, type]:
+def search_for(class_type: type, path: str) -> dict[str, type]:
     cwd = os.getcwd()
     _path = pathlib.Path(path)
     classes = {}
@@ -102,7 +101,7 @@ def search_for(class_type: type, path: str,  depth: int = 0
             except Exception as e:
                 print(f"Failed to import {module_name} from {_path}: {e}")
 
-    elif _path.is_dir() and depth < 2:
+    elif _path.is_dir():
         for item in _path.iterdir():
-            classes |= search_for(class_type, str(item), depth + 1)
+            classes |= search_for(class_type, str(item))
     return classes

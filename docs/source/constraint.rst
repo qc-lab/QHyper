@@ -1,8 +1,8 @@
 ==========
-Polynomial
+Constraint
 ==========
 
-.. autoclass:: QHyper.polynomial.Polynomial
-   :no-members:
+.. autoclass:: QHyper.constraint.Constraint
+   :members:
    :no-inherited-members:
    :no-special-members:

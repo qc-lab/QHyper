@@ -9,6 +9,11 @@ Problems (:mod:`QHyper.problems`)
 
 .. currentmodule:: QHyper.problems
 
+Any problem that is in directory 'QHyper/custom' or 'custom' will be
+automatically imported and available for use. Add 'name' attribute to the
+class to make it available in the PROBLEMS dictionary (if not problem will be
+available by its class name).
+
 Package Content
 ===============
 
@@ -32,22 +37,22 @@ from .knapsack import KnapsackProblem
 from .tsp import TSPProblem
 from .maxcut import MaxCutProblem
 from .workflow_scheduling import WorkflowSchedulingProblem
-from .community_detection import CommunityDetectionProblem, Network
+from .community_detection import CommunityDetectionProblem, Network # noqa 401
 
 from QHyper.util import search_for
 
 from QHyper.problems.base import Problem
 
 
-PROBLEMS_BY_NAME: dict[str, Type[Problem]] = {
+PROBLEMS: dict[str, Type[Problem]] = {
     "knapsack": KnapsackProblem,
     "tsp": TSPProblem,
     "maxcut": MaxCutProblem,
     "workflow_scheduling": WorkflowSchedulingProblem,
     'community_detection': CommunityDetectionProblem
 }
-PROBLEMS_BY_NAME.update(search_for(Problem, 'QHyper/custom/problems'))
-PROBLEMS_BY_NAME.update(search_for(Problem, 'custom/problems'))
+PROBLEMS.update(search_for(Problem, 'QHyper/custom'))
+PROBLEMS.update(search_for(Problem, 'custom'))
 
 
 class ProblemConfigException(Exception):
@@ -72,7 +77,7 @@ def problem_from_config(config: dict[str, dict[str, Any]]) -> Problem:
         error_msg = "Problem configuration was not provided"
         problem_type = str(_config.pop('type'))
         error_msg = f"There is no {problem_type} problem type"
-        problem_class = PROBLEMS_BY_NAME[problem_type]
+        problem_class = PROBLEMS[problem_type]
     except KeyError:
         raise ProblemConfigException(error_msg)
 

@@ -9,6 +9,11 @@ Optimizers (:mod:`QHyper.optimizers`)
 
 .. currentmodule:: QHyper.optimizers
 
+Any optimizer that is in directory 'QHyper/custom' or 'custom' will be
+automatically imported and available for use. Add 'name' attribute to the
+class to make it available in the OPTIMIZERS dictionary (if not optimizer will
+be available by its class name).
+
 Package Content
 ===============
 
@@ -19,7 +24,7 @@ Package Content
     OptimizationResult -- Dataclass for storing the results of an optimization run.
 
     ScipyOptimizer -- Wrapper for the scipy.optimize.minimize function.
-    QmlGradientDescent -- Wrapper for the PennyLane gradient descent optimziers.
+    QmlGradientDescent -- Wrapper for the PennyLane gradient descent optimizers.
     CEM -- Cross-entropy method optimizer.
     Random -- Random search optimizer.
     GridSearch -- Grid search optimizer.
@@ -41,7 +46,7 @@ from .scipy_minimizer import ScipyOptimizer
 from .grid_search import GridSearch
 from .dummy import Dummy
 
-OPTIMIZERS_BY_NAME: dict[str, Type[Optimizer]] = {
+OPTIMIZERS: dict[str, Type[Optimizer]] = {
     'scipy': ScipyOptimizer,
     'random': Random,
     'qml': QmlGradientDescent,
@@ -50,5 +55,5 @@ OPTIMIZERS_BY_NAME: dict[str, Type[Optimizer]] = {
     'grid': GridSearch,
     'dummy': Dummy,
 }
-OPTIMIZERS_BY_NAME.update(search_for(Optimizer, 'QHyper/custom/optimizers'))
-OPTIMIZERS_BY_NAME.update(search_for(Optimizer, 'custom/optimizers'))
+OPTIMIZERS.update(search_for(Optimizer, 'QHyper/custom'))
+OPTIMIZERS.update(search_for(Optimizer, 'custom'))

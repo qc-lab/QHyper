@@ -29,6 +29,7 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx_copybutton',
     'nbsphinx',
+    'sphinx_tabs.tabs',
 ]
 
 autodoc_typehints = 'none'

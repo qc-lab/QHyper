@@ -13,13 +13,13 @@ from QHyper.constraint import Operator
 
 
 def polynomial_to_gurobi(gurobi_vars: dict[str, Any], poly: Polynomial) -> Any:
-    cost_function: float = 0
+    cost_function_1: float = 0
     for vars, coeff in poly.terms.items():
         tmp = 1
         for v in vars:
             tmp *= gurobi_vars[v]
-        cost_function += tmp * coeff
-    return cost_function
+        cost_function_1 += tmp * coeff
+    return cost_function_1
 
 
 class Gurobi(Solver):  # todo works only for quadratic expressions
