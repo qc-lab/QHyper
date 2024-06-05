@@ -156,6 +156,18 @@ class Converter:
 
     @staticmethod
     def to_dqm(problem: Problem, cases: int = 1) -> DiscreteQuadraticModel:
+        """
+        Convert problem to DQM format.
+
+        Attributes
+        ----------
+        problem : Problem
+            The problem to be solved. Objective funtion variables
+            should be written in the format <str><int> (e.g. x10, yz1).
+        cases: int, default 1
+            Number of variable cases (values)
+            1 is denoting binary variable.
+        """
 
         def binary_to_discrete(v: str) -> str:
             for i in range(len(v)):
@@ -172,7 +184,10 @@ class Converter:
 
         def extract_number(element) -> int:
             match = re.search(r'(\d+)', element)
-            return int(match.group(1))
+            prefix = element[:match.start()]
+            number = int(match.group(1))
+
+            return (prefix, number)
 
         if problem.constraints:
             warnings.warn(
@@ -180,6 +195,14 @@ class Converter:
                 " constraints, it only supports objective functions!",
                 ProblemWarning
             )
+
+        pattern = re.compile(r'^[a-zA-Z]+\d+$')
+        for variable in problem.objective_function.get_variables():
+            if not pattern.match(variable):
+                raise ValueError(
+                    f"Objective funtion variable '{variable}'"
+                    "should be written in the format <str><int> (e.g. x10, yz1)."
+                )
 
         dqm = dimod.DiscreteQuadraticModel()
         objective_function_variables = sorted(
@@ -189,11 +212,9 @@ class Converter:
             binary_to_discrete(str(v))
             for v in objective_function_variables[:: cases]
         ]
-
-        cases_offset = 1 if cases == 1 else 0
+        cases_offset = cases == 1
 
         for variable in variables:
-            variable = str(variable)
             if variable not in dqm.variables:
                 dqm.add_variable(cases + cases_offset, variable)
 
@@ -207,8 +228,7 @@ class Converter:
                 dqm.set_quadratic(
                     dqm.variables[xi_idx],
                     dqm.variables[xj_idx],
-                    {(case, case): bias
-                     for case in range(cases + cases_offset)},
+                    {(case, case): bias for case in range(cases + cases_offset)},
                 )
             else:
                 dqm.set_linear(
