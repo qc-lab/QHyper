@@ -33,15 +33,10 @@ class Problem(ABC):
         Objective_function represented as a Polynomial
     constraints : list[Polynomial], optional
         List of constraints represented as a Polynomials
-    cases: int, default 1
-        Number of variable cases (values)
-        (default 1 - denoting binary variable)
-        Currently only used for :py:class:`.CommunityDetectionProblem`
     """
 
     objective_function: Polynomial
     constraints: list[Constraint] = []
-    cases: int = 1
 
     def get_score(self, result: np.record, penalty: float = 0) -> float:
         """Returns score of the outcome provided as a binary string

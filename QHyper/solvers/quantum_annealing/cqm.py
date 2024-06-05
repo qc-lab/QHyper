@@ -4,13 +4,14 @@
 
 
 import os
+import numpy as np
 from dwave.system import LeapHybridCQMSampler
 
 from typing import Any
 
 from QHyper.converter import Converter
-from QHyper.problems.base import Problem
-from QHyper.solvers.base import Solver
+from QHyper.problems import Problem
+from QHyper.solvers import Solver, SolverResult
 
 
 DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
@@ -41,7 +42,7 @@ class CQM(Solver):
         self.problem: Problem = problem
         self.time: float = time
 
-    def solve(self, params_inits: dict[str, Any] = {}) -> Any:
+    def solve(self, params_inits: dict[str, Any] = {}) -> SolverResult:
         """
         Solve the problem using the CQM approach.
 
@@ -53,10 +54,28 @@ class CQM(Solver):
         converter = Converter()
         cqm = converter.to_cqm(self.problem)
         sampler = LeapHybridCQMSampler(token=DWAVE_API_TOKEN)
-        solutions = sampler.sample_cqm(cqm, self.time)
-        correct_solutions = [
-            s for s in solutions
-            if len(cqm.violations(s, skip_satisfied=True)) == 0
-        ]
+        solutions = sampler.sample_cqm(cqm, self.time).aggregate()
 
-        return correct_solutions[0]
+        recarray = np.recarray(
+            (len(solutions),),
+            dtype=([(v, int) for v in solutions.variables]
+                   + [('probability', float)]
+                   + [('energy', float)]
+                   + [('is_feasible', bool)])
+        )
+
+        num_of_shots = solutions.record.num_occurrences.sum()
+        for i, solution in enumerate(solutions.data()):
+            for var in solutions.variables:
+                recarray[var][i] = solution.sample[var]
+
+            recarray['probability'][i] = (
+                solution.num_occurrences / num_of_shots)
+            recarray['energy'][i] = solution.energy
+            recarray['is_feasible'][i] = solution.is_feasible
+
+        return SolverResult(
+            recarray,
+            {},
+            []
+        )
