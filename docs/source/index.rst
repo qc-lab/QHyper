@@ -10,9 +10,6 @@
 Welcome to QHyper's documentation!
 ==================================
 
-.. image:: https://user-images.githubusercontent.com/38388283/226841016-711112a8-09d1-4a83-8aab-6e305cb24edb.png
-    :width: 40
-
 QHyper - a software framework for hybrid quantum-classical combinatorial optimization.
 
 Introduction to QHyper Library
@@ -53,44 +50,17 @@ Architecture
 
 QHyper consists with three main components:
 
-* :ref:`README Problems` - classes describing different types of problems e.g. Knapsack problem or Travelling Salesman Problem
+* :doc:`Problems <problems>` - classes describing different types of problems e.g. Knapsack problem or Travelling Salesman Problem
 
-* :ref:`README Solvers` - classes definng differnt types of solvers e.g. quantum solvers like QAOA or CQM, but also classical algorithms like Gurobi
+* :doc:`Solvers <solvers>` - classes defining different types of solvers e.g. quantum solvers like QAOA or CQM, but also classical algorithms like Gurobi
 
-* :ref:`README Optimizers` - classes implementing different types of optimizer
+* :doc:`Optimizers <optimizers>` - classes implementing different types of optimizer
 
 Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
 
-.. _README Problems:
+.. raw:: html
 
-Problems
-----------
-
-.. graphviz:: _static/classes_problems.dot
-
-More detailed information can be found on :doc:`problems`.
-
-
-.. _README Solvers:
-
-Solvers
-----------
-
-.. graphviz:: _static/classes_solvers.dot
-
-
-More detailed information can be found on :doc:`solvers`.
-
-.. _README Optimizers:
-
-Optimizers
-----------
-
-.. graphviz:: _static/classes_optimizers.dot
-
-
-More detailed information can be found on :doc:`optimizers`.
-
+      <img src="_static/qhyper_architecture.svg" style="background-color: transparent">
 
 
 Contents
