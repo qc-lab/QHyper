@@ -13,15 +13,12 @@ def run_parallel(
         processes: int,
         disable_tqdm: bool = True
 ) -> list[OptimizationResult]:
-    if processes == 0:
+    if processes == 1:
         results = []
         for arg in tqdm(args, disable=disable_tqdm):
             result = func(arg)
             results.append(result)
         return results
-    if processes == -1:
-        return list(tqdm((func(arg) for arg in args),
-                         total=len(args), disable=disable_tqdm))
 
     with mp.Pool(processes=processes) as pool:
         return list(tqdm(

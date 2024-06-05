@@ -1,4 +1,4 @@
-from typing import Any, Tuple, DefaultDict
+from typing import Any
 import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass
@@ -8,6 +8,7 @@ from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver, SolverResult
 from QHyper.converter import Converter
 from QHyper.optimizers import (Optimizer, OptimizationResult)
+from QHyper.constraint import Polynomial
 
 from dwave.system import DWaveSampler, EmbeddingComposite
 from dimod import BinaryQuadraticModel
@@ -20,10 +21,19 @@ class OptimizerFunction:
     problem: Problem
 
     def __call__(self, args: npt.NDArray) -> OptimizationResult:
-        sampleset = run_advantage(self.problem, self.embedding_compose, args)
+        sampleset = self.run_advantage(args)
         result_energy = sampleset.first.energy
 
         return OptimizationResult(result_energy, args)
+
+    def run_advantage(self, args: npt.NDArray) -> SampleSet:
+        qubo = Converter.create_qubo(self.problem, args)
+        qubo_terms, offset = convert_qubo_keys(qubo)
+        bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
+        sampleset = self.embedding_compose.sample(bqm)
+
+        return sampleset
+
 
 class Advantage(Solver):
     """
@@ -48,21 +58,38 @@ class Advantage(Solver):
         embedding_compose = EmbeddingComposite(sampler)
 
         opt_result = None
+        wrapper = OptimizerFunction(embedding_compose, self.problem)
+
         if self.optimizer:
             args = (
                 np.array(params_inits["weights"]).flatten() if params_inits["weights"]
                 else None
             )
 
-            opt_wrapper = OptimizerFunction(embedding_compose, self.problem)
-            result = self.optimizer.minimize(opt_wrapper, args)
+            result = self.optimizer.minimize(wrapper, args)
             opt_result = result.params
 
         qubo_arguments = opt_result if self.optimizer else params_inits.get("weights", [])
-        sampleset = run_advantage(self.problem, embedding_compose, qubo_arguments)
-        result = self.prepare_solver_result(sampleset.first.sample, qubo_arguments)
+        solution = wrapper.run_advantage(qubo_arguments)
 
-        return result
+        result = np.recarray(
+            (1),
+            dtype=([(v, int) for v in solution.variables]
+                   + [('probability', float)]
+                   + [('energy', float)])
+        )
+
+        for var in solution.variables:
+            result[var][0] = solution.first.sample[var]
+
+        result['probability'][0] = 100.0
+        result['energy'][0] = solution.first.energy
+
+        return SolverResult(
+            result,
+            {},
+            []
+        )
 
     def prepare_solver_result(self, result: defaultdict, arguments: npt.NDArray) -> SolverResult:
         sorted_keys = sorted(result.keys(), key=lambda x: int(''.join(filter(str.isdigit, x))))
@@ -72,34 +99,19 @@ class Advantage(Solver):
 
         return SolverResult(probabilities, parameters)
 
-def run_advantage(problem: Problem, embedding_compose: DWaveSampler, args: npt.NDArray, ) -> SampleSet:
-    qubo = Converter.create_qubo(problem, args)
-    qubo_terms, offset = convert_qubo_keys(qubo.terms)
-    bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
-    sampleset = embedding_compose.sample(bqm)
-
-    return sampleset
-
-
-def convert_qubo_keys(qubo: defaultdict) -> Tuple[DefaultDict[tuple, float], float]:
+def convert_qubo_keys(qubo: Polynomial) -> tuple[dict[tuple, float], float]:
     new_qubo = defaultdict(float)
     offset = 0.0
 
-    for k, v in qubo.items():
-        if isinstance(k, tuple):
-            if len(k) == 0:
-                offset += v
-                continue
-            elif len(k) == 1:
-                new_key = (k[0], k[0])
-            else:
-                new_key = k
-
-            if new_key in new_qubo:
-                new_qubo[new_key] += v
-            else:
-                new_qubo[new_key] = v
+    qubo, offset = qubo.separate_const()
+    for k, v in qubo.terms.items():
+        if len(k) == 1:
+            new_key = (k[0], k[0])
+        elif len(k) > 2:
+            raise ValueError("Only supports quadratic model")
         else:
-            raise ValueError("Keys in QUBO must be tuples")
+            new_key = k
+
+        new_qubo[new_key] += v
 
     return (new_qubo, offset)

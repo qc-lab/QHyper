@@ -36,7 +36,6 @@ class CEM(Optimizer):
         mean and covariance for next epoch.
     processes : int, default 1
         The number of processes to use for parallel computation.
-        If the value is set to 0, it works in series.
     n_elite : int
         The number of elite samples. Calculated as
         `samples_per_epoch * elite_frac`.
