@@ -70,20 +70,23 @@ class Advantage(Solver):
             opt_result = result.params
 
         qubo_arguments = opt_result if self.optimizer else params_inits.get("weights", [])
-        solution = wrapper.run_advantage(qubo_arguments)
+        solutions = wrapper.run_advantage(qubo_arguments)
 
         result = np.recarray(
-            (1),
-            dtype=([(v, int) for v in solution.variables]
+            (len(solutions),),
+            dtype=([(v, int) for v in solutions.variables]
                    + [('probability', float)]
                    + [('energy', float)])
         )
 
-        for var in solution.variables:
-            result[var][0] = solution.first.sample[var]
+        num_of_shots = solutions.record.num_occurrences.sum()
+        for i, solution in enumerate(solutions.data()):
+            for var in solutions.variables:
+                result[var][i] = solution.sample[var]
 
-        result['probability'][0] = 100.0
-        result['energy'][0] = solution.first.energy
+            result['probability'][i] = (
+                solution.num_occurrences / num_of_shots)
+            result['energy'][i] = solution.energy
 
         return SolverResult(
             result,
