@@ -30,7 +30,7 @@ Here are some key steps to get started:
 
 1. **Define solver config and initial parameters:**
 Check :doc:`../api` for available solvers and problems. You can define your own
-solvers, problems and optimizer - for that checkout :doc:`demo/different_configurations`.
+solvers, problems and optimizer - for that checkout :doc:`solver_configuration` and :doc:`demo/defining_problems`.
 
 .. code-block:: python
 

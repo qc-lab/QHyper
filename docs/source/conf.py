@@ -41,11 +41,13 @@ exclude_patterns = []
 
 # numpydoc_show_class_members = False
 autosectionlabel_prefix_document = True
+html_sourcelink_suffix = ''
+
+html_static_path = ['_static']
+html_css_files = ['custom.css']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
-html_static_path = ['_static']
 
 html_theme = "pydata_sphinx_theme"
 

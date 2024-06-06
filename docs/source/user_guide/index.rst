@@ -20,5 +20,5 @@ researcher, this guide will help you navigate the features and capabilities of t
 
     solver_configuration
 
-    demo/different_configurations
+    demo/typical_use_cases
     demo/defining_problems
