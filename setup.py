@@ -34,7 +34,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(exclude=['tests']),
-    install_requires=['numpy', 'PennyLane', 'tdqm', 'sympy', 'dwave-system', 'gurobipy', 'pandas', 'wfcommons'],
+    install_requires=['numpy==1.23.4', 'PennyLane==0.33.1', 'tdqm', 'sympy==1.11.1', 'dwave-system', 'gurobipy', 'pandas', 'wfcommons'],
     keywords=['python', 'qhyper', 'quantum', 'solver', 'experiment'],
     license='MIT',
     classifiers=[
