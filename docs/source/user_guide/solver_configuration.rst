@@ -296,9 +296,9 @@ However, as in `Adding the hyperoptimizer`_, penalties  are searched by the ``hy
         pqc:
             type: wfqaoa
             layers: 5
-        optmizer:
+        optimizer:
             type: qml
-            optmizer: adam
+            optimizer: adam
             steps: 200
             stepsize: 0.005
         hyper_optimizer:

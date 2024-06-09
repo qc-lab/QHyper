@@ -28,7 +28,7 @@ QML_GRADIENT_DESCENT_OPTIMIZERS: dict[
 class QmlGradientDescent(Optimizer):
     """Gradient Descent Optimizer
 
-    This minimizer is a wrapper for gradient descent optmizers
+    This minimizer is a wrapper for gradient descent optimizers
     provided by PennyLane.
 
     Attributes
