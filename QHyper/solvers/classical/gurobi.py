@@ -34,22 +34,35 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
         The name of the gurobi model.
     mip_gap : float | None, optional
         The MIP gap.
+    suppress_output : bool, optional, default=True
+        If True, the solver's output will be suppressed.
+    threads : int, optional, default=1
+        The number of threads to be used by the solver.
     """
 
-    problem: Problem
-    model_name: str
-    mip_gap: float | None
-
     def __init__(self, problem: Problem, model_name: str = "",
-                 mip_gap: float | None = None) -> None:
+                 mip_gap: float | None = None, suppress_output: bool = True,
+                 threads: int = 1) -> None:
         self.problem = problem
         self.model_name = model_name
         self.mip_gap = mip_gap
+        self.supress_output = suppress_output
+        self.threads = threads
 
     def solve(self, params_inits: Optional[dict[str, Any]] = None) -> Any:
         gpm = gp.Model(self.model_name)
+
+        if self.supress_output:
+            env = gp.Env(empty=True)
+            env.setParam("OutputFlag", 0)
+            env.start()
+
+            gpm = gp.Model(self.model_name, env=env)
+
         if self.mip_gap:
             gpm.Params.MIPGap = self.mip_gap
+
+        gpm.setParam('Threads', self.threads)
 
         vars = {
             str(var_name): gpm.addVar(vtype=gp.GRB.BINARY, name=str(var_name))
@@ -75,9 +88,6 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
 
             gpm.update()
         gpm.optimize()
-
-        # print("Status ", gpm.Status)
-        # print("Is optimal? ", GRB.OPTIMAL)
 
         allvars = gpm.getVars()
         solution = {}
