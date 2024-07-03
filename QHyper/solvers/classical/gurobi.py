@@ -50,14 +50,14 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
         self.threads = threads
 
     def solve(self, params_inits: Optional[dict[str, Any]] = None) -> Any:
-        gpm = gp.Model(self.model_name)
-
         if self.supress_output:
             env = gp.Env(empty=True)
             env.setParam("OutputFlag", 0)
             env.start()
+        else:
+            env = None
 
-            gpm = gp.Model(self.model_name, env=env)
+        gpm = gp.Model(self.model_name, env=env)
 
         if self.mip_gap:
             gpm.Params.MIPGap = self.mip_gap
