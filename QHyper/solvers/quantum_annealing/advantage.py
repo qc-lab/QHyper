@@ -42,7 +42,6 @@ class OptimizerFunction:
             result['probability'][i] = (
                 solution.num_occurrences / num_of_shots)
             result['energy'][i] = solution.energy
-
         result_energy = weighted_avg_evaluation(
             result, self.problem.get_score, penalty=0
         )
@@ -122,7 +121,7 @@ class Advantage(Solver):
 
 
     def solve(self, params_inits: dict[str, Any] = {}) -> Any:
-        if not params_inits:
+        if not params_inits and self.params_inits:
             params_inits = self.params_inits
         sampler = DWaveSampler(solver=self.version, region=self.region)
         embedding_compose = EmbeddingComposite(sampler)
