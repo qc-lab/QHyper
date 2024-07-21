@@ -13,8 +13,10 @@ from QHyper.optimizers import (
     OPTIMIZERS, Optimizer, OptimizationResult)
 
 from dwave.system import DWaveSampler, EmbeddingComposite
+from dwave.system.composites import FixedEmbeddingComposite
 from dimod import BinaryQuadraticModel
 from dimod.sampleset import SampleSet
+from dwave.embedding.pegasus import find_clique_embedding
 
 
 @dataclass
@@ -77,8 +79,10 @@ class Advantage(Solver):
         The coupling strength between qubits.
     hyper_optimizer: Optimizer or None, default None
         The optimizer for hyperparameters.
-    params_inits: dict[str, Any] | None, default None
+    params_inits: dict[str, Any], default {}
         The initial parameter settings.
+    use_clique_embedding: bool, default False
+        Find clique for the embedding
     """
 
     def __init__(self, problem: Problem,
@@ -87,7 +91,8 @@ class Advantage(Solver):
                  num_reads: int = 1,
                  chain_strength: float | None = None,
                  hyper_optimizer: Optimizer | None = None,
-                 params_inits: dict[str, Any] | None = None) -> None:
+                 params_inits: dict[str, Any] = {},
+                 use_clique_embedding: bool = False) -> None:
         self.problem = problem
         self.version = version
         self.region = region
@@ -95,6 +100,18 @@ class Advantage(Solver):
         self.chain_strength = chain_strength
         self.hyper_optimizer = hyper_optimizer
         self.params_inits = params_inits
+        self.use_clique_embedding = use_clique_embedding
+        self.sampler = DWaveSampler(solver=self.version, region=self.region)
+
+        if use_clique_embedding:
+            args = params_inits.get("weights", [])
+            qubo = Converter.create_qubo(self.problem, args)
+            qubo_terms, offset = convert_qubo_keys(qubo)
+            bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
+
+            self.embedding = find_clique_embedding(
+                bqm.to_networkx_graph(), target_graph=self.sampler.to_networkx_graph()
+            )
 
     @classmethod
     def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'Advantage':
@@ -123,8 +140,11 @@ class Advantage(Solver):
     def solve(self, params_inits: dict[str, Any] = {}) -> Any:
         if not params_inits and self.params_inits:
             params_inits = self.params_inits
-        sampler = DWaveSampler(solver=self.version, region=self.region)
-        embedding_compose = EmbeddingComposite(sampler)
+
+        if not self.use_clique_embedding:
+            embedding_compose = EmbeddingComposite(self.sampler)
+        else:
+            embedding_compose = FixedEmbeddingComposite(self.sampler, self.embedding)
 
         opt_result = None
         wrapper = OptimizerFunction(
