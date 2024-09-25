@@ -20,7 +20,7 @@ from QHyper.parser import from_sympy
 class Network:
     graph: nx.Graph
     resolution: float = 1.0
-    weight: str | None = None
+    weight: str | None = "weight"
     community: list | None = None
     full_modularity_matrix: np.ndarray = field(init=False)
     generalized_modularity_matrix: np.ndarray = field(init=False)
