@@ -45,7 +45,7 @@ class Network:
 
         B_bis = full_modularity_matrix[self.community, :]
         B_community = B_bis[:, self.community]
-        B_i = np.sum(B_community, axis=-1)
+        B_i = np.sum(B_community, axis=1)
         B_j = np.sum(B_community.T, axis=1)
         delta = np.eye(len(self.community), dtype=np.int32)
         B_g = 0.5*( B_community + B_community.T ) - 0.5 * delta * (B_i + B_j)
