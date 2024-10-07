@@ -36,13 +36,13 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
         The MIP gap.
     suppress_output : bool, optional, default=True
         If True, the solver's output will be suppressed.
-    threads : int, optional, default=1
+    threads : int, optional, default=0
         The number of threads to be used by the solver.
     """
 
     def __init__(self, problem: Problem, model_name: str = "",
                  mip_gap: float | None = None, suppress_output: bool = True,
-                 threads: int = 1) -> None:
+                 threads: int = 0) -> None:
         self.problem = problem
         self.model_name = model_name
         self.mip_gap = mip_gap
