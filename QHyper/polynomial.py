@@ -121,15 +121,23 @@ class Polynomial:
     def __rmul__(self, other: float | int) -> 'Polynomial':
         return self * other
 
-    def __pow__(self, power: int) -> 'Polynomial':
-        if not isinstance(power, int):
-            raise TypeError(f"Unsupported operation: {self} ** {power}")
+    def __pow__(self, power: 'Polynomial | int') -> 'Polynomial':
+        power_: int
 
-        if power == 0:
+        if isinstance(power, Polynomial):
+            const = power.terms.get(tuple(), 0)
+            if power.degree() != 0 or (int(const) != const):
+                raise ValueError(f"Unsupported operation: {self} ** {power}")
+            power_ = int(const)
+        elif not isinstance(power, int):
+            raise TypeError(f"Unsupported operation: {self} ** {power}")
+        else:
+            power_ = power
+        if power_ == 0:
             return Polynomial({tuple(): 1})
 
         result = self
-        for _ in range(power - 1):
+        for _ in range(power_ - 1):
             result *= self
 
         return result

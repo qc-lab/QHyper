@@ -36,7 +36,7 @@ class MaxCutProblem(Problem):
         self.variables = sympy.symbols(
             " ".join(
                 [f"x{i}" for i in range(max(v for edge in edges
-                                            for v in edge))]
+                                            for v in edge) + 1)]
             )
         )
 
@@ -47,16 +47,14 @@ class MaxCutProblem(Problem):
         equation = cast(sympy.Expr, 0)
 
         for e in self.edges:
-            x_i, x_j = self.variables[e[0] - 1], self.variables[e[1] - 1]
+            x_i, x_j = self.variables[e[0]], self.variables[e[1]]
             equation -= x_i * (1 - x_j) + x_j * (1 - x_i)
 
         self.objective_function = from_sympy(equation)
 
     def get_score(self, result: np.record, penalty: float = 0) -> float:
         sum = 0
-
         for e in self.edges:
-            x_i, x_j = int(result[f"x{e[0] - 1}"]), int(result[f"x{e[1] - 1}"])
+            x_i, x_j = int(result[f"x{e[0]}"]), int(result[f"x{e[1]}"])
             sum += x_i * (1 - x_j) + x_j * (1 - x_i)
-
-        return sum
+        return -sum
