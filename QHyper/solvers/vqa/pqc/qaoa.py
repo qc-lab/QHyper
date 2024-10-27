@@ -85,7 +85,7 @@ class QAOA(PQC):
             result = result + summand if result else summand
 
         assert result is not None
-        return result + const * qml.Identity(result.wires[0])
+        return (result + const * qml.Identity(result.wires[0])).simplify()
 
     def _hadamard_layer(self, cost_operator: qml.Hamiltonian) -> None:
         for i in cost_operator.wires:

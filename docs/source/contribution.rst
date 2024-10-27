@@ -35,7 +35,7 @@ Install the project's production dependencies using pip:
 
 .. note::
 
-    ``requirements/docs.txt`` is not required for general contributions unless you plan to build the documentation locally.
+    ``requirements/dev.txt`` is not required for general contributions unless you plan to build the documentation locally.
 
 4. **Development Environment Setup Complete:**
 
@@ -53,7 +53,7 @@ Install additonal dependencies for building the documentation:
 
 .. code-block:: bash
 
-   pip install -r requirements/docs.txt
+   pip install -r requirements/dev.txt
 
 2. **Modify Documentation Files:**
 
