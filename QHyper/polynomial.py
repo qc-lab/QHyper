@@ -166,3 +166,6 @@ class Polynomial:
 
     def get_variables(self) -> set[str]:
         return set(variable for term in self.terms for variable in term)
+
+
+PolynomialType = Polynomial | float | int | dict[tuple[str, ...], float]

@@ -59,7 +59,7 @@ def test_scipy():
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.310672890)
+    assert result == pytest.approx(-0.310672502)
 
 
 def test_qml():

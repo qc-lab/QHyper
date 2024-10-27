@@ -33,10 +33,10 @@ class Knapsack:
     def __init__(
         self,
         max_weight: int,
-        max_item_value: int = 10,
-        items_amount: int = 0,
-        items_weights: list[int] = [],
-        items_values: list[int] = []
+        max_item_value: int,
+        items_amount: int,
+        items_weights: list[int],
+        items_values: list[int]
     ) -> None:
         """
         Parameters
@@ -44,11 +44,11 @@ class Knapsack:
         max_weight: int
             maximum weight of an item
         max_item_value: int
-            maximum value of an item (default 10)
+            maximum value of an item
         items_amount: int
-            items amount, used only for random knapsack (default 0)
+            items amount, used only for random knapsack
         items: list[tuple[int, int]]
-            set items in knapsack (default [])
+            set items in knapsack
         """
         self.items: list[Item] = []
         self.max_weight: int = max_weight
@@ -59,6 +59,9 @@ class Knapsack:
                     "Weights and values must have the same length")
             self.set_knapsack(items_weights, items_values)
         else:
+            if items_amount < 1:
+                raise ValueError(
+                    "Cannot create knapsack with less than one item")
             self.generate_knapsack(items_amount)
 
     def generate_knapsack(self, items_amount: int) -> None:
@@ -108,7 +111,7 @@ class KnapsackProblem(Problem):
         self,
         max_weight: int,
         max_item_value: int = 10,
-        items_amount: int = 0,
+        items_amount: int = 1,
         items_weights: list[int] = [],
         items_values: list[int] = []
     ) -> None:

@@ -1,7 +1,7 @@
 import uuid
 from enum import Enum
 
-from QHyper.polynomial import Polynomial
+from QHyper.polynomial import Polynomial, PolynomialType
 
 
 class MethodsForInequalities(Enum):
@@ -25,9 +25,9 @@ class Constraint:
 
     Attributes
     ----------
-    lhs : Polynomial
+    lhs : PolynomialType
         The left-hand side of the constraint.
-    rhs : Polynomial, default Polynomial(0)
+    rhs : PolynomialType, default 0
         The right-hand side of the constraint.
     operator : Operator, default Operator.EQ
         The operator of the constraint. It can be ==, >=, <=.
@@ -44,15 +44,15 @@ class Constraint:
     """
     def __init__(
         self,
-        lhs: Polynomial,
-        rhs: Polynomial = Polynomial(0),
+        lhs: PolynomialType,
+        rhs: PolynomialType = 0,
         operator: Operator = Operator.EQ,
         method_for_inequalities: MethodsForInequalities | None = None,
         label: str = "",
         group: int = -1,
     ) -> None:
-        self.lhs: Polynomial = lhs
-        self.rhs: Polynomial = rhs
+        self.lhs = lhs if isinstance(lhs, Polynomial) else Polynomial(lhs)
+        self.rhs = rhs if isinstance(rhs, Polynomial) else Polynomial(rhs)
         self.operator: Operator = operator
 
         if operator != Operator.EQ and method_for_inequalities is None:
