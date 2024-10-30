@@ -55,6 +55,9 @@ class Solver(ABC):
 
     problem: Problem
 
+    def __init__(self, problem: Problem):
+        self.problem = problem
+
     @classmethod
     def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'Solver':
         return cls(problem, **config)
