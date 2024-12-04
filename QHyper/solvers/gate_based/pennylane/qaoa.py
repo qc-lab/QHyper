@@ -2,18 +2,19 @@ import pennylane as qml
 from pennylane import numpy as np
 
 from numpy.typing import NDArray
-from typing import Any, Callable, cast, Optional
+from typing import Any, Callable, cast
+
+from dataclasses import dataclass, field
 
 from QHyper.problems.base import Problem
-from QHyper.optimizers import OptimizationResult, Optimizer, Dummy
+from QHyper.optimizers import OptimizationResult, Optimizer, Dummy, OptimizationParameter
 
 from QHyper.converter import Converter
 from QHyper.polynomial import Polynomial
 from QHyper.solvers.base import Solver, SolverResult, SolverException
 
-# from .mixers import MIXERS_BY_NAME
 
-
+@dataclass
 class QAOA(Solver):
     """
     Clasic QAOA implementation.
@@ -34,25 +35,31 @@ class QAOA(Solver):
 
     problem: Problem
     optimizer: Optimizer
-    angles: NDArray
-    hyper_args: NDArray
-    qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = {}
-    dev: qml.Device | None = None
+    gamma: OptimizationParameter
+    beta: OptimizationParameter
+    weights: NDArray | None
+    qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
+        default_factory=dict, init=False)
+    dev: qml.Device | None = field(default=None, init=False)
 
     def __init__(
             self, problem: Problem,
-            angles: NDArray, hyper_args: NDArray,
+            gamma: OptimizationParameter,
+            beta: OptimizationParameter,
+            weights: NDArray | None = None,
             optimizer: Optimizer = Dummy(),
             layers: int = 3, backend: str = "default.qubit",
             mixer: str = "pl_x_mixer"
     ) -> None:
         self.problem = problem
         self.optimizer = optimizer
-        self.angles = angles
-        self.hyper_args = hyper_args
+        self.gamma = gamma
+        self.beta = beta
+        self.weights = weights
         self.layers = layers
         self.backend = backend
         self.mixer = mixer
+        self.qubo_cache = {}
 
     def _get_num_of_wires(self) -> int:
         if self.dev is None:
@@ -97,43 +104,43 @@ class QAOA(Solver):
 
     def _create_mixing_hamiltonian(self, cost_operator: qml.Hamiltonian
                                    ) -> qml.Hamiltonian:
-        if self.mixer not in MIXERS_BY_NAME:
-            raise Exception(f"Unknown {self.mixer} mixer")
-        return MIXERS_BY_NAME[self.mixer](
-            [str(v) for v in cost_operator.wires])
+        return qml.qaoa.x_mixer([str(v) for v in cost_operator.wires])
 
     def _circuit(
         self,
-        params: NDArray,
+        angles: list[float],
         cost_operator: qml.Hamiltonian,
     ) -> None:
-        def qaoa_layer(gamma: NDArray, beta: NDArray) -> None:
+        def qaoa_layer(gamma: list[float], beta: list[float]) -> None:
             qml.qaoa.cost_layer(gamma, cost_operator)
             qml.qaoa.mixer_layer(
                 beta, self._create_mixing_hamiltonian(cost_operator))
-
+        gamma, beta = angles[:len(angles) // 2], angles[len(angles) // 2:]
         self._hadamard_layer(cost_operator)
-        params = params.reshape(2, -1)
-        qml.layer(qaoa_layer, self.layers, params[0], params[1])
+        qml.layer(qaoa_layer, self.layers, gamma, beta)
 
     def get_expval_circuit(
         self, weights: list[float]
-    ) -> Callable[[NDArray], OptimizationResult]:
+    ) -> Callable[[list[float]], OptimizationResult]:
         cost_operator = self.create_cost_operator(self.problem, weights)
 
         self.dev = qml.device(self.backend, wires=cost_operator.wires)
 
         @qml.qnode(self.dev)
-        def expval_circuit(params: NDArray) -> OptimizationResult:
-            self._circuit(params, cost_operator)
-            return OptimizationResult(
-                    cast(float, qml.expval(cost_operator)), params)
+        def expval_circuit(angles: list[float]) -> OptimizationResult:
+            self._circuit(angles, cost_operator)
+            return cast(float, qml.expval(cost_operator))
 
-        return expval_circuit
+        def wrapper(angles: list[float]) -> OptimizationResult:
+            return OptimizationResult(
+                expval_circuit(angles), angles
+            )
+
+        return wrapper
 
     def get_probs_func(
         self, problem: Problem, weights: list[float]
-    ) -> Callable[[NDArray], NDArray]:
+    ) -> Callable[[list[float]], list[float]]:
         """Returns function that takes angles and returns probabilities
 
         Parameters
@@ -151,10 +158,10 @@ class QAOA(Solver):
         self.dev = qml.device(self.backend, wires=cost_operator.wires)
 
         @qml.qnode(self.dev)
-        def probability_circuit(params: NDArray) -> NDArray:
-            self._circuit(params, cost_operator)
+        def probability_circuit(angles: list[float]) -> list[float]:
+            self._circuit(angles, cost_operator)
             return cast(
-                NDArray, qml.probs(wires=cost_operator.wires)
+                list[float], qml.probs(wires=cost_operator.wires)
             )
 
         return probability_circuit
@@ -171,11 +178,10 @@ class QAOA(Solver):
     def run_with_probs(
         self,
         problem: Problem,
-        angles: NDArray,
+        angles: list[float],
         weights: list[float],
     ) -> np.recarray:
-        probs = self.get_probs_func(problem, weights)(
-            angles.reshape(2, -1))
+        probs = self.get_probs_func(problem, weights)(angles)
 
         recarray = np.recarray((len(probs),),
                                dtype=[(wire, 'i4') for wire in
@@ -208,31 +214,45 @@ class QAOA(Solver):
     #         else np.array(params_init["hyper_args"])
     #     )
 
-    def get_params_init_format(
-        self, opt_args: NDArray, hyper_args: NDArray
-    ) -> dict[str, Any]:
-        return {
-            "angles": opt_args,
-            "hyper_args": hyper_args,
-        }
+    # def get_params_init_format(
+    #     self, opt_args: NDArray, hyper_args: NDArray
+    # ) -> dict[str, Any]:
+    #     return {
+    #         "angles": opt_args,
+    #         "hyper_args": hyper_args,
+    #     }
 
-    def solve(self, angles: NDArray | None, weights: list[float] | None) -> SolverResult:
-        if not angles and not self.angles:
-            raise SolverException("Parameter 'angles' was not provided")
-        angles = angles if angles else self.angles
+    def solve(self, weights: list[float] | None = None) -> SolverResult:
+        # if gamma is None and self.gamma is None:
+        #     raise SolverException("Parameter 'gamma' was not provided")
+        # if beta is None and self.beta is None:
+        #     raise SolverException("Parameter 'beta' was not provided")
 
-        if not weights:
+        # gamma = self.gamma if gamma is None else gamma
+        # beta = self.beta if beta is None else beta
+
+        if weights is None and self.weights is None:
             weights = [1.] * (len(self.problem.constraints) + 1)
+        weights = self.weights if weights is None else weights
 
         # opt_wrapper = LocalOptimizerFunction(
         #         self.pqc, self.problem, best_hargs)
         # opt_res = self.optimizer.minimize(opt_wrapper, opt_args)
+        # func = self.get_expval_circuit(weights)
+
+        # opt_res = self.optimizer.minimize(func, angles)
+        # assert gamma
+        # assert beta
+        angles = self.gamma + self.beta
 
         opt_res = self.optimizer.minimize(
             self.get_expval_circuit(weights), angles)
 
+        gamma_ = opt_res.params[:len(opt_res.params) // 2]
+        beta_ = opt_res.params[len(opt_res.params) // 2:]
+
         return SolverResult(
             self.run_with_probs(self.problem, opt_res.params, weights),
-            {'angles': opt_res.params, 'weights': weights},
+            {'gamma': gamma_, 'beta': beta_},
             opt_res.history,
         )

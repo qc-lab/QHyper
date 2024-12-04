@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 from QHyper.optimizers.util import run_parallel
 
 from QHyper.optimizers.base import (
-    Optimizer, OptimizationResult, OptimizerError)
+    Optimizer, OptimizationResult, OptimizerError, OptimizationParameter)
 
 
 class CEM(Optimizer):
@@ -41,7 +41,6 @@ class CEM(Optimizer):
         `samples_per_epoch * elite_frac`.
     """
 
-    bounds: NDArray
     verbose: bool
     disable_tqdm: bool
     epochs: int
@@ -52,7 +51,6 @@ class CEM(Optimizer):
 
     def __init__(
         self,
-        bounds: NDArray,
         verbose: bool = False,
         disable_tqdm: bool = True,
         epochs: int = 5,
@@ -73,7 +71,6 @@ class CEM(Optimizer):
         processes : int, default 1
         """
 
-        self.bounds = bounds
         self.verbose = verbose
         self.disable_tqdm = disable_tqdm
         self.epochs = epochs
@@ -85,18 +82,17 @@ class CEM(Optimizer):
             int(self.samples_per_epoch * self.elite_frac), 1)
 
     def _get_points(
-        self, mean: NDArray, cov: NDArray
+        self, mean: NDArray, cov: NDArray, init: OptimizationParameter
     ) -> NDArray:
-        if self.bounds is None:
-            raise OptimizerError('This optimizer requires bounds')
-
         # TODO
         hyperparams: list[NDArray] = []
+        bounds = np.array(init.bounds)
+
         while len(hyperparams) < self.samples_per_epoch:
             point = np.random.multivariate_normal(mean, cov)
             if (
-                    (self.bounds[:, 0] <= point).all()
-                    and (point < self.bounds[:, 1]).all()
+                    (bounds[:, 0] <= point).all()
+                    and (point < bounds[:, 1]).all()
             ):
                 hyperparams.append(point)
 
@@ -104,25 +100,22 @@ class CEM(Optimizer):
 
     def minimize_(
         self,
-        func: Callable[[NDArray], OptimizationResult],
-        init: NDArray | None,
+        func: Callable[[list[float]], OptimizationResult],
+        init: OptimizationParameter,
     ) -> OptimizationResult:
-        if init is None:
-            raise OptimizerError("Initial point must be provided.")
+        init.assert_bounds_init()
 
-        self.check_bounds(init)
-
-        mean = init.flatten()
+        mean = np.array(init.init)
         cov = np.identity(len(mean))
-        best_hyperparams = init
-        best_result = OptimizationResult(np.inf, init, [])
+        best_hyperparams = init.init
+        best_result = OptimizationResult(np.inf, init.init, [])
         history: list[list[OptimizationResult]] = []
 
         for i in range(self.epochs):
             if self.verbose:
                 print(f'Epoch {i+1}/{self.epochs}')
 
-            hyperparams = self._get_points(mean, cov)
+            hyperparams = self._get_points(mean, cov, init)
             results = run_parallel(func, hyperparams, self.processes,
                                    self.disable_tqdm)
 

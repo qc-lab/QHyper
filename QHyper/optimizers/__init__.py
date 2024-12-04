@@ -32,11 +32,12 @@ Package Content
 
 """
 
-from typing import Type
+from typing import Type, Any
 
 from QHyper.util import search_for
 
-from QHyper.optimizers.base import Optimizer, OptimizationResult  # noqa: F401
+from QHyper.optimizers.base import (                # noqa: F401
+    Optimizer, OptimizationResult, OptimizerError, OptimizationParameter)  # noqa: F401
 
 from .cem import CEM
 from .qml_gradient_descent import QmlGradientDescent
@@ -57,3 +58,15 @@ OPTIMIZERS: dict[str, Type[Optimizer]] = {
 }
 OPTIMIZERS.update(search_for(Optimizer, 'QHyper/custom'))
 OPTIMIZERS.update(search_for(Optimizer, 'custom'))
+
+
+def create_optimizer(config: dict[str, Any]) -> Optimizer:
+    if config.get('type') in OPTIMIZERS:
+        optimizer_class = OPTIMIZERS[config.pop('type')]
+    else:
+        raise OptimizerError(
+            f"Optimizer {config.get('type')} not found"
+        )
+
+    return optimizer_class(**config)
+

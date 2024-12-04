@@ -21,8 +21,15 @@ def get_problem_config():
     }
 
     params_config = {
-        'angles': [[0.5]*3, [1]*3],
-        'hyper_args': [1, 2.5, 2.5],
+        'gamma': {
+            'init': [0.5]*3,
+        },
+        'beta': {
+            'init': [1]*3,
+        },
+        # weights': {
+        # 'angles': [[0.5]*3, [1]*3],
+        # 'hyper_args': [1, 2.5, 2.5],
     }
     hyper_optimizer_bounds = 3*[(1, 10)]
 
@@ -39,13 +46,12 @@ def test_qaoa():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qaoa",
-                "layers": 3,
-                "backend": "default.qubit",
-            },
-            "params_inits": params_config,
+            'name': 'QAOA',
+            'category': 'gate_based',
+            'platform': 'pennylane',
+            'layers': 3,
+            'weights': [1, 2.5, 2.5],
+            **params_config
         },
         "problem": problem_config
     }
@@ -92,15 +98,15 @@ def test_wfqaoa():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "wfqaoa",
-                "layers": 3,
-                "limit_results": 10,
-                "penalty": 2,
-                "backend": "default.qubit",
-            },
-            "params_inits": params_config,
+            'name': 'WFQAOA',
+            'category': 'gate_based',
+            'platform': 'pennylane',
+            "layers": 3,
+            "limit_results": 10,
+            "penalty": 2,
+            "backend": "default.qubit",
+            "weights": [1, 2.5, 2.5],
+            **params_config,
         },
         "problem": problem_config
     }
@@ -147,15 +153,17 @@ def test_hqaoa():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "hqaoa",
-                "layers": 3,
-                "limit_results": 10,
-                "penalty": 2,
-                "backend": "default.qubit",
-            },
-            "params_inits": params_config,
+            "name": "HQAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 3,
+            "limit_results": 10,
+            "penalty": 2,
+            "backend": "default.qubit",
+            **params_config,
+            'weights': {
+                'init': [1, 2.5, 2.5],
+            }
         },
         "problem": problem_config
     }

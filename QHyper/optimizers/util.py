@@ -1,15 +1,14 @@
 import multiprocessing as mp
 from typing import Callable
 
-import numpy.typing as npt
 from tqdm import tqdm
 
 from QHyper.optimizers.base import OptimizationResult
 
 
 def run_parallel(
-        func: Callable[[npt.NDArray], OptimizationResult],
-        args: npt.NDArray,
+        func: Callable[[list[float]], OptimizationResult],
+        args: list[list[float]],
         processes: int,
         disable_tqdm: bool = True
 ) -> list[OptimizationResult]:

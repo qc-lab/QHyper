@@ -9,7 +9,7 @@ from numpy.typing import NDArray
 
 from QHyper.optimizers.util import run_parallel
 from QHyper.optimizers.base import (
-    OptimizationResult, Optimizer, OptimizerError)
+    OptimizationResult, Optimizer, OptimizerError, OptimizationParameter)
 
 
 class GridSearch(Optimizer):
@@ -35,46 +35,44 @@ class GridSearch(Optimizer):
         The number of processes to use for parallel computation.
     """
 
-    bounds: NDArray
-    steps: list[float]
+    # bounds: NDArray
     verbose: bool
     disable_tqdm: bool
     processes: int = 1
 
     def __init__(
         self,
-        bounds: NDArray,
-        steps: list[float],
+        # bounds: NDArray,
         verbose: bool = False,
         disable_tqdm: bool = True,
         processes: int = 1,
     ) -> None:
-        self.bounds = bounds
-        self.steps = steps
+        # self.bounds = bounds
         self.verbose = verbose
         self.disable_tqdm = disable_tqdm
         self.processes = processes
 
-    def _generate_grid(self) -> NDArray:
-        if self.bounds is None:
-            raise OptimizerError("This optimizer requires bounds")
-
+    def _generate_grid(self, params: OptimizationParameter
+                       ) -> list[list[float]]:
         return np.stack(
             np.meshgrid(
-                *[np.arange(bound[0], bound[1], step)
-                  for bound, step in zip(self.bounds, self.steps)]
+                *[np.arange(min_, max_, step)
+                  for min_, max_, step
+                  in zip(params.min, params.max, params.step)]
             ), axis=-1
-        ).reshape(-1, len(self.bounds))
+        ).reshape(-1, len(params))
 
     def minimize_(
             self,
             func: Callable[[NDArray], OptimizationResult],
-            init: NDArray | None
+            init: OptimizationParameter | None
     ) -> OptimizationResult:
-        self.check_bounds(None)
+        if init is None:
+            raise OptimizerError("Optimization parameter must be provided.")
+        init.assert_bounds()
+        init.assert_step()
 
-        hyperparams = self._generate_grid()
-
+        hyperparams = self._generate_grid(init)
         results = run_parallel(
             func, hyperparams, self.processes, self.disable_tqdm)
         min_idx = np.argmin([result.value for result in results])

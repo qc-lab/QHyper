@@ -15,8 +15,18 @@ def get_problem_config():
     }
 
     params_config = {
-        'angles': [[0.5]*5, [1]*5],
-        'hyper_args': [1, 2.5, 2.5],
+        'gamma': {
+            'init': [0.5]*5,
+            'min': [0]*5,
+            'max': [2*np.pi]*5,
+        },
+        'beta': {
+            'init': [1]*5,
+            'min': [0]*5,
+            'max': [2*np.pi]*5,
+        },
+        # 'angles': [[0.5]*5, [1]*5],
+        # 'hyper_args': [1, 2.5, 2.5],
     }
     hyper_optimizer_bounds = 3*[(1, 10)]
 
@@ -38,22 +48,20 @@ def test_scipy():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qaoa",
-                "layers": 5,
-                "backend": "default.qubit",
-            },
+            "name": "QAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 5,
+            **params_config,
             "optimizer": {
                 "type": "scipy",
                 "maxfun": 10,
-                "bounds": [(0, 2*np.pi)]*10,
+                # "bounds": [(0, 2*np.pi)]*10,
                 'method': 'L-BFGS-B',
                 'options': {
                     'maxiter': 10,
                 }
             },
-            "params_inits": params_config,
         },
         "problem": problem_config
     }
@@ -67,17 +75,15 @@ def test_qml():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qaoa",
-                "layers": 5,
-                "backend": "default.qubit",
-            },
+            "name": "QAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 5,
+            **params_config,
             "optimizer": {
                 "type": "qml",
                 "steps": 10
             },
-            "params_inits": params_config,
         },
         "problem": problem_config
     }
@@ -115,24 +121,35 @@ def test_random():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qaoa",
-                "layers": 5,
-                "backend": "default.qubit",
-            },
+            "name": "QAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 5,
+            **params_config,
+            # "type": "vqa",
+            # "pqc": {
+            #     "type": "qaoa",
+            #     "layers": 5,
+            #     "backend": "default.qubit",
+            # },
             "optimizer": {
                 "type": "qml",
                 "steps": 10
             },
-            "hyper_optimizer": {
+
+            # "params_inits": params_config,
+        },
+        "hyper_optimizer": {
+            "optimizer": {
                 "type": "random",
                 "processes": 1,
                 "number_of_samples": 2,
-                "bounds": hyperoptimizer_bounds,
                 "disable_tqdm": False
             },
-            "params_inits": params_config,
+            'weights': {
+                'min': [1]*3,
+                'max': [10]*3,
+            },
         },
         "problem": problem_config
     }

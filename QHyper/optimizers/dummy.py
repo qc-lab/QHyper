@@ -4,11 +4,12 @@
 
 
 from typing import Callable
-
 from numpy.typing import NDArray
 
+import numpy as np
+
 from QHyper.optimizers.base import (
-    Optimizer, OptimizationResult, OptimizerError)
+    Optimizer, OptimizationResult, OptimizerError, OptimizationParameter)
 
 
 class Dummy(Optimizer):
@@ -22,10 +23,11 @@ class Dummy(Optimizer):
     def minimize_(
         self,
         func: Callable[[NDArray], OptimizationResult],
-        init: NDArray | None,
+        init: OptimizationParameter | None,
     ) -> OptimizationResult:
         if init is None:
             raise OptimizerError("Initial point must be provided.")
+        init.assert_init()
 
-        result = func(init)
+        result = func(np.array(init.init))
         return OptimizationResult(result.value, result.params, [[result]])

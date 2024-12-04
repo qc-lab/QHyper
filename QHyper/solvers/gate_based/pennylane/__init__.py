@@ -39,6 +39,3 @@ Evaluation functions
 
     eval_funcs
 """
-
-
-from .base import VQA  # noqa: F401

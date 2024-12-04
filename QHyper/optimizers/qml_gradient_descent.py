@@ -10,7 +10,7 @@ import pennylane as qml
 from pennylane import numpy as np
 
 from QHyper.optimizers.base import (
-    Optimizer, OptimizationResult, OptimizerError)
+    Optimizer, OptimizationResult, OptimizerError, OptimizationParameter)
 
 
 QML_GRADIENT_DESCENT_OPTIMIZERS: dict[
@@ -88,28 +88,28 @@ class QmlGradientDescent(Optimizer):
 
     def minimize_(
         self,
-        func: Callable[[NDArray], OptimizationResult],
-        init: NDArray | None
+        func: Callable[[list[float]], OptimizationResult],
+        init: OptimizationParameter
     ) -> OptimizationResult:
-        if init is None:
-            raise OptimizerError("Initial point must be provided.")
+        init.assert_init()
 
         if isinstance(self.optimizer, qml.QNGOptimizer):
             raise OptimizerError(
                 'QNG is not supported via optimizer, use qml_qaoa instead')
 
-        def wrapper(params: NDArray) -> float:
-            return func(np.array(params).reshape(np.array(init).shape)).value
+        def wrapper(params: list[float]) -> float:
+            return func(list(params)).value
 
         cost_history = []
         best_result = float('inf')
-        best_params = np.array(init, requires_grad=True)
-        params = np.array(init, requires_grad=True)
+        best_params = np.array(init.init, requires_grad=True)
+        params = np.array(init.init, requires_grad=True)
 
         if hasattr(self.optimizer, 'reset'):
             self.optimizer.reset()  # type: ignore
         for i in range(self.steps):
             params, cost = self.optimizer.step_and_cost(wrapper, params)
+            print(params)
             params = np.array(params, requires_grad=True)
 
             if cost < best_result:
