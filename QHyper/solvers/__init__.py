@@ -93,6 +93,7 @@ def get_solver(name: str, category: str, platform: str) -> Solver:
             f'QHyper.solvers.{category}.{platform}.{name.lower()}')
         if hasattr(module, name) and issubclass(getattr(module, name), Solver):
             return getattr(module, name)
+        raise ImportError
     except ImportError:
         raise FileNotFoundError(
             "Solver with"
