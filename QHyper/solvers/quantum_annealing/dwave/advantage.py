@@ -1,3 +1,4 @@
+import os
 from typing import Any
 import numpy as np
 import numpy.typing as npt
@@ -19,48 +20,52 @@ from dimod.sampleset import SampleSet
 from dwave.embedding.pegasus import find_clique_embedding
 
 
+DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
+
+
+# @dataclass
+# class OptimizerFunction:
+#     embedding_compose: DWaveSampler
+#     problem: Problem
+#     num_reads: int
+#     chain_strength: float | None
+
+#     def __call__(self, args: npt.NDArray) -> OptimizationResult:
+#         sampleset = self.run_advantage(args)
+
+#         result = np.recarray(
+#             (len(sampleset),),
+#             dtype=([(v, int) for v in sampleset.variables]
+#                    + [('probability', float)]
+#                    + [('energy', float)])
+#         )
+
+#         num_of_shots = sampleset.record.num_occurrences.sum()
+#         for i, solution in enumerate(sampleset.data()):
+#             for var in sampleset.variables:
+#                 result[var][i] = solution.sample[var]
+
+#             result['probability'][i] = (
+#                 solution.num_occurrences / num_of_shots)
+#             result['energy'][i] = solution.energy
+#         result_energy = weighted_avg_evaluation(
+#             result, self.problem.get_score, penalty=0
+#         )
+
+#         return OptimizationResult(result_energy, args)
+
+#     def run_advantage(self, args: npt.NDArray) -> SampleSet:
+#         qubo = Converter.create_qubo(self.problem, args)
+#         qubo_terms, offset = convert_qubo_keys(qubo)
+#         bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
+#         sampleset = self.embedding_compose.sample(
+#             bqm, num_reads=self.num_reads, chain_strength=self.chain_strength
+#         )
+
+#         return sampleset
+
+
 @dataclass
-class OptimizerFunction:
-    embedding_compose: DWaveSampler
-    problem: Problem
-    num_reads: int
-    chain_strength: float | None
-
-    def __call__(self, args: npt.NDArray) -> OptimizationResult:
-        sampleset = self.run_advantage(args)
-
-        result = np.recarray(
-            (len(sampleset),),
-            dtype=([(v, int) for v in sampleset.variables]
-                   + [('probability', float)]
-                   + [('energy', float)])
-        )
-
-        num_of_shots = sampleset.record.num_occurrences.sum()
-        for i, solution in enumerate(sampleset.data()):
-            for var in sampleset.variables:
-                result[var][i] = solution.sample[var]
-
-            result['probability'][i] = (
-                solution.num_occurrences / num_of_shots)
-            result['energy'][i] = solution.energy
-        result_energy = weighted_avg_evaluation(
-            result, self.problem.get_score, penalty=0
-        )
-
-        return OptimizationResult(result_energy, args)
-
-    def run_advantage(self, args: npt.NDArray) -> SampleSet:
-        qubo = Converter.create_qubo(self.problem, args)
-        qubo_terms, offset = convert_qubo_keys(qubo)
-        bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
-        sampleset = self.embedding_compose.sample(
-            bqm, num_reads=self.num_reads, chain_strength=self.chain_strength
-        )
-
-        return sampleset
-
-
 class Advantage(Solver):
     """
     Class for solving a problem using Advantage
@@ -85,105 +90,121 @@ class Advantage(Solver):
         Find clique for the embedding
     """
 
-    def __init__(self, problem: Problem,
+    problem: Problem
+    weights: list[float] | None = None
+    version: str = "Advantage_system5.4"
+    region: str = "eu-central-1"
+    num_reads: int = 1
+    chain_strength: float | None = None
+    token: str | None = None
+
+    def __init__(self,
+                 problem: Problem,
+                 weights: list[float] | None = None,
                  version: str = "Advantage_system5.4",
                  region: str = "eu-central-1",
                  num_reads: int = 1,
                  chain_strength: float | None = None,
-                 hyper_optimizer: Optimizer | None = None,
-                 params_inits: dict[str, Any] = {},
-                 use_clique_embedding: bool = False) -> None:
+                 use_clique_embedding: bool = False,
+                 token: str | None = None) -> None:
         self.problem = problem
+        self.weights = weights
         self.version = version
         self.region = region
         self.num_reads = num_reads
         self.chain_strength = chain_strength
-        self.hyper_optimizer = hyper_optimizer
-        self.params_inits = params_inits
         self.use_clique_embedding = use_clique_embedding
-        self.sampler = DWaveSampler(solver=self.version, region=self.region)
+        self.sampler = DWaveSampler(
+            solver=self.version, region=self.region,
+            token=token or DWAVE_API_TOKEN)
+        self.token = token
 
         if use_clique_embedding:
-            args = params_inits.get("weights", [])
+            args = self.weigths if self.weigths else []
             qubo = Converter.create_qubo(self.problem, args)
             qubo_terms, offset = convert_qubo_keys(qubo)
             bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
 
             self.embedding = find_clique_embedding(
-                bqm.to_networkx_graph(), target_graph=self.sampler.to_networkx_graph()
+                bqm.to_networkx_graph(),
+                target_graph=self.sampler.to_networkx_graph()
             )
 
-    @classmethod
-    def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'Advantage':
-        if not (hyper_optimizer_config := config.pop('hyper_optimizer', None)):
-            hyper_optimizer = None
-        elif not (hyper_optimizer_type := hyper_optimizer_config.pop('type', None)):
-            raise SolverConfigException(
-                "Optimizer type was not provided")
-        elif not (hyper_optimizer_class := OPTIMIZERS.get(
-                hyper_optimizer_type, None)):
-            raise SolverConfigException(
-                f"There is no {hyper_optimizer_type} optimizer type")
-        else:
-            hyper_optimizer = hyper_optimizer_class(**hyper_optimizer_config)
+    # @classmethod
+    # def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'Advantage':
+    #     if not (hyper_optimizer_config := config.pop('hyper_optimizer', None)):
+    #         hyper_optimizer = None
+    #     elif not (hyper_optimizer_type := hyper_optimizer_config.pop('type', None)):
+    #         raise SolverConfigException(
+    #             "Optimizer type was not provided")
+    #     elif not (hyper_optimizer_class := OPTIMIZERS.get(
+    #             hyper_optimizer_type, None)):
+    #         raise SolverConfigException(
+    #             f"There is no {hyper_optimizer_type} optimizer type")
+    #     else:
+    #         hyper_optimizer = hyper_optimizer_class(**hyper_optimizer_config)
 
-        version = config.pop('version', "Advantage_system5.4")
-        region = config.pop('region', "eu-central-1")
-        num_reads = config.pop('num_reads', 1)
-        chain_strength = config.pop('chain_strength', None)
+    #     version = config.pop('version', "Advantage_system5.4")
+    #     region = config.pop('region', "eu-central-1")
+    #     num_reads = config.pop('num_reads', 1)
+    #     chain_strength = config.pop('chain_strength', None)
 
-        params_inits = config.pop('params_inits', None)
+    #     params_inits = config.pop('params_inits', None)
 
-        return cls(problem, version, region, num_reads, chain_strength, hyper_optimizer, params_inits)
+    #     return cls(problem, version, region, num_reads, chain_strength, hyper_optimizer, params_inits)
 
-
-    def solve(self, params_inits: dict[str, Any] = {}) -> Any:
-        if not params_inits and self.params_inits:
-            params_inits = self.params_inits
+    def solve(self, weights: list[float] | None = None) -> Any:
+        if weights is None and self.weights is None:
+            weights = [1.] * (len(self.problem.constraints) + 1)
+        weights = self.weights if weights is None else weights
 
         if not self.use_clique_embedding:
             embedding_compose = EmbeddingComposite(self.sampler)
         else:
-            embedding_compose = FixedEmbeddingComposite(self.sampler, self.embedding)
+            embedding_compose = FixedEmbeddingComposite(
+                self.sampler, self.embedding)
 
-        opt_result = None
-        wrapper = OptimizerFunction(
-            embedding_compose, self.problem, self.num_reads, self.chain_strength
+        # opt_result = None
+        # wrapper = OptimizerFunction(
+        #     embedding_compose, self.problem, self.num_reads, self.chain_strength
+        # )
+
+        # if self.hyper_optimizer:
+        #     args = (
+        #         np.array(params_inits["weights"]).flatten() if params_inits["weights"]
+        #         else None
+        #     )
+
+        #     result = self.hyper_optimizer.minimize(wrapper, args)
+        #     opt_result = result.params
+
+        qubo = Converter.create_qubo(self.problem, weights)
+        qubo_terms, offset = convert_qubo_keys(qubo)
+        bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
+        sampleset = embedding_compose.sample(
+            bqm, num_reads=self.num_reads, chain_strength=self.chain_strength
         )
 
-        if self.hyper_optimizer:
-            args = (
-                np.array(params_inits["weights"]).flatten() if params_inits["weights"]
-                else None
-            )
-
-            result = self.hyper_optimizer.minimize(wrapper, args)
-            opt_result = result.params
-
-        qubo_arguments = opt_result if self.hyper_optimizer else params_inits.get("weights", [])
-        solutions = wrapper.run_advantage(qubo_arguments)
+        # qubo_arguments = opt_result if self.hyper_optimizer else params_inits.get("weights", [])
+        # solutions = wrapper.run_advantage(qubo_arguments)
 
         result = np.recarray(
-            (len(solutions),),
-            dtype=([(v, int) for v in solutions.variables]
+            (len(sampleset),),
+            dtype=([(v, int) for v in sampleset.variables]
                    + [('probability', float)]
                    + [('energy', float)])
         )
 
-        num_of_shots = solutions.record.num_occurrences.sum()
-        for i, solution in enumerate(solutions.data()):
-            for var in solutions.variables:
+        num_of_shots = sampleset.record.num_occurrences.sum()
+        for i, solution in enumerate(sampleset.data()):
+            for var in sampleset.variables:
                 result[var][i] = solution.sample[var]
 
             result['probability'][i] = (
                 solution.num_occurrences / num_of_shots)
             result['energy'][i] = solution.energy
 
-        return SolverResult(
-            result,
-            {"weights": qubo_arguments},
-            []
-        )
+        return SolverResult(result, {"weights": weights}, [])
 
     def prepare_solver_result(self, result: defaultdict, arguments: npt.NDArray) -> SolverResult:
         sorted_keys = sorted(result.keys(), key=lambda x: int(''.join(filter(str.isdigit, x))))
@@ -192,6 +213,7 @@ class Advantage(Solver):
         parameters = {values: arguments}
 
         return SolverResult(probabilities, parameters)
+
 
 def convert_qubo_keys(qubo: Polynomial) -> tuple[dict[tuple, float], float]:
     new_qubo = defaultdict(float)

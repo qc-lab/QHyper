@@ -39,11 +39,11 @@ class QML_QAOA(QAOA):
         Optimizer arguments.
     """
     problem: Problem
-    optimizer: Optimizer
+    layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
+    optimizer: Optimizer
     weights: NDArray | None = None
-    layers: int = 3
     mixer: str = "pl_x_mixer"
     backend: str = "default.qubit"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
@@ -51,7 +51,6 @@ class QML_QAOA(QAOA):
     dev: qml.Device | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
-        print(self.optimizer)
         if not isinstance(self.optimizer, QmlGradientDescent):
             raise ValueError(f"Optimizer {self.optimizer} not supported")
 

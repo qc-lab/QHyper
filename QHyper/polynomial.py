@@ -158,8 +158,9 @@ class Polynomial:
         return self.terms == terms
 
     def separate_const(self) -> tuple['Polynomial', float]:
-        constant = self.terms.pop(tuple(), 0)
-        return Polynomial(self.terms), constant
+        _terms = self.terms.copy()
+        constant = _terms.pop(tuple(), 0)
+        return Polynomial(_terms), constant
 
     def degree(self) -> int:
         return max(len(term) for term in self.terms)

@@ -37,12 +37,12 @@ class WF_QAOA(QAOA):
     """
 
     problem: Problem
-    optimizer: Optimizer
+    layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
+    optimizer: Optimizer
     weights: NDArray | None
     penalty: float = 0
-    layers: int = 3
     backend: str = "default.qubit"
     mixer: str = "pl_x_mixer"
     limit_results: int | None = None
@@ -51,12 +51,13 @@ class WF_QAOA(QAOA):
     dev: qml.Device | None = field(default=None, init=False)
 
     def __init__(
-            self, problem: Problem,
+            self,
+            problem: Problem,
+            layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
             weights: NDArray | None = None,
             penalty: float = 0,
-            layers: int = 3,
             backend: str = "default.qubit",
             mixer: str = "pl_x_mixer",
             limit_results: int | None = None,

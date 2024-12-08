@@ -4,6 +4,7 @@ from numpy.typing import NDArray
 from typing import Any
 from QHyper.optimizers import OptimizationResult, Optimizer, OptimizationParameter
 from QHyper.solvers import Solver, SolverResult
+from QHyper.problems import Problem
 from QHyper.util import weighted_avg_evaluation
 
 
@@ -42,6 +43,10 @@ class HyperOptimizer:
 
         for property, values in properties.items():
             self.properties[property] = OptimizationParameter(**values)
+
+    @property
+    def problem(self) -> Problem:
+        return self.solver.problem
 
     def parse_params(self, params: NDArray) -> dict[str, list[float]]:
         parsed_params = {}

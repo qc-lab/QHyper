@@ -34,11 +34,11 @@ class QAOA(Solver):
     """
 
     problem: Problem
-    optimizer: Optimizer
+    layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
-    weights: list[float] | None
-    layers: int = 3
+    optimizer: Optimizer
+    weights: list[float] | None = None
     backend: str = "default.qubit"
     mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
@@ -46,12 +46,14 @@ class QAOA(Solver):
     dev: qml.Device | None = field(default=None, init=False)
 
     def __init__(
-            self, problem: Problem,
+            self,
+            problem: Problem,
+            layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
             weights: list[float] | None = None,
             optimizer: Optimizer = Dummy(),
-            layers: int = 3, backend: str = "default.qubit",
+            backend: str = "default.qubit",
             mixer: str = "pl_x_mixer"
     ) -> None:
         self.problem = problem
