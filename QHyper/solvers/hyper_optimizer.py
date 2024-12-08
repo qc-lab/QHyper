@@ -27,11 +27,12 @@ class HyperOptimizerProperty:
 
 
 @dataclass
-class HyperOptimizer(Solver):
+class HyperOptimizer:
     optimizer: Optimizer
     solver: Solver
     properties: dict[str, OptimizationParameter] = field(default_factory=dict)
     history: list[SolverResult] = field(default_factory=list)
+    best_params: OptimizationResult = field(init=False)
 
     def __init__(self, optimizer: Optimizer, solver: Solver, **properties: Any) -> None:
         self.optimizer = optimizer
@@ -42,17 +43,21 @@ class HyperOptimizer(Solver):
         for property, values in properties.items():
             self.properties[property] = OptimizationParameter(**values)
 
-    def optimization_function(self, params: NDArray) -> OptimizationResult:
-        print(params)
-        solver_params = {}
+    def parse_params(self, params: NDArray) -> dict[str, list[float]]:
+        parsed_params = {}
 
         param_index = 0
         for property, opt_param in self.properties.items():
-            solver_params[property] = params[
-                    param_index:param_index + len(opt_param)]
+            parsed_params[property] = params[
+                param_index:param_index + len(opt_param)]
             param_index += len(opt_param)
-        # print(solver_params)
-        result = self.solver.solve(**solver_params)
+        return parsed_params
+
+    def run_solver(self, params: NDArray) -> SolverResult:
+        return self.solver.solve(**self.parse_params(params))
+
+    def _optimization_function(self, params: NDArray) -> OptimizationResult:
+        result = self.run_solver(params)
 
         value = weighted_avg_evaluation(
             result.probabilities, self.solver.problem.get_score,
@@ -65,9 +70,15 @@ class HyperOptimizer(Solver):
             history=[]
         )
 
-    def solve(self) -> SolverResult:
+    def solve(self) -> OptimizationResult:
         initial_params = sum(self.properties.values(), OptimizationParameter())
 
-        result = self.optimizer.minimize(
-            self.optimization_function, initial_params)
-        return result
+        self.best_params = self.optimizer.minimize(
+            self._optimization_function, initial_params)
+        return self.best_params
+
+    def run_with_best_params(self) -> SolverResult:
+        if self.best_params is None:
+            raise ValueError(
+                "Run hyper optimization first. Call solve() method")
+        return self.run_solver(self.best_params.params)

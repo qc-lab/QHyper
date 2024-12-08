@@ -18,7 +18,7 @@ from QHyper.util import weighted_avg_evaluation
 
 
 @dataclass
-class HQAOA(QAOA):
+class H_QAOA(QAOA):
     """
     Clasic QAOA implementation.
 
@@ -41,8 +41,11 @@ class HQAOA(QAOA):
     gamma: OptimizationParameter
     beta: OptimizationParameter
     weights: OptimizationParameter
-    penalty: float
     limit_results: int | None = None
+    penalty: float = 0
+    layers: int = 3
+    backend: str = "default.qubit"
+    mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
         default_factory=dict, init=False)
     dev: qml.Device | None = field(default=None, init=False)
@@ -53,10 +56,11 @@ class HQAOA(QAOA):
             beta: OptimizationParameter,
             weights: OptimizationParameter,
             penalty: float,
+            layers: int = 3,
+            backend: str = "default.qubit",
+            mixer: str = "pl_x_mixer",
             limit_results: int | None = None,
             optimizer: Optimizer = Dummy(),
-            layers: int = 3, backend: str = "default.qubit",
-            mixer: str = "pl_x_mixer"
     ) -> None:
         self.problem = problem
         self.optimizer = optimizer
@@ -139,7 +143,9 @@ class HQAOA(QAOA):
     #         "hyper_args": hyper_args,
     #     }
 
-    def solve(self, weights: list[float] | None = None) -> SolverResult:
+    def solve(self, weights: list[float] | None = None,
+              gamma: list[float] | None = None,
+              beta: list[float] | None = None) -> SolverResult:
         # if gamma is None and self.gamma is None:
         #     raise SolverException("Parameter 'gamma' was not provided")
         # if beta is None and self.beta is None:
@@ -151,6 +157,8 @@ class HQAOA(QAOA):
             weights = self.weights.update(init=weights)
         else:
             weights = self.weights
+        gamma_ = self.gamma if gamma is None else self.gamma.update(init=gamma)
+        beta_ = self.beta if beta is None else self.beta.update(init=beta)
 
         # opt_wrapper = LocalOptimizerFunction(
         #         self.pqc, self.problem, best_hargs)
@@ -160,19 +168,19 @@ class HQAOA(QAOA):
         # opt_res = self.optimizer.minimize(func, angles)
         # assert gamma
         # assert beta
-        params = self.gamma + self.beta + self.weights
+        params = gamma_ + beta_ + self.weights
 
         opt_res = self.optimizer.minimize(
             self.get_expval_circuit(), params)
 
         angles = opt_res.params[:2*self.layers]
-        weights_ = opt_res.params[2*self.layers:]
-        print(angles, weights_)
-        gamma_ = angles[:len(angles) // 2]
-        beta_ = angles[len(angles) // 2:]
+        weights_res = opt_res.params[2*self.layers:]
+
+        gamma_res = angles[:len(angles) // 2]
+        beta_res = angles[len(angles) // 2:]
 
         return SolverResult(
-            self.run_with_probs(self.problem, angles, weights_),
-            {'gamma': gamma_, 'beta': beta_, 'weights': weights_},
+            self.run_with_probs(self.problem, angles, weights_res),
+            {'gamma': gamma_res, 'beta': beta_res, 'weights': weights_res},
             opt_res.history,
         )

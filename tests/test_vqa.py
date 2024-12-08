@@ -98,7 +98,7 @@ def test_wfqaoa():
 
     solver_config = {
         "solver": {
-            'name': 'WFQAOA',
+            'name': 'WF_QAOA',
             'category': 'gate_based',
             'platform': 'pennylane',
             "layers": 3,
@@ -153,7 +153,7 @@ def test_hqaoa():
 
     solver_config = {
         "solver": {
-            "name": "HQAOA",
+            "name": "H_QAOA",
             "category": "gate_based",
             "platform": "pennylane",
             "layers": 3,

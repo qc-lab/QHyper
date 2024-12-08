@@ -137,7 +137,7 @@ def get_solver(name: str, category: str, platform: str) -> Solver:
     # )
 
 
-def solver_from_config(config: dict[str, Any]) -> Solver:
+def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
     """
     Alternative way of creating solver.
     Expect dict with two keys:

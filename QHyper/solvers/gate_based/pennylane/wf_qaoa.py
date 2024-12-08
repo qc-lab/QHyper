@@ -18,7 +18,7 @@ from QHyper.solvers.gate_based.pennylane.qaoa import QAOA
 
 
 @dataclass
-class WFQAOA(QAOA):
+class WF_QAOA(QAOA):
     """
     Clasic QAOA implementation.
 
@@ -40,8 +40,11 @@ class WFQAOA(QAOA):
     optimizer: Optimizer
     gamma: OptimizationParameter
     beta: OptimizationParameter
-    penalty: float
     weights: NDArray | None
+    penalty: float = 0
+    layers: int = 3
+    backend: str = "default.qubit"
+    mixer: str = "pl_x_mixer"
     limit_results: int | None = None
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
         default_factory=dict, init=False)
@@ -51,12 +54,13 @@ class WFQAOA(QAOA):
             self, problem: Problem,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
-            penalty: float,
             weights: NDArray | None = None,
+            penalty: float = 0,
+            layers: int = 3,
+            backend: str = "default.qubit",
+            mixer: str = "pl_x_mixer",
             limit_results: int | None = None,
             optimizer: Optimizer = Dummy(),
-            layers: int = 3, backend: str = "default.qubit",
-            mixer: str = "pl_x_mixer"
     ) -> None:
         self.problem = problem
         self.optimizer = optimizer

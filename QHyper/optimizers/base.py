@@ -21,6 +21,12 @@ class OptimizationParameter:
     step: list[float] = dataclasses.field(default_factory=list)
     init: list[float] = dataclasses.field(default_factory=list)
 
+    def __post_init__(self) -> None:
+        self.min = list(self.min)
+        self.max = list(self.max)
+        self.step = list(self.step)
+        self.init = list(self.init)
+
     def assert_bounds(self) -> None:
         if not self.min:
             raise ValueError("Min bounds are required")
@@ -31,13 +37,13 @@ class OptimizationParameter:
 
     def assert_step(self) -> None:
         self.assert_bounds()
-        if not self.step:
+        if len(self.step) == 0:
             raise ValueError("Steps are required")
         if len(self.min) != len(self.step):
             raise ValueError("Steps must have the same length as bounds")
 
     def assert_init(self) -> None:
-        if not self.init:
+        if len(self.init) == 0:
             raise ValueError("Init are required")
 
     def assert_bounds_init(self) -> None:
