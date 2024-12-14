@@ -4,7 +4,6 @@
 
 
 from typing import Callable, Any, Type
-from numpy.typing import NDArray
 
 import pennylane as qml
 from pennylane import numpy as np

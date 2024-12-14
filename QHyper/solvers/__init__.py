@@ -87,20 +87,63 @@ from QHyper.solvers.hyper_optimizer import HyperOptimizer
 # SOLVERS.update(search_for(Solver, 'custom'))
 
 
-def get_solver(name: str, category: str, platform: str) -> Solver:
-    try:
-        module = importlib.import_module(
-            f'QHyper.solvers.{category}.{platform}.{name.lower()}')
-        if hasattr(module, name) and issubclass(getattr(module, name), Solver):
-            return getattr(module, name)
-        raise ImportError
-    except ImportError:
-        raise FileNotFoundError(
-            "Solver with"
-            f"{f'category \'{category}\' and ' if category else ''}"
-            f"{f'platform \'{platform}\' and ' if platform else ''}"
-            f"{name} not found"
-        )
+class Solvers:
+    custom_solvers = (search_for(Solver, 'QHyper/custom')
+                      | search_for(Solver, 'custom'))
+
+    @staticmethod
+    def get(name: str, category: str, platform: str) -> Type[Solver]:
+        # In the future, the category and platform might be required for some
+        # solvers
+        if category == "custom":
+            if name in Solvers.custom_solvers:
+                return Solvers.custom_solvers[name]
+            else:
+                raise FileNotFoundError(
+                    f"Solver {name} not found in custom solvers"
+                )
+        if name.lower() == "qaoa":
+            from .gate_based.pennylane.qaoa import QAOA
+            return QAOA
+        elif name.lower() == "qml_qaoa":
+            from .gate_based.pennylane.qml_qaoa import QML_QAOA
+            return QML_QAOA
+        elif name.lower() == "wf_qaoa":
+            from .gate_based.pennylane.wf_qaoa import WF_QAOA
+            return WF_QAOA
+        elif name.lower() == "h_qaoa":
+            from .gate_based.pennylane.h_qaoa import H_QAOA
+            return H_QAOA
+        elif name.lower() == "gurobi":
+            from .classical.gurobi.gurobi import Gurobi
+            return Gurobi
+        elif name.lower() == "cqm":
+            from .quantum_annealing.dwave.cqm import CQM
+            return CQM
+        elif name.lower() == "dqm":
+            from .quantum_annealing.dwave.dqm import DQM
+            return DQM
+        elif name.lower() == "advantage":
+            from .quantum_annealing.dwave.advantage import Advantage
+            return Advantage
+        else:
+            raise SolverConfigException(f"Solver {name} not found")
+
+
+# def get_solver(name: str, category: str, platform: str) -> Solver:
+#     try:
+#         module = importlib.import_module(
+#             f'QHyper.solvers.{category}.{platform}.{name.lower()}')
+#         if hasattr(module, name) and issubclass(getattr(module, name), Solver):
+#             return getattr(module, name)
+#         raise ImportError
+#     except ImportError:
+#         raise FileNotFoundError(
+#             "Solver with"
+#             f"{f'category \'{category}\' and ' if category else ''}"
+#             f"{f'platform \'{platform}\' and ' if platform else ''}"
+#             f"{name} not found"
+#         )
     # import pathlib
     # current_path = pathlib.Path(os.path.relpath(__file__))
 
@@ -179,7 +222,7 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
         raise SolverConfigException("Solver platform was not provided")
 
     try:
-        solver_class = get_solver(
+        solver_class = Solvers.get(
             config['solver']['name'],
             config['solver']['category'],
             config['solver']['platform']
@@ -228,7 +271,7 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
         solver_category = solver_config.pop('category')
         error_msg = "Solver platform was not provided"
         solver_platform = solver_config.pop('platform')
-        solver_class = get_solver(
+        solver_class = Solvers.get(
             solver_name, solver_category, solver_platform)
     except KeyError:
         raise SolverConfigException(error_msg)

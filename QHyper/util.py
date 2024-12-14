@@ -12,7 +12,7 @@ import re
 import numpy as np
 import numpy.typing as npt
 
-from typing import Callable, NewType
+from typing import Callable, NewType, Any
 
 Array1D = NewType("Array1D", npt.NDArray)
 Array2D = NewType("Array2D", npt.NDArray)
@@ -65,12 +65,11 @@ def add_evaluation_to_results(
     return new_results
 
 
-def class_to_snake(cls: type) -> str:
+def get_class_name(cls: type) -> str:
     if hasattr(cls, 'name'):
         return cls.name
-    if cls.__name__.isupper():
-        return cls.__name__.lower()
-    return re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
+    return cls.__name__
+    # return re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
 
 
 def search_for(class_type: type, path: str) -> dict[str, type]:
@@ -95,8 +94,10 @@ def search_for(class_type: type, path: str) -> dict[str, type]:
                         and issubclass(obj, class_type)
                         and obj != class_type
                     ):
-                        classes[class_to_snake(obj)] = obj
-                        print(f"Imported {obj} from {module_path}")
+                        class_name = get_class_name(obj)
+                        classes[class_name] = obj
+                        print(f"Imported {obj} from {module_path}"
+                              f" as {class_name}")
 
             except Exception as e:
                 print(f"Failed to import {module_name} from {_path}: {e}")

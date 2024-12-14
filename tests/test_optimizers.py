@@ -1,10 +1,12 @@
 import numpy as np
 import pytest
 
-from QHyper.optimizers import (
-    ScipyOptimizer, OptimizationResult, QmlGradientDescent,
-    Random, GridSearch, CEM, OptimizationParameter
-)
+from QHyper.optimizers.cem import CEM
+from QHyper.optimizers.grid_search import GridSearch
+from QHyper.optimizers.random import Random
+from QHyper.optimizers.scipy_minimizer import ScipyOptimizer
+from QHyper.optimizers.qml_gradient_descent import QmlGradientDescent
+from QHyper.optimizers.base import OptimizationResult, OptimizationParameter
 
 np.random.seed(1244)
 

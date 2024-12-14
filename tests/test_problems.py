@@ -1,8 +1,10 @@
 import numpy as np
 import networkx as nx
 
-from QHyper.problems import KnapsackProblem, TSPProblem, CommunityDetectionProblem, Network
-from QHyper.problems.knapsack import Item
+from QHyper.problems.tsp import TSPProblem
+from QHyper.problems.community_detection import (
+    CommunityDetectionProblem, Network)
+from QHyper.problems.knapsack import Item, KnapsackProblem
 
 np.random.seed(1244)
 

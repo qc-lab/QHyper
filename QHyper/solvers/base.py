@@ -9,9 +9,6 @@ import numpy as np
 
 from typing import Any
 
-from QHyper.problems.base import Problem
-from QHyper.optimizers import OptimizationResult
-
 
 class SolverConfigException(Exception):
     pass
@@ -23,6 +20,7 @@ class SolverException(Exception):
 
 @dataclass
 class SolverResult:
+    from QHyper.optimizers import OptimizationResult
     """
     Class for storing results of the solver.
 
@@ -44,6 +42,7 @@ class SolverResult:
 
 
 class Solver(ABC):
+    from QHyper.problems.base import Problem
     """
     Abstract base class for solvers.
 

@@ -33,26 +33,50 @@ Package Content
 from typing import Type, Any
 import copy
 
-from .knapsack import KnapsackProblem
-from .tsp import TSPProblem
-from .maxcut import MaxCutProblem
-from .workflow_scheduling import WorkflowSchedulingProblem
-from .community_detection import CommunityDetectionProblem, Network # noqa 401
+# from .knapsack import KnapsackProblem
+# from .tsp import TSPProblem
+# from .maxcut import MaxCutProblem
+# from .workflow_scheduling import WorkflowSchedulingProblem
+# from .community_detection import CommunityDetectionProblem, Network # noqa 401
 
 from QHyper.util import search_for
 
 from QHyper.problems.base import Problem
 
 
-PROBLEMS: dict[str, Type[Problem]] = {
-    "knapsack": KnapsackProblem,
-    "tsp": TSPProblem,
-    "maxcut": MaxCutProblem,
-    "workflow_scheduling": WorkflowSchedulingProblem,
-    'community_detection': CommunityDetectionProblem
-}
-PROBLEMS.update(search_for(Problem, 'QHyper/custom'))
-PROBLEMS.update(search_for(Problem, 'custom'))
+class Problems:
+    custom_fetched = False
+    custom_problems = {}
+
+    @staticmethod
+    def get(name: str) -> Type[Problem]:
+        if not Problems.custom_fetched:
+            Problems.custom_problems = (search_for(Problem, 'QHyper/custom')
+                                        | search_for(Problem, 'custom'))
+            Problems.custom_fetched = True
+
+        if name in Problems.custom_problems:
+            return Problems.custom_problems[name]
+        elif name == "knapsack":
+            from .knapsack import KnapsackProblem
+            return KnapsackProblem
+        elif name == "tsp":
+            from .tsp import TSPProblem
+            return TSPProblem
+        elif name == "maxcut":
+            from .maxcut import MaxCutProblem
+            return MaxCutProblem
+        elif name == "workflow_scheduling":
+            from .workflow_scheduling import WorkflowSchedulingProblem
+            return WorkflowSchedulingProblem
+        elif name == "community_detection":
+            from .community_detection import CommunityDetectionProblem
+            return CommunityDetectionProblem
+        else:
+            raise ValueError(f"Problem {name} not found")
+
+# PROBLEMS.update(search_for(Problem, 'QHyper/custom'))
+# PROBLEMS.update(search_for(Problem, 'custom'))
 
 
 class ProblemConfigException(Exception):
@@ -71,14 +95,10 @@ def problem_from_config(config: dict[str, dict[str, Any]]) -> Problem:
     Problem
         Initialized Problem object
     """
-    _config = copy.deepcopy(config)
-    error_msg = ""
-    try:
-        error_msg = "Problem configuration was not provided"
-        problem_type = str(_config.pop('type'))
-        error_msg = f"There is no {problem_type} problem type"
-        problem_class = PROBLEMS[problem_type]
-    except KeyError:
-        raise ProblemConfigException(error_msg)
+    config_ = copy.deepcopy(config)
+    if "type" not in config_:
+        raise ProblemConfigException("Problem type was not provided")
+    problem_type = config_.pop('type')
+    problem_class = Problems.get(problem_type)
 
-    return problem_class(**_config)
+    return problem_class(**config_)
