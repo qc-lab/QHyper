@@ -6,17 +6,13 @@ from dataclasses import dataclass
 from collections import defaultdict
 
 from QHyper.problems.base import Problem
-from QHyper.solvers.base import Solver, SolverResult, SolverConfigException
+from QHyper.solvers.base import Solver, SolverResult
 from QHyper.converter import Converter
 from QHyper.constraint import Polynomial
-from QHyper.util import weighted_avg_evaluation
-from QHyper.optimizers import (
-    OPTIMIZERS, Optimizer, OptimizationResult)
 
 from dwave.system import DWaveSampler, EmbeddingComposite
 from dwave.system.composites import FixedEmbeddingComposite
 from dimod import BinaryQuadraticModel
-from dimod.sampleset import SampleSet
 from dwave.embedding.pegasus import find_clique_embedding
 
 
