@@ -62,38 +62,3 @@ Each abstract class allows adding new implementatons which will be compatible wi
 
       <img src="_static/qhyper_architecture.svg" style="background-color: transparent">
 
-
-Contents
-========
-.. toctree::
-    :hidden:
-
-    Home <self>
-
-
-User Guide
-----------
-Information on how to install and use QHyper for conducting experiments.
-
-.. toctree::
-    :maxdepth: 2
-
-    user_guide/index
-
-Contribution Guide
-------------------
-Information on how to contribute to the QHyper library.
-
-.. toctree::
-    :maxdepth: 2
-
-    contribution
-
-API Reference
--------------
-Detailed information on the classes and methods available in the QHyper library.
-
-.. toctree::
-   :maxdepth: 2
-
-   api

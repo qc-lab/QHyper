@@ -9,6 +9,9 @@ import numpy as np
 
 from typing import Any
 
+from QHyper.problems.base import Problem
+from QHyper.optimizers import OptimizationResult
+
 
 class SolverConfigException(Exception):
     pass
@@ -20,15 +23,15 @@ class SolverException(Exception):
 
 @dataclass
 class SolverResult:
-    from QHyper.optimizers import OptimizationResult
+    
     """
     Class for storing results of the solver.
 
     Attributes
     ----------
-    results_probabilities : np.recarray
+    probabilities : np.recarray
         Record array with the results of the solver. Contains column for each
-        variable and the probability of the solution.
+        variable and the probability of the solution. 
     params : dict[Any, Any]
         Dictionary with the best parameters for the solver.
     history : list[list[float]]
@@ -42,7 +45,6 @@ class SolverResult:
 
 
 class Solver(ABC):
-    from QHyper.problems.base import Problem
     """
     Abstract base class for solvers.
 

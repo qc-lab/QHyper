@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'QHyper'
-copyright = '2022, Cyfronet'
+copyright = '2024, Cyfronet'
 author = 'Cyfronet'
 
 # -- General configuration ---------------------------------------------------
@@ -52,7 +52,7 @@ html_css_files = ['custom.css']
 html_theme = "pydata_sphinx_theme"
 
 html_logo = "_static/logo.png"
-
+add_module_names = False
 html_theme_options = {
     "logo": {
         "text": "QHyper",

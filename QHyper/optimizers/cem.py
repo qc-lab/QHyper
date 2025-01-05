@@ -17,12 +17,17 @@ from QHyper.optimizers.base import (
 class CEM(Optimizer):
     """Implementation of the Cross Entropy Method for hyperparameter tuning
 
+    The Cross Entropy Method is a stochastic optimization algorithm that
+    iteratively samples candidate solutions from a multivariate normal
+    distribution. The mean and covariance of the distribution are updated
+    based on the best samples from the previous iteration.
+    This alogrithm requries the following parameters to be set:
+    - `min` and `max` bounds for each parameter
+    - `init` initial values for each parameter
+
+
     Attributes
     ----------
-    bounds : numpy.ndarray, optional
-        The bounds for the optimization algorithm. Not all optimizers
-        support bounds. The shape of the array should be (n, 2), where
-        n is the number of parameters (`init` in method :meth:`minimize`).
     verbose : bool, default False
         Whether to print the optimization progress.
     disable_tqdm : bool, default True

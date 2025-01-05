@@ -4,18 +4,37 @@
 
 
 import abc
-import warnings
 import dataclasses
 
 from abc import abstractmethod
-import numpy as np
 
-from typing import Callable, cast, overload, Self
-from numpy.typing import NDArray
+from typing import Callable, Self
 
 
 @dataclasses.dataclass
 class OptimizationParameter:
+    """
+    Dataclass for storing bounds, steps and init values for parameters
+    that might be optimized. Most of the time some of this values are not
+    required, but it depends on the chosen optimization algorithm. 
+    Check the documentation of the chosen algorithm to see which values are
+    required.
+
+    Attributes
+    ----------
+    min : list[float]
+        List of minimum values for each parameter. 
+    max : list[float]
+        List of maximum values for each parameter.
+    step : list[float]
+        List of step values for each parameter. Used for example in the grid
+        search algorithm. For 0-th parameter the following values will be
+        generated: min[0], min[0] + step[0], min[0] + 2*step[0], ...
+    init : list[float]
+        List of initial values for each parameter. Some algorithms require
+        starting point to be set.
+    """
+
     min: list[float] = dataclasses.field(default_factory=list)
     max: list[float] = dataclasses.field(default_factory=list)
     step: list[float] = dataclasses.field(default_factory=list)
@@ -28,6 +47,9 @@ class OptimizationParameter:
         self.init = list(self.init)
 
     def assert_bounds(self) -> None:
+        """Check if bounds are correctly set.
+        """
+
         if not self.min:
             raise ValueError("Min bounds are required")
         if not self.max:
@@ -36,6 +58,8 @@ class OptimizationParameter:
             raise ValueError("Min and Max bounds must have the same length")
 
     def assert_step(self) -> None:
+        """Check if steps are correctly set.
+        """
         self.assert_bounds()
         if len(self.step) == 0:
             raise ValueError("Steps are required")
@@ -43,16 +67,20 @@ class OptimizationParameter:
             raise ValueError("Steps must have the same length as bounds")
 
     def assert_init(self) -> None:
+        """Check if init values are correctly set.
+        """
         if len(self.init) == 0:
             raise ValueError("Init are required")
 
     def assert_bounds_init(self) -> None:
+        """Check if bounds and init values are correctly set.
+        """
         self.assert_bounds()
         self.assert_init()
         if len(self.min) != len(self.init):
             raise ValueError("Init must have the same length as bounds")
 
-    def __add__(self, other: Self) -> Self:
+    def __add__(self, other: Self) -> 'OptimizationParameter':
         min_ = self.min + other.min
         max_ = self.max + other.max
         step_ = self.step + other.step
@@ -72,7 +100,7 @@ class OptimizationParameter:
                min: list[float] | None = None,
                max: list[float] | None = None,
                step: list[float] | None = None,
-               init: list[float] | None = None) -> Self:
+               init: list[float] | None = None) -> 'OptimizationParameter':
         if min is None:
             min = self.min.copy()
         if max is None:
@@ -84,7 +112,7 @@ class OptimizationParameter:
         return OptimizationParameter(min, max, step, init)
 
     @property
-    def bounds(self) -> NDArray:
+    def bounds(self) -> list[tuple[float, float]]:
         return list(zip(self.min, self.max))
 
 
@@ -104,8 +132,9 @@ class OptimizationResult:
     ----------
     value : float
         The minimum function value found by the optimization algorithm.
-    params : numpy.ndarray
-        The optimal point found by the optimization algorithm.
+    params : list[float]
+        The optimal point (function arguments) found by the optimization 
+        algorithm.
     history : list[list[OptimizationResult]]
         The history of the optimization algorithm. Each element of the list
         represents the results of the objective function at each

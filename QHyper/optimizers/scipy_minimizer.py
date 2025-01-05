@@ -17,12 +17,13 @@ class ScipyOptimizer(Optimizer):
     """
     Class for the SciPy minimizer.
 
+    This class is a wrapper for the SciPy minimizer.
+    It requires the following parameters to be set:
+    - `init` initial values for each parameter
+    - `min` and `max` bounds for each parameter
+
     Attributes
     ----------
-    bounds : numpy.ndarray, optional
-        The bounds for the optimization algorithm. Not all optimizers
-        support bounds. The shape of the array should be (n, 2), where
-        n is the number of parameters (`init` in method :meth:`minimize`).
     verbose : bool, default False
         Whether to print the optimization progress.
     disable_tqdm : bool, default True

@@ -29,6 +29,26 @@ class HyperOptimizerProperty:
 
 @dataclass
 class HyperOptimizer:
+    """ Class for hyperparameter optimization
+
+    HyperOptimizer is a class that allows to use the optimizers and 
+    find the best parameters for a given solver.
+
+    Parameters
+    ----------
+    optimizer : Optimizer
+        The optimizer to use for optimization
+    solver : Solver
+        The solver to use for optimization
+    properties : dict[str, OptimizationParameter]
+        The properties to optimize. Their keys must match the properties 
+        of the solver. 
+    history : list[SolverResult]
+        The history of the optimization process
+    best_params : OptimizationResult
+        The best parameters found during optimization
+    """
+
     optimizer: Optimizer
     solver: Solver
     properties: dict[str, OptimizationParameter] = field(default_factory=dict)

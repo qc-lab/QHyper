@@ -17,12 +17,14 @@ from QHyper.optimizers.base import (
 class Random(Optimizer):
     """Random optimizer
 
+    The random optimizer is a simple optimization algorithm that
+    generates random samples from the parameter space and evaluates
+    the function at each point.
+    This alogrithm requries the following parameters to be set:
+    - `min` and `max` bounds for each parameter
+
     Attributes
     ----------
-    bounds : numpy.ndarray
-        The bounds for the optimization algorithm. Not all optimizers
-        support bounds. The shape of the array should be (n, 2), where
-        n is the number of parameters (`init` in method :meth:`minimize`).
     verbose : bool, default False
         Whether to print the optimization progress.
     disable_tqdm : bool, default True

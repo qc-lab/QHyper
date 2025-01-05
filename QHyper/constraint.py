@@ -42,6 +42,7 @@ class Constraint:
         Example use is assigning same weight to the constraints with the same
         group when creating qubo.
     """
+
     def __init__(
         self,
         lhs: PolynomialType,

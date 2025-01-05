@@ -20,16 +20,38 @@ from QHyper.solvers.gate_based.pennylane.qaoa import QAOA
 @dataclass
 class WF_QAOA(QAOA):
     """
-    Clasic QAOA implementation.
+    Different implementation of QAOA.
+    This implementation uses different function to evaluate the hamiltonian -
+    this function doesn't return expectation value but the score of the
+    solution.
 
     Attributes
     ----------
+    problem : Problem
+        The problem to be solved.
     layers : int
         Number of layers.
-    backend : str
+    gamma : OptimizationParameter
+        Vector of gamma angles used in cost Hamiltonian. Size of the vector
+        should be equal to the number of layers.
+    beta : OptimizationParameter
+        Vector of beta angles used in mixing Hamiltonian. Size of the vector    
+        should be equal to the number of layers.
+    optimizer : Optimizer
+        Optimizer used in the classical part of the algorithm.
+    weights : list[float] | None
+        Weights used for converting Problem to QUBO. They connect cost function
+        with constraints. If not specified, all weights are set to 1.
+    limit_results : int | None, default None
+        Specifies how many results should be considered in the evaluation of
+        the objective function. If None, all results are considered.
+    penalty : float, default 0
+        When calculating the score of the solution, the penalty is the score 
+        for the solution that doesn't satisfy the constraints.
+    backend : str, default 'default.qubit'
         Backend for PennyLane.
-    mixer : str
-        Mixer name.
+    mixer : str, default 'pl_x_mixer'
+        Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
         Cache for QUBO.
     dev : qml.Device
@@ -41,7 +63,7 @@ class WF_QAOA(QAOA):
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
-    weights: NDArray | None
+    weights: list[float] | None
     penalty: float = 0
     backend: str = "default.qubit"
     mixer: str = "pl_x_mixer"
@@ -56,7 +78,7 @@ class WF_QAOA(QAOA):
             layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
-            weights: NDArray | None = None,
+            weights: list[float] | None = None,
             penalty: float = 0,
             backend: str = "default.qubit",
             mixer: str = "pl_x_mixer",

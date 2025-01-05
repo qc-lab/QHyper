@@ -29,6 +29,8 @@ class QmlGradientDescent(Optimizer):
 
     This minimizer is a wrapper for gradient descent optimizers
     provided by PennyLane.
+    This alogrithm requries the following parameters to be set:
+    - `init` initial values for each parameter
 
     Attributes
     ----------

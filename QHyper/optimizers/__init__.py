@@ -23,12 +23,12 @@ Package Content
     Optimizer  -- Base class for optimizers.
     OptimizationResult -- Dataclass for storing the results of an optimization run.
 
-    ScipyOptimizer -- Wrapper for the scipy.optimize.minimize function.
-    QmlGradientDescent -- Wrapper for the PennyLane gradient descent optimizers.
-    CEM -- Cross-entropy method optimizer.
-    Random -- Random search optimizer.
-    GridSearch -- Grid search optimizer.
-    Dummy -- Dummy optimizer.
+    scipy_minimizer.ScipyOptimizer -- Wrapper for the scipy.optimize.minimize function.
+    qml_gradient_descent.QmlGradientDescent -- Wrapper for the PennyLane gradient descent optimizers.
+    cem.CEM -- Cross-entropy method optimizer.
+    random.Random -- Random search optimizer.
+    grid_search.GridSearch -- Grid search optimizer.
+    dummy.Dummy -- Dummy optimizer.
 
 """
 import copy
@@ -65,7 +65,7 @@ class Optimizers:
         elif name.lower() == "scipy" or name.lower() == "scipyminimizer":
             from .scipy_minimizer import ScipyOptimizer
             return ScipyOptimizer
-        elif name.lower() == "random":
+        elif name.lower() == "random" or name.lower() == "randomsearch":
             from .random import Random
             return Random
         elif name.lower() == "qml" or name.lower() == "qmlgradientdescent":

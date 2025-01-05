@@ -30,7 +30,7 @@ Classical Solvers
 .. autosummary::
     :toctree: generated/
 
-    Gurobi -- Gurobi solver.
+    classical.gurobi.Gurobi -- Gurobi solver.
 
 
 Quantum Annealing Solvers
@@ -39,9 +39,9 @@ Quantum Annealing Solvers
 .. autosummary::
     :toctree: generated/
 
-    CQM -- CQM solver.
-    DQM -- DQM solver.
-    Advantage -- Advantage solver.
+    quantum_annealing.dwave.cqm.CQM -- CQM solver.
+    quantum_annealing.dwave.dqm.DQM -- DQM solver.
+    quantum_annealing.dwave.advantage.Advantage -- Advantage solver.
 
 
 Variational Quantum Algorithm Solvers
@@ -49,9 +49,11 @@ Variational Quantum Algorithm Solvers
 
 .. autosummary::
     :toctree: generated/
-    :recursive:
-
-    vqa -- VQA solver.
+    
+    gate_based.pennylane.qaoa.QAOA -- QAOA solver.
+    gate_based.pennylane.qml_qaoa.QML_QAOA -- QML QAOA solver.
+    gate_based.pennylane.wf_qaoa.WF_QAOA -- Weight Free QAOA solver.
+    gate_based.pennylane.h_qaoa.H_QAOA -- Hyper QAOA solver.
 """
 
 import copy

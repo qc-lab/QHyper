@@ -3,6 +3,10 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
+"""
+.. currentmodule:: QHyper.problems.knapsack
+"""
+
 import random
 import sympy
 import numpy as np

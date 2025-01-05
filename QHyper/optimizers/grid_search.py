@@ -16,17 +16,17 @@ class GridSearch(Optimizer):
     """
     Grid search optimizer
 
+    The grid search optimizer is a simple optimization algorithm that
+    searches through the entire parameter space by evaluating the function
+    at each point. 
+    This alogrithm requries the following parameters to be set:
+    - `min` and `max` bounds for each parameter
+    - `step` step values for each parameter
+    Values for n-th parameter will be generated as:
+    min[n], min[n] + step[n], min[n] + 2*step[n], ... < max[n]
+
     Attributes
     ----------
-    bounds : numpy.ndarray, optional
-        The bounds for the optimization algorithm. Not all optimizers
-        support bounds. The shape of the array should be (n, 2), where
-        n is the number of parameters (`init` in method :meth:`minimize`).
-    steps : list[float]
-        The step for each bound. The length of the list should be equal
-        to the number of bounds. E.g. for bounds [[0, 1]]
-        the steps could be [0.1].
-        The searching space will be: [0, 0.1, 0.2, ..., 0.9]
     verbose : bool, default False
         Whether to print the optimization progress.
     disable_tqdm : bool, default True

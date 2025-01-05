@@ -22,12 +22,11 @@ Package Content
 
     Problem  -- Base class for problems.
 
-    KnapsackProblem -- Knapsack problem.
-    TSPProblem -- Traveling Salesman Problem.
-    MaxCutProblem -- Max-Cut problem.
-    WorkflowSchedulingProblem -- Workflow Scheduling problem.
-    CommunityDetectionProblem -- Community Detection problem.
-
+    knapsack.KnapsackProblem -- Knapsack problem.
+    tsp.TSPProblem -- Traveling Salesman Problem.
+    maxcut.MaxCutProblem -- Max-Cut problem.
+    workflow_scheduling.WorkflowSchedulingProblem -- Workflow Scheduling problem.
+    community_detection.CommunityDetectionProblem -- Community Detection problem.
 """
 
 from typing import Type, Any

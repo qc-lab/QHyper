@@ -17,7 +17,9 @@ class Dummy(Optimizer):
     Dummy optimizer.
 
     This optimizer is used as a default optimizer in the case
-    when no optimizer is selected.
+    when no optimizer is selected. It simply evaluates the function.
+    It requires the initial point to be provided.
+
     """
 
     def minimize_(
