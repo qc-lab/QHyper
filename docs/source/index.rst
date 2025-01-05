@@ -62,3 +62,23 @@ Each abstract class allows adding new implementatons which will be compatible wi
 
       <img src="_static/qhyper_architecture.svg" style="background-color: transparent">
 
+
+.. toctree::
+    :hidden:
+
+    Home <self>
+
+.. toctree::
+    :hidden:
+
+    user_guide/index
+
+.. toctree::
+    :hidden:
+
+    contribution
+
+.. toctree::
+   :hidden:
+
+   api

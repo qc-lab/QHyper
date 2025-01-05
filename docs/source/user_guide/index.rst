@@ -7,6 +7,7 @@ experiments. Whether you're new to quantum computing or an experienced
 researcher, this guide will help you navigate the features and capabilities of the library.
 
 .. toctree::
+
    Home <self>
 
 
