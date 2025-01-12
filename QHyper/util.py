@@ -95,7 +95,7 @@ def search_for(class_type: type, path: str) -> dict[str, type]:
                         and obj != class_type
                     ):
                         class_name = get_class_name(obj)
-                        classes[class_name] = obj
+                        classes[class_name.lower()] = obj
                         print(f"Imported {obj} from {module_path}"
                               f" as {class_name}")
 

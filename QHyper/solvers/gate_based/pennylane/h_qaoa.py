@@ -23,7 +23,7 @@ class H_QAOA(QAOA):
     Different implementation of QAOA. 
     This implementation uses different function to evaluate the hamiltonian - 
     this function doesn't return expectation value but the score of the 
-    solution. Another difference is that this implementation update the weights
+    solution. Another difference is that this implementation update the penalty weights
     of the problem in the optimization process of QAOA.
 
     Attributes
@@ -40,9 +40,9 @@ class H_QAOA(QAOA):
         should be equal to the number of layers.
     optimizer : Optimizer
         Optimizer used in the classical part of the algorithm.
-    weights : OptimizationParameter
-        Weights used for converting Problem to QUBO. They connect cost function 
-        with constraints. If not specified, all weights are set to 1. But 
+    penalty_weights : OptimizationParameter
+        Penalty Weights used for converting Problem to QUBO. They connect cost function 
+        with constraints. If not specified, all penalty weights are set to 1. But 
         unlike in QAOA, this parameter is updated during optimization.
     limit_results : int | None, default None
         Specifies how many results should be considered in the evaluation of
@@ -64,7 +64,7 @@ class H_QAOA(QAOA):
     layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
-    weights: OptimizationParameter
+    penalty_weights: OptimizationParameter
     optimizer: Optimizer
     limit_results: int | None = None
     penalty: float = 0
@@ -80,7 +80,7 @@ class H_QAOA(QAOA):
             layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
-            weights: OptimizationParameter,
+            penalty_weights: OptimizationParameter,
             penalty: float,
             backend: str = "default.qubit",
             mixer: str = "pl_x_mixer",
@@ -91,7 +91,7 @@ class H_QAOA(QAOA):
         self.optimizer = optimizer
         self.gamma = gamma
         self.beta = beta
-        self.weights = weights
+        self.penalty_weights = penalty_weights
         self.penalty = penalty
         self.limit_results = limit_results
         self.layers = layers
@@ -103,22 +103,20 @@ class H_QAOA(QAOA):
             self) -> Callable[[list[float], list[float]], float]:
         def wrapper(params: list[float]) -> float:
             angles = params[:2*self.layers]
-            weights = params[2*self.layers:]
+            penalty_weights = params[2*self.layers:]
 
-            weights_ = []
+            penalty_weights_ = []
 
-            for weight in weights:
+            for weight in penalty_weights:
                 if isinstance(weight, np.numpy_boxes.ArrayBox):
-                    weights_.append(weight._value)
+                    penalty_weights_.append(weight._value)
                 else:
-                    weights_.append(weight)
-            weights = weights_
+                    penalty_weights_.append(weight)
+            penalty_weights = penalty_weights_
 
-            print(angles, weights)
-
-            cost_operator = self.create_cost_operator(self.problem, weights)
+            cost_operator = self.create_cost_operator(self.problem, penalty_weights)
             self.dev = qml.device(self.backend, wires=cost_operator.wires)
-            probs_func = self.get_probs_func(self.problem, weights)
+            probs_func = self.get_probs_func(self.problem, penalty_weights)
 
             probs = probs_func(angles)
             if isinstance(probs, np.numpy_boxes.ArrayBox):
@@ -168,7 +166,7 @@ class H_QAOA(QAOA):
     #         "hyper_args": hyper_args,
     #     }
 
-    def solve(self, weights: list[float] | None = None,
+    def solve(self, penalty_weights: list[float] | None = None,
               gamma: list[float] | None = None,
               beta: list[float] | None = None) -> SolverResult:
         # if gamma is None and self.gamma is None:
@@ -178,34 +176,34 @@ class H_QAOA(QAOA):
 
         # gamma = self.gamma if gamma is None else gamma
         # beta = self.beta if beta is None else beta
-        if weights is not None:
-            weights = self.weights.update(init=weights)
+        if penalty_weights is not None:
+            penalty_weights = self.penalty_weights.update(init=penalty_weights)
         else:
-            weights = self.weights
+            penalty_weights = self.penalty_weights
         gamma_ = self.gamma if gamma is None else self.gamma.update(init=gamma)
         beta_ = self.beta if beta is None else self.beta.update(init=beta)
 
         # opt_wrapper = LocalOptimizerFunction(
         #         self.pqc, self.problem, best_hargs)
         # opt_res = self.optimizer.minimize(opt_wrapper, opt_args)
-        # func = self.get_expval_circuit(weights)
+        # func = self.get_expval_circuit(penalty_weights)
 
         # opt_res = self.optimizer.minimize(func, angles)
         # assert gamma
         # assert beta
-        params = gamma_ + beta_ + self.weights
+        params = gamma_ + beta_ + self.penalty_weights
 
         opt_res = self.optimizer.minimize(
             self.get_expval_circuit(), params)
 
         angles = opt_res.params[:2*self.layers]
-        weights_res = opt_res.params[2*self.layers:]
+        penalty_weights_res = opt_res.params[2*self.layers:]
 
         gamma_res = angles[:len(angles) // 2]
         beta_res = angles[len(angles) // 2:]
 
         return SolverResult(
-            self.run_with_probs(self.problem, angles, weights_res),
-            {'gamma': gamma_res, 'beta': beta_res, 'weights': weights_res},
+            self.run_with_probs(self.problem, angles, penalty_weights_res),
+            {'gamma': gamma_res, 'beta': beta_res, 'penalty_weights': penalty_weights_res},
             opt_res.history,
         )

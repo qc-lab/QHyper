@@ -23,7 +23,7 @@ Package Content
     Problem  -- Base class for problems.
 
     knapsack.KnapsackProblem -- Knapsack problem.
-    tsp.TSPProblem -- Traveling Salesman Problem.
+    tsp.TravelingSalesmanProblem -- Traveling Salesman Problem.
     maxcut.MaxCutProblem -- Max-Cut problem.
     workflow_scheduling.WorkflowSchedulingProblem -- Workflow Scheduling problem.
     community_detection.CommunityDetectionProblem -- Community Detection problem.
@@ -31,12 +31,6 @@ Package Content
 
 from typing import Type, Any
 import copy
-
-# from .knapsack import KnapsackProblem
-# from .tsp import TSPProblem
-# from .maxcut import MaxCutProblem
-# from .workflow_scheduling import WorkflowSchedulingProblem
-# from .community_detection import CommunityDetectionProblem, Network # noqa 401
 
 from QHyper.util import search_for
 
@@ -54,28 +48,27 @@ class Problems:
                                         | search_for(Problem, 'custom'))
             Problems.custom_fetched = True
 
-        if name in Problems.custom_problems:
-            return Problems.custom_problems[name]
-        elif name == "knapsack":
+        name_ = name.lower()
+
+        if name_ in Problems.custom_problems:
+            return Problems.custom_problems[name_]
+        elif name_ in ["knapsack", "knapsackproblem"]:
             from .knapsack import KnapsackProblem
             return KnapsackProblem
-        elif name == "tsp":
-            from .tsp import TSPProblem
-            return TSPProblem
-        elif name == "maxcut":
+        elif name_ in ["tsp", "travelingsalesmanproblem"]:
+            from .tsp import TravelingSalesmanProblem
+            return TravelingSalesmanProblem
+        elif name_ in ["maxcut", "maxcutproblem"]:
             from .maxcut import MaxCutProblem
             return MaxCutProblem
-        elif name == "workflow_scheduling":
+        elif name_ in ["workflow_scheduling", "workflowschedulingproblem"]:
             from .workflow_scheduling import WorkflowSchedulingProblem
             return WorkflowSchedulingProblem
-        elif name == "community_detection":
+        elif name_ in ["community_detection", "communitydetectionproblem"]:
             from .community_detection import CommunityDetectionProblem
             return CommunityDetectionProblem
         else:
             raise ValueError(f"Problem {name} not found")
-
-# PROBLEMS.update(search_for(Problem, 'QHyper/custom'))
-# PROBLEMS.update(search_for(Problem, 'custom'))
 
 
 class ProblemConfigException(Exception):

@@ -48,8 +48,8 @@ solver_config = {
     'problem': {
         'type': 'knapsack',
         'max_weight': 2,
-        'items_weights': [1, 1, 1],
-        'items_values': [2, 2, 1],
+        'item_weights': [1, 1, 1],
+        'item_values': [2, 2, 1],
     }
 }
 solver = solver_from_config(solver_config)

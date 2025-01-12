@@ -27,23 +27,36 @@ class QML_QAOA(QAOA):
 
     Attributes
     ----------
-    layers : int, default 3
+    problem : Problem
+        The problem to be solved.
+    layers : int
         Number of layers.
-    mixer : str, default "pl_x_mixer"
-        Mixer name.
-    backend : str, default "default.qubit"
-        Backend device for PennyLane.
-    optimizer : str, default ""
-        Optimizer name.
-    optimizer_args : dict[str, Any], default {}
-        Optimizer arguments.
+    gamma : OptimizationParameter
+        Vector of gamma angles used in cost Hamiltonian. Size of the vector
+        should be equal to the number of layers.
+    beta : OptimizationParameter
+        Vector of beta angles used in mixing Hamiltonian. Size of the vector
+        should be equal to the number of layers.
+    optimizer : Optimizer
+        Optimizer used in the classical part of the algorithm.
+    penalty_weights : list[float] | None
+        Penalty weights used for converting Problem to QUBO. They connect cost function
+        with constraints. If not specified, all penalty weights are set to 1.
+    backend : str 
+        Backend for PennyLane.
+    mixer : str
+        Mixer name. Currently only 'pl_x_mixer' is supported.
+    qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
+        Cache for QUBO.
+    dev : qml.Device
+        PennyLane device instance.
     """
     problem: Problem
     layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
-    weights: NDArray | None = None
+    penalty_weights: NDArray | None = None
     mixer: str = "pl_x_mixer"
     backend: str = "default.qubit"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
@@ -55,9 +68,9 @@ class QML_QAOA(QAOA):
             raise ValueError(f"Optimizer {self.optimizer} not supported")
 
     def get_expval_circuit(
-        self, weights: list[float]
+        self, penalty_weights: list[float]
     ) -> Callable[[list[float]], OptimizationResult]:
-        cost_operator = self.create_cost_operator(self.problem, weights)
+        cost_operator = self.create_cost_operator(self.problem, penalty_weights)
 
         self.dev = qml.device(self.backend, wires=cost_operator.wires)
 
@@ -70,8 +83,8 @@ class QML_QAOA(QAOA):
 
     def _run_optimizer(
             self,
-            weights: list[float],
+            penalty_weights: list[float],
             angles: OptimizationParameter
     ) -> OptimizationResult:
         return self.optimizer.minimize_expval_func(
-            cast(qml.QNode, self.get_expval_circuit(weights)), angles)
+            cast(qml.QNode, self.get_expval_circuit(penalty_weights)), angles)

@@ -66,7 +66,7 @@ solvers, problems and optimizer - for that checkout :doc:`solver_configuration` 
     from QHyper.solvers import VQA
     from QHyper.problems.knapsack import KnapsackProblem
 
-    problem = KnapsackProblem(max_weight=2, items_weights=[1, 1, 1], items_values=[2, 2, 1])
+    problem = KnapsackProblem(max_weight=2, item_weights=[1, 1, 1], item_values=[2, 2, 1])
 
     vqa = VQA.from_config(problem, config=solver_config)
 
@@ -81,8 +81,8 @@ You can also create a solver from a config file. That's also suggested way to cr
     problem_config = {
         'type': 'knapsack',
         'max_weight': 2,
-        'items_weights': [1, 1, 1],
-        'items_values': [2, 2, 1],
+        'item_weights': [1, 1, 1],
+        'item_values': [2, 2, 1],
     }
 
     full_solver_config = {

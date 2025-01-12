@@ -10,8 +10,8 @@ def get_problem_config():
     problem_config = {
         "type": "knapsack",
         "max_weight": 2,
-        "items_weights": [1, 1, 1],
-        "items_values": [2, 2, 1],
+        "item_weights": [1, 1, 1],
+        "item_values": [2, 2, 1],
     }
 
     params_config = {
@@ -155,7 +155,7 @@ def test_random():
                 "number_of_samples": 2,
                 "disable_tqdm": False
             },
-            'weights': {
+            'penalty_weights': {
                 'min': [1]*3,
                 'max': [10]*3,
             },
@@ -190,7 +190,7 @@ def test_cem():
                 "epochs": 2,
                 "disable_tqdm": False,
             },
-            'weights': {
+            'penalty_weights': {
                 'min': [1]*3,
                 'max': [10]*3,
                 'init': [1, 2.5, 2.5],
@@ -224,7 +224,7 @@ def test_grid():
                 "processes": 1,
                 "disable_tqdm": False,
             },
-            'weights': {
+            'penalty_weights': {
                 'min': [1]*3,
                 'max': [10]*3,
                 'step': [8, 7, 6],

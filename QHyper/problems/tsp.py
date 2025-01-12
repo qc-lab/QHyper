@@ -89,7 +89,7 @@ class TSP:
         )
 
 
-class TSPProblem(Problem):
+class TravelingSalesmanProblem(Problem):
     """
     Class defining objective function and constraints for TSP
 

@@ -57,8 +57,8 @@ Variational Quantum Algorithm Solvers
 """
 
 import copy
-import pkgutil
-import importlib
+import dataclasses
+
 
 from typing import Type, Any
 
@@ -70,23 +70,6 @@ from QHyper.optimizers import Optimizer, create_optimizer, OptimizationParameter
 from QHyper.solvers.base import (  # noqa F401
     Solver, SolverResult, SolverConfigException)
 from QHyper.solvers.hyper_optimizer import HyperOptimizer
-
-# from .vqa.base import VQA
-# from .classical.gurobi import Gurobi
-# from .quantum_annealing.cqm import CQM
-# from .quantum_annealing.dqm import DQM
-# from .quantum_annealing.advantage import Advantage
-#
-
-# SOLVERS: dict[str, Type[Solver]] = {
-#     'vqa': VQA,
-#     'gurobi': Gurobi,
-#     'cqm': CQM,
-#     'dqm': DQM,
-#     'advantage': Advantage
-# }
-# SOLVERS.update(search_for(Solver, 'QHyper/custom'))
-# SOLVERS.update(search_for(Solver, 'custom'))
 
 
 class Solvers:
@@ -104,83 +87,34 @@ class Solvers:
                 raise FileNotFoundError(
                     f"Solver {name} not found in custom solvers"
                 )
-        if name.lower() == "qaoa":
+            
+        name_ = name.lower()
+        if name_ in ["qaoa"]:
             from .gate_based.pennylane.qaoa import QAOA
             return QAOA
-        elif name.lower() == "qml_qaoa":
+        elif name_ in ["qml_qaoa"]:
             from .gate_based.pennylane.qml_qaoa import QML_QAOA
             return QML_QAOA
-        elif name.lower() == "wf_qaoa":
+        elif name_ in ["wf_qaoa"]:
             from .gate_based.pennylane.wf_qaoa import WF_QAOA
             return WF_QAOA
-        elif name.lower() == "h_qaoa":
+        elif name_ in ["h_qaoa"]:
             from .gate_based.pennylane.h_qaoa import H_QAOA
             return H_QAOA
-        elif name.lower() == "gurobi":
+        elif name_ in ["gurobi"]:
             from .classical.gurobi.gurobi import Gurobi
             return Gurobi
-        elif name.lower() == "cqm":
+        elif name_ in ["cqm"]:
             from .quantum_annealing.dwave.cqm import CQM
             return CQM
-        elif name.lower() == "dqm":
+        elif name_ in ["dqm"]:
             from .quantum_annealing.dwave.dqm import DQM
             return DQM
-        elif name.lower() == "advantage":
+        elif name_ in ["advantage"]:
             from .quantum_annealing.dwave.advantage import Advantage
             return Advantage
         else:
             raise SolverConfigException(f"Solver {name} not found")
-
-
-# def get_solver(name: str, category: str, platform: str) -> Solver:
-#     try:
-#         module = importlib.import_module(
-#             f'QHyper.solvers.{category}.{platform}.{name.lower()}')
-#         if hasattr(module, name) and issubclass(getattr(module, name), Solver):
-#             return getattr(module, name)
-#         raise ImportError
-#     except ImportError:
-#         raise FileNotFoundError(
-#             "Solver with"
-#             f"{f'category \'{category}\' and ' if category else ''}"
-#             f"{f'platform \'{platform}\' and ' if platform else ''}"
-#             f"{name} not found"
-#         )
-    # import pathlib
-    # current_path = pathlib.Path(os.path.relpath(__file__))
-
-    # search_path = f'{category}/{platform}/*.py'
-    # print(current_path.parent)
-    # print(str(current_path.parent.joinpath(search_path)))
-    # file_names = glob.glob(str(
-    #     current_path.parent.joinpath(search_path).resolve()))
-    # print(file_names)
-    # if len(file_names) == 0:
-    #     raise FileNotFoundError(
-    #         "Solver with"
-    #         f"{f'category \'{category}\' and ' if category else ''}"
-    #         f"{f'platform \'{platform}\' and ' if platform else ''}"
-    #         f"{name} not found"
-    #     )
-
-    # for file_name in file_names:
-    #     print(file_name)
-    #     try:
-    #         module = importlib.import_module(file_name)
-    #         print(module)
-
-    #         if hasattr(module, name) and issubclass(getattr(module, name),
-    #                                                 Solver):
-    #             return getattr(module, name)
-    #     except ImportError as e:
-    #         print(e)
-    #         continue
-    # raise FileNotFoundError(
-    #     "Solver with"
-    #     f"{f'category \'{category}\' and ' if category else ''}"
-    #     f"{f'platform \'{platform}\' and ' if platform else ''}"
-    #     f"{name} not found"
-    # )
 
 
 def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
@@ -218,23 +152,17 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
         raise SolverConfigException("Solver configuration was not provided")
     if 'name' not in config['solver']:
         raise SolverConfigException("Solver name was not provided")
-    if 'category' not in config['solver']:
-        raise SolverConfigException("Solver category was not provided")
-    if 'platform' not in config['solver']:
-        raise SolverConfigException("Solver platform was not provided")
 
     try:
         solver_class = Solvers.get(
             config['solver']['name'],
-            config['solver']['category'],
-            config['solver']['platform']
+            config['solver'].get('category', ''),
+            config['solver'].get('platform', '')
         )
     except FileNotFoundError:
         raise SolverConfigException(
             f"Solver {config['solver']['name']} not found"
         )
-    import dataclasses
-    # print(dataclasses.fields(solver_class))
 
     for field in dataclasses.fields(solver_class):
         if not field.init:
@@ -251,28 +179,14 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
             config['solver'][field.name] = OptimizationParameter(
                 **config['solver'][field.name]
             )
-            # if config['solver'][field.name].get('type') in OPTIMIZERS:
-            #     optimizer_class = OPTIMIZERS[
-            #         config['solver'][field.name].pop('type')]
-            # else:
-            #     raise SolverConfigException(
-            #         f"Optimizer {config['solver'][field.name].get('type')} "
-            #         "not found"
-            #     )
-
-            # config['solver'][field.name] = optimizer_class(
-            #     **config['solver'][field.name]
-            # )
 
     try:
         error_msg = "Solver configuration was not provided"
         solver_config = config.pop('solver')
         error_msg = "Solver name was not provided"
         solver_name = solver_config.pop('name')
-        error_msg = "Solver category was not provided"
-        solver_category = solver_config.pop('category')
-        error_msg = "Solver platform was not provided"
-        solver_platform = solver_config.pop('platform')
+        solver_category = solver_config.pop('category', '')
+        solver_platform = solver_config.pop('platform', '')
         solver_class = Solvers.get(
             solver_name, solver_category, solver_platform)
     except KeyError:

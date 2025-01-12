@@ -39,9 +39,9 @@ class WF_QAOA(QAOA):
         should be equal to the number of layers.
     optimizer : Optimizer
         Optimizer used in the classical part of the algorithm.
-    weights : list[float] | None
-        Weights used for converting Problem to QUBO. They connect cost function
-        with constraints. If not specified, all weights are set to 1.
+    penalty_weights : list[float] | None
+        Penalty weights used for converting Problem to QUBO. They connect cost function
+        with constraints. If not specified, all penalty weights are set to 1.
     limit_results : int | None, default None
         Specifies how many results should be considered in the evaluation of
         the objective function. If None, all results are considered.
@@ -63,7 +63,7 @@ class WF_QAOA(QAOA):
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
-    weights: list[float] | None
+    penalty_weights: list[float] | None
     penalty: float = 0
     backend: str = "default.qubit"
     mixer: str = "pl_x_mixer"
@@ -78,7 +78,7 @@ class WF_QAOA(QAOA):
             layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
-            weights: list[float] | None = None,
+            penalty_weights: list[float] | None = None,
             penalty: float = 0,
             backend: str = "default.qubit",
             mixer: str = "pl_x_mixer",
@@ -90,20 +90,20 @@ class WF_QAOA(QAOA):
         self.gamma = gamma
         self.beta = beta
         self.penalty = penalty
-        self.weights = weights
+        self.penalty_weights = penalty_weights
         self.limit_results = limit_results
         self.layers = layers
         self.backend = backend
         self.mixer = mixer
         self.qubo_cache = {}
 
-    def get_expval_circuit(self, weights: list[float]
+    def get_expval_circuit(self, penalty_weights: list[float]
                            ) -> Callable[[list[float]], float]:
-        cost_operator = self.create_cost_operator(self.problem, weights)
+        cost_operator = self.create_cost_operator(self.problem, penalty_weights)
 
         self.dev = qml.device(self.backend, wires=cost_operator.wires)
 
-        probs_func = self.get_probs_func(self.problem, weights)
+        probs_func = self.get_probs_func(self.problem, penalty_weights)
 
         def wrapper(angles: list[float]) -> float:
             probs = probs_func(angles)

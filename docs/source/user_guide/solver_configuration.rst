@@ -14,8 +14,8 @@ This tutorial assumes the following sample optimization problem definition:
         problem:
             type: knapsack
             max_weight: 2
-            items_weights: [1, 1, 1]
-            items_values: [2, 2, 1]
+            item_weights: [1, 1, 1]
+            item_values: [2, 2, 1]
 
     .. code-tab:: json
 
@@ -23,8 +23,8 @@ This tutorial assumes the following sample optimization problem definition:
             "problem": {
                 "type": "knapsack",
                 "max_weight": 2,
-                "items_weights": [1, 1, 1],
-                "items_values": [2, 2, 1]
+                "item_weights": [1, 1, 1],
+                "item_values": [2, 2, 1]
             }
         }
 
@@ -75,7 +75,7 @@ the Knapsack Problem
 where
  * :math:`N=3` is the number of available items;
  * :math:`W=` ``max_weight`` is the maximum weight of the knapsack;
- * :math:`c_i` and :math:`w_i` are the costs and weights specified in ``items_values`` and ``items_weights`` lists of the configuration;
+ * :math:`c_i` and :math:`w_i` are the costs and weights specified in ``item_values`` and ``item_weights`` lists of the configuration;
  * The goal is to optimize :math:`\boldsymbol{x} = [x_i]_N` which is a Boolean vector, where :math:`x_i = 1`  if and only if the item :math:`i` was selected to be inserted into the knapsack;
  * :math:`\boldsymbol{y} = [y_i]_W` is a one-hot vector where :math:`y_i = 1` if and only if the weight of the knapsack is equal to :math:`i`;
  * :math:`\alpha_j` are penalty weights  (i.e. Lagrangian multipliers, hyperparameters of the optimized function).

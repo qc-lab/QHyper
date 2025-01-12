@@ -87,7 +87,7 @@ class Advantage(Solver):
     """
 
     problem: Problem
-    weights: list[float] | None = None
+    penalty_weights: list[float] | None = None
     version: str = "Advantage_system5.4"
     region: str = "eu-central-1"
     num_reads: int = 1
@@ -96,7 +96,7 @@ class Advantage(Solver):
 
     def __init__(self,
                  problem: Problem,
-                 weights: list[float] | None = None,
+                 penalty_weights: list[float] | None = None,
                  version: str = "Advantage_system5.4",
                  region: str = "eu-central-1",
                  num_reads: int = 1,
@@ -104,7 +104,7 @@ class Advantage(Solver):
                  use_clique_embedding: bool = False,
                  token: str | None = None) -> None:
         self.problem = problem
-        self.weights = weights
+        self.penalty_weights = penalty_weights
         self.version = version
         self.region = region
         self.num_reads = num_reads
@@ -149,10 +149,10 @@ class Advantage(Solver):
 
     #     return cls(problem, version, region, num_reads, chain_strength, hyper_optimizer, params_inits)
 
-    def solve(self, weights: list[float] | None = None) -> Any:
-        if weights is None and self.weights is None:
-            weights = [1.] * (len(self.problem.constraints) + 1)
-        weights = self.weights if weights is None else weights
+    def solve(self, penalty_weights: list[float] | None = None) -> Any:
+        if penalty_weights is None and self.penalty_weights is None:
+            penalty_weights = [1.] * (len(self.problem.constraints) + 1)
+        penalty_weights = self.penalty_weights if penalty_weights is None else penalty_weights
 
         if not self.use_clique_embedding:
             embedding_compose = EmbeddingComposite(self.sampler)
@@ -167,21 +167,21 @@ class Advantage(Solver):
 
         # if self.hyper_optimizer:
         #     args = (
-        #         np.array(params_inits["weights"]).flatten() if params_inits["weights"]
+        #         np.array(params_inits["penalty_weights"]).flatten() if params_inits["penalty_weights"]
         #         else None
         #     )
 
         #     result = self.hyper_optimizer.minimize(wrapper, args)
         #     opt_result = result.params
 
-        qubo = Converter.create_qubo(self.problem, weights)
+        qubo = Converter.create_qubo(self.problem, penalty_weights)
         qubo_terms, offset = convert_qubo_keys(qubo)
         bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
         sampleset = embedding_compose.sample(
             bqm, num_reads=self.num_reads, chain_strength=self.chain_strength
         )
 
-        # qubo_arguments = opt_result if self.hyper_optimizer else params_inits.get("weights", [])
+        # qubo_arguments = opt_result if self.hyper_optimizer else params_inits.get("penalty_weights", [])
         # solutions = wrapper.run_advantage(qubo_arguments)
 
         result = np.recarray(
@@ -200,7 +200,7 @@ class Advantage(Solver):
                 solution.num_occurrences / num_of_shots)
             result['energy'][i] = solution.energy
 
-        return SolverResult(result, {"weights": weights}, [])
+        return SolverResult(result, {"penalty_weights": penalty_weights}, [])
 
     def prepare_solver_result(self, result: defaultdict, arguments: npt.NDArray) -> SolverResult:
         sorted_keys = sorted(result.keys(), key=lambda x: int(''.join(filter(str.isdigit, x))))

@@ -59,41 +59,30 @@ class Optimizers:
                 search_for(Optimizer, 'QHyper/custom')
                 | search_for(Optimizer, 'custom'))
             Optimizers.custom_fetched = True
+        
+        name_ = name.lower()
 
-        if name in Optimizers.custom_optimizers:
-            return Optimizers.custom_optimizers[name]
-        elif name.lower() == "scipy" or name.lower() == "scipyminimizer":
+        if name_ in Optimizers.custom_optimizers:
+            return Optimizers.custom_optimizers[name_]
+        elif name_ in ["scipy", "scipyminimizer"]:
             from .scipy_minimizer import ScipyOptimizer
             return ScipyOptimizer
-        elif name.lower() == "random" or name.lower() == "randomsearch":
+        elif name_ in ["random", "randomsearch"]:
             from .random import Random
             return Random
-        elif name.lower() == "qml" or name.lower() == "qmlgradientdescent":
+        elif name_ in ["qml", "qmlgradientdescent"]:
             from .qml_gradient_descent import QmlGradientDescent
             return QmlGradientDescent
-        elif name.lower() == "cem":
+        elif name_ in ["cem", "crossentropymethod"]:
             from .cem import CEM
             return CEM
-        elif name.lower() == "grid" or name.lower() == "gridsearch":
+        elif name_ in ["grid", "gridsearch"]:
             from .grid_search import GridSearch
             return GridSearch
-        elif name.lower() == "dummy":
+        elif name_ in ["dummy"]:
             return Dummy
         else:
             raise OptimizerError(f"Optimizer {name} not found")
-
-
-# OPTIMIZERS: dict[str, Type[Optimizer]] = {
-#     'scipy': ScipyOptimizer,
-#     'random': Random,
-#     'qml': QmlGradientDescent,
-#     'cem': CEM,
-#     # 'basinhopping': Basinhopping,
-#     'grid': GridSearch,
-#     'dummy': Dummy,
-# }
-# OPTIMIZERS.update(search_for(Optimizer, 'QHyper/custom'))
-# OPTIMIZERS.update(search_for(Optimizer, 'custom'))
 
 
 def create_optimizer(config: dict[str, Any]) -> Optimizer:

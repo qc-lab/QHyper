@@ -16,8 +16,8 @@ def get_problem_config():
     problem_config = {
         "type": "knapsack",
         "max_weight": 2,
-        "items_weights": [1, 1, 1],
-        "items_values": [2, 2, 1],
+        "item_weights": [1, 1, 1],
+        "item_values": [2, 2, 1],
     }
 
     params_config = {
@@ -27,7 +27,7 @@ def get_problem_config():
         'beta': {
             'init': [1]*3,
         },
-        # weights': {
+        # penalty_weights': {
         # 'angles': [[0.5]*3, [1]*3],
         # 'hyper_args': [1, 2.5, 2.5],
     }
@@ -50,7 +50,7 @@ def test_qaoa():
             'category': 'gate_based',
             'platform': 'pennylane',
             'layers': 3,
-            'weights': [1, 2.5, 2.5],
+            'penalty_weights': [1, 2.5, 2.5],
             **params_config
         },
         "problem": problem_config
@@ -105,7 +105,7 @@ def test_wfqaoa():
             "limit_results": 10,
             "penalty": 2,
             "backend": "default.qubit",
-            "weights": [1, 2.5, 2.5],
+            "penalty_weights": [1, 2.5, 2.5],
             **params_config,
         },
         "problem": problem_config
@@ -161,7 +161,7 @@ def test_hqaoa():
             "penalty": 2,
             "backend": "default.qubit",
             **params_config,
-            'weights': {
+            'penalty_weights': {
                 'init': [1, 2.5, 2.5],
             }
         },

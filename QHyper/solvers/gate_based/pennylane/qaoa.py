@@ -33,9 +33,9 @@ class QAOA(Solver):
         should be equal to the number of layers.
     optimizer : Optimizer
         Optimizer used in the classical part of the algorithm.
-    weights : list[float] | None
-        Weights used for converting Problem to QUBO. They connect cost function
-        with constraints. If not specified, all weights are set to 1.
+    penalty_weights : list[float] | None
+        Penalty weights used for converting Problem to QUBO. They connect cost function
+        with constraints. If not specified, all penalty weights are set to 1.
     backend : str 
         Backend for PennyLane.
     mixer : str
@@ -51,7 +51,7 @@ class QAOA(Solver):
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
-    weights: list[float] | None = None
+    penalty_weights: list[float] | None = None
     backend: str = "default.qubit"
     mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
@@ -64,7 +64,7 @@ class QAOA(Solver):
             layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
-            weights: list[float] | None = None,
+            penalty_weights: list[float] | None = None,
             optimizer: Optimizer = Dummy(),
             backend: str = "default.qubit",
             mixer: str = "pl_x_mixer"
@@ -73,7 +73,7 @@ class QAOA(Solver):
         self.optimizer = optimizer
         self.gamma = gamma
         self.beta = beta
-        self.weights = weights
+        self.penalty_weights = penalty_weights
         self.layers = layers
         self.backend = backend
         self.mixer = mixer
@@ -84,12 +84,12 @@ class QAOA(Solver):
             raise ValueError("Device not initialized")
         return len(self.dev.wires)
 
-    def create_cost_operator(self, problem: Problem, weights: list[float]
+    def create_cost_operator(self, problem: Problem, penalty_weights: list[float]
                              ) -> qml.Hamiltonian:
-        if tuple(weights) not in self.qubo_cache:
-            qubo = Converter.create_qubo(problem, weights)
-            self.qubo_cache[tuple(weights)] = self._create_cost_operator(qubo)
-        return self.qubo_cache[tuple(weights)]
+        if tuple(penalty_weights) not in self.qubo_cache:
+            qubo = Converter.create_qubo(problem, penalty_weights)
+            self.qubo_cache[tuple(penalty_weights)] = self._create_cost_operator(qubo)
+        return self.qubo_cache[tuple(penalty_weights)]
 
     def _create_cost_operator(self, qubo: Polynomial) -> qml.Hamiltonian:
         result: qml.Hamiltonian | None = None
@@ -138,9 +138,9 @@ class QAOA(Solver):
         qml.layer(qaoa_layer, self.layers, gamma, beta)
 
     def get_expval_circuit(
-        self, weights: list[float]
+        self, penalty_weights: list[float]
     ) -> Callable[[list[float]], OptimizationResult]:
-        cost_operator = self.create_cost_operator(self.problem, weights)
+        cost_operator = self.create_cost_operator(self.problem, penalty_weights)
 
         self.dev = qml.device(self.backend, wires=cost_operator.wires)
 
@@ -157,21 +157,21 @@ class QAOA(Solver):
         return wrapper
 
     def get_probs_func(
-        self, problem: Problem, weights: list[float]
+        self, problem: Problem, penalty_weights: list[float]
     ) -> Callable[[list[float]], list[float]]:
         """Returns function that takes angles and returns probabilities
 
         Parameters
         ----------
-        weights : list[float]
-            weights for converting Problem to QUBO
+        penalty_weights : list[float]
+            Penalty weights for converting Problem to QUBO
 
         Returns
         -------
         Callable[[list[float]], float]
             Returns function that takes angles and returns probabilities
         """
-        cost_operator = self.create_cost_operator(problem, weights)
+        cost_operator = self.create_cost_operator(problem, penalty_weights)
 
         self.dev = qml.device(self.backend, wires=cost_operator.wires)
 
@@ -197,9 +197,9 @@ class QAOA(Solver):
         self,
         problem: Problem,
         angles: list[float],
-        weights: list[float],
+        penalty_weights: list[float],
     ) -> np.recarray:
-        probs = self.get_probs_func(problem, weights)(angles)
+        probs = self.get_probs_func(problem, penalty_weights)(angles)
 
         recarray = np.recarray((len(probs),),
                                dtype=[(wire, 'i4') for wire in
@@ -240,12 +240,12 @@ class QAOA(Solver):
     #         "hyper_args": hyper_args,
     #     }
 
-    def _run_optimizer(self, weights: list[float],
+    def _run_optimizer(self, penalty_weights: list[float],
                        angles: OptimizationParameter) -> OptimizationResult:
         return self.optimizer.minimize(
-            self.get_expval_circuit(weights), angles)
+            self.get_expval_circuit(penalty_weights), angles)
 
-    def solve(self, weights: list[float] | None = None,
+    def solve(self, penalty_weights: list[float] | None = None,
               gamma: list[float] | None = None,
               beta: list[float] | None = None) -> SolverResult:
         # if gamma is None and self.gamma is None:
@@ -255,9 +255,9 @@ class QAOA(Solver):
 
         # gamma = self.gamma if gamma is None else gamma
         # beta = self.beta if beta is None else beta
-        if weights is None and self.weights is None:
-            weights = [1.] * (len(self.problem.constraints) + 1)
-        weights = self.weights if weights is None else weights
+        if penalty_weights is None and self.penalty_weights is None:
+            penalty_weights = [1.] * (len(self.problem.constraints) + 1)
+        penalty_weights = self.penalty_weights if penalty_weights is None else penalty_weights
 
         gamma_ = self.gamma if gamma is None else self.gamma.update(init=gamma)
         beta_ = self.beta if beta is None else self.beta.update(init=beta)
@@ -265,19 +265,19 @@ class QAOA(Solver):
         # opt_wrapper = LocalOptimizerFunction(
         #         self.pqc, self.problem, best_hargs)
         # opt_res = self.optimizer.minimize(opt_wrapper, opt_args)
-        # func = self.get_expval_circuit(weights)
+        # func = self.get_expval_circuit(penalty_weights)
 
         # opt_res = self.optimizer.minimize(func, angles)
         # assert gamma
         # assert beta
         angles = gamma_ + beta_
-        opt_res = self._run_optimizer(weights, angles)
+        opt_res = self._run_optimizer(penalty_weights, angles)
 
         gamma_res = opt_res.params[:len(opt_res.params) // 2]
         beta_res = opt_res.params[len(opt_res.params) // 2:]
 
         return SolverResult(
-            self.run_with_probs(self.problem, opt_res.params, weights),
+            self.run_with_probs(self.problem, opt_res.params, penalty_weights),
             {'gamma': gamma_res, 'beta': beta_res},
             opt_res.history,
         )
