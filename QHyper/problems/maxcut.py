@@ -3,12 +3,10 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-from typing import cast
-
 import numpy as np
 import sympy
 
-from QHyper.parser import from_sympy
+from QHyper.polynomial import Polynomial
 
 from QHyper.problems.base import Problem
 
@@ -44,13 +42,14 @@ class MaxCutProblem(Problem):
         self.constraints = []
 
     def _set_objective_function(self) -> None:
-        equation = cast(sympy.Expr, 0)
+        equation = Polynomial(0)
 
         for e in self.edges:
-            x_i, x_j = self.variables[e[0]], self.variables[e[1]]
-            equation -= x_i * (1 - x_j) + x_j * (1 - x_i)
-
-        self.objective_function = from_sympy(equation)
+            
+            x_i = f"x{e[0]}"
+            x_j = f"x{e[1]}"
+            equation -= Polynomial({(x_i,): 1, (x_j,): 1, (x_i, x_j): -2})
+        self.objective_function = equation
 
     def get_score(self, result: np.record, penalty: float = 0) -> float:
         sum = 0

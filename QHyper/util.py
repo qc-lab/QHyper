@@ -2,6 +2,19 @@
 # Smart Growth Operational Programme (2014-2020), Measure 4.2
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
+"""
+This module contains utility functions that are used across the project.
+
+.. rubric:: Functions
+
+.. autofunction:: weighted_avg_evaluation
+.. autofunction:: sort_solver_results
+.. autofunction:: add_evaluation_to_results
+.. autofunction:: search_for
+
+"""
+
+
 import importlib
 import importlib.util
 import pathlib
@@ -26,6 +39,38 @@ def weighted_avg_evaluation(
     limit_results: int | None = None,
     normalize: bool = True,
 ) -> float:
+    """Calculate weighted average evaluation of results.
+
+    Example:
+
+    .. code-block:: python
+
+        results = solver.solve()
+        score = weighted_avg_evaluation(
+            results.probabilities, solver.problem.get_score, penalty=3,
+            limit_results=100, normalize=True)
+
+
+    Parameters
+    ----------
+    results : np.recarray
+        Results to evaluate. It should contain variables and probability.
+    score_function : Callable[[np.record, float], float]
+        Function to evaluate results. Most often it's a problem's get_score
+        method.
+    penalty : float, optional
+        Penalty for the constraint violation, by default 0
+    limit_results : int, optional
+        Number of results to evaluate, by default None
+    normalize : bool, optional
+        Normalize the score, by default True, applicable when the limit is set
+
+    Returns
+    -------
+    float
+        Weighted average evaluation of results.
+    """    
+
     score: float = 0
 
     sorted_results = sort_solver_results(results, limit_results)
@@ -42,6 +87,28 @@ def sort_solver_results(
     results: np.recarray,
     limit_results: int | None = None,
 ) -> np.recarray:
+    """Sort solver results by probability.
+
+    Example:
+
+    .. code-block:: python
+
+        results = solver.solve()
+        sorted_results = sort_solver_results(results.probabilities, 100)
+    
+    Parameters
+    ----------
+    results : np.recarray
+        Results to sort. It should contain variables and probability.
+    limit_results : int, optional
+        Number of results to return, by default None
+    
+    Returns
+    -------
+    np.recarray
+        Sorted results.    
+    """
+
     limit_results = limit_results or len(results)
     results_ = np.sort(results, order='probability')
     return results_[::-1][:limit_results]
@@ -52,6 +119,32 @@ def add_evaluation_to_results(
     score_function: Callable[[np.record, float], float],
     penalty: float = 0,
 ) -> np.recarray:
+    """Add evaluation to results.
+
+    Example:
+
+    .. code-block:: python
+    
+        results = solver.solve()
+        add_evaluation_to_results(
+            results.probabilities, solver.problem.get_score)
+
+    Parameters
+    ----------
+    results : np.recarray
+        Results to evaluate. It should contain variables and probability.
+    score_function : Callable[[np.record, float], float]
+        Function to evaluate results. Most often it's a problem's get_score
+        method.
+    penalty : float, optional
+        Penalty for the constraint violation, by default 0
+
+    Returns
+    -------
+    np.recarray
+        Results with evaluation added. Can be found under 'evaluation' key.
+    """
+
     if 'evaluation' in results.dtype.names:
         return results
 
@@ -69,10 +162,29 @@ def get_class_name(cls: type) -> str:
     if hasattr(cls, 'name'):
         return cls.name
     return cls.__name__
-    # return re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
 
 
 def search_for(class_type: type, path: str) -> dict[str, type]:
+    """This function searches for classes of a given type in a given path.
+
+    If class contains a name attribute, it will be used as a key in the
+    returned dictionary. Otherwise, the class name will be used.
+    Either way, the key will be lowercased.
+    
+    Parameters
+    ----------
+    class_type : type
+        Type of the class to search for e.g. Problem, Solver.
+    path : str
+        Path to the file or directory to search in. 
+
+    Returns
+    -------
+    dict[str, type]
+        Dictionary of found classes with their names as keys and classes as 
+        values.
+    """
+
     cwd = os.getcwd()
     _path = pathlib.Path(path)
     classes = {}

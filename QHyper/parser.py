@@ -1,3 +1,18 @@
+"""Module for parsing sympy expressions to :py:class:`~QHyper.polynomial.Polynomial`.
+
+This module provides a way to parse sympy expressions and string to 
+:py:class:`~QHyper.polynomial.Polynomial`.
+It is not recommended to use this module for large polynomials as it is very
+slow in comparison to creating Polynomial directly from the dict.
+
+.. rubric:: Functions
+
+.. autofunction:: from_str
+.. autofunction:: from_sympy
+.. autofunction:: to_sympy
+
+"""
+
 import ast
 import sympy
 
@@ -52,6 +67,20 @@ class Parser(ast.NodeVisitor):
 
 
 def to_sympy(poly: Polynomial) -> str:
+    """Method to convert a polynomial to a sympy expression.
+    Might be handy to display the polynomial in a more readable form.
+
+    Parameters
+    ----------
+    poly : Polynomial
+        The polynomial to be converted.
+    
+    Returns
+    -------
+    str
+        The sympy expression.
+    """
+
     polynomial = ""
     for term, const in poly.terms.items():
         if const < 0:
@@ -63,6 +92,22 @@ def to_sympy(poly: Polynomial) -> str:
 
 
 def from_str(equation: str) -> Polynomial:
+    """Method to parse a string to a polynomial.
+    Uses ast parser to parse the equation. This method is very slow in 
+    comparison to creating Polynomial directly from the dict. Although, for 
+    smaller polynomials, it is not noticeable.
+
+    Parameters
+    ----------
+    equation : str
+        The equation to be parsed in form of string.
+
+    Returns
+    -------
+    Polynomial
+        The parsed polynomial.
+    """
+
     parser = Parser()
     ast_tree = ast.parse(equation)
     parser.visit(ast_tree)
@@ -73,4 +118,20 @@ def from_str(equation: str) -> Polynomial:
 
 
 def from_sympy(equation: sympy.core.Expr) -> Polynomial:
+    """Method to convert a sympy expression to a polynomial.
+    Uses ast parser to parse the equation. This method is very slow in 
+    comparison to creating Polynomial directly from the dict. Although, for 
+    smaller polynomials, it is not noticeable.
+
+    Parameters
+    ----------
+    equation : sympy.core.Expr
+        The sympy expression to be converted.
+    
+    Returns
+    -------
+    Polynomial
+        The converted polynomial.
+    """
+
     return from_str(str(sympy.expand(equation)))

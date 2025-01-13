@@ -3,19 +3,12 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 """
-===============================
-Solvers (:mod:`QHyper.solvers`)
-===============================
-
-.. currentmodule:: QHyper.solvers
-
 Any solver that is in directory 'QHyper/custom' or 'custom' will be
 automatically imported and available for use. Add 'name' attribute to the
 class to make it available in the SOLVERS dictionary (if not solver will be
 available by its class name).
 
-Interfaces
-==========
+.. rubric:: Interface
 
 .. autosummary::
     :toctree: generated/
@@ -24,8 +17,7 @@ Interfaces
     SolverResult -- Dataclass for storing
 
 
-Classical Solvers
-=================
+.. rubric:: Classical Solvers
 
 .. autosummary::
     :toctree: generated/
@@ -33,8 +25,7 @@ Classical Solvers
     classical.gurobi.Gurobi -- Gurobi solver.
 
 
-Quantum Annealing Solvers
-=========================
+.. rubric:: Quantum Annealing Solvers
 
 .. autosummary::
     :toctree: generated/
@@ -44,8 +35,7 @@ Quantum Annealing Solvers
     quantum_annealing.dwave.advantage.Advantage -- Advantage solver.
 
 
-Variational Quantum Algorithm Solvers
-=====================================
+.. rubric:: Gate-based solvers
 
 .. autosummary::
     :toctree: generated/
@@ -54,6 +44,17 @@ Variational Quantum Algorithm Solvers
     gate_based.pennylane.qml_qaoa.QML_QAOA -- QML QAOA solver.
     gate_based.pennylane.wf_qaoa.WF_QAOA -- Weight Free QAOA solver.
     gate_based.pennylane.h_qaoa.H_QAOA -- Hyper QAOA solver.
+
+    
+.. rubric:: Hyper-optimizer
+
+Not really a solver, but a class that can be used to optimize the hyperparameters
+of another solver. It is a wrapper around the solver class.
+
+.. autosummary::
+    :toctree: generated/
+
+    hyper_optimizer.HyperOptimizer -- Hyper-optimizer.
 """
 
 import copy

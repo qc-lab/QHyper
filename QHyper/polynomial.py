@@ -1,3 +1,20 @@
+""" Module for polynomial representation.
+Implementation of the polynomials using dictionaries. Used in the whole system.
+
+.. rubric:: Main class
+
+.. autosummary::
+    :toctree: generated
+
+    Polynomial  -- implementation of the polynomial.
+
+
+.. rubric:: MyPy Type
+
+.. autoclass:: PolynomialType
+
+"""
+
 from dataclasses import dataclass, field
 from collections import defaultdict
 
@@ -24,8 +41,10 @@ class Polynomial:
     Attributes
     ----------
     terms : dict[tuple[str, ...], float]
-        dictionary of terms and their coefficients
-
+        dictionary of terms and their coefficients, where the key is a tuple
+        of variables and the value is the coefficient of the term
+        For example, the polynomial 3*x + 2 + 4*x^2 is represented as
+        {('x',): 3, ('x', 'x'): 4, (): 2}
     """
 
     terms: dict[tuple[str, ...], float] = field(default_factory=dict)
@@ -158,14 +177,43 @@ class Polynomial:
         return self.terms == terms
 
     def separate_const(self) -> tuple['Polynomial', float]:
+        """Method for separating constant term from the rest of the polynomial.
+
+        For example, for polynomial 3*x + 2 + 4*x^2, the method will return
+        3*x + 4*x^2 and 2 or in the actual representation:
+        {('x',): 3, ('x', 'x'): 4, (): 2} will be separated into
+        {('x',): 3, ('x', 'x'): 4} and {(): 2}.
+
+        Returns
+        -------
+        Polynomial
+            Polynomial without the constant term - empty tuple.
+        float
+            Constant term of the polynomial.
+        """
+
         _terms = self.terms.copy()
         constant = _terms.pop(tuple(), 0)
         return Polynomial(_terms), constant
 
     def degree(self) -> int:
+        """Method for calculating the degree of the polynomial.
+
+        Returns
+        -------
+        int
+            The degree of the polynomial.
+        """
         return max(len(term) for term in self.terms)
 
     def get_variables(self) -> set[str]:
+        """Method for extracting variables from the polynomial.
+
+        Returns
+        -------
+        set[str]
+            Set of variables used in the polynomial.
+        """
         return set(variable for term in self.terms for variable in term)
 
 

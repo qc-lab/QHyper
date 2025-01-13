@@ -1,8 +1,8 @@
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
-sys.path.insert(0, os.path.abspath('..'))
+# sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -24,6 +24,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'sphinx_autodoc_typehints',
     'numpydoc',
     'sphinx.ext.graphviz',
     'sphinx.ext.autosectionlabel',
@@ -31,8 +33,11 @@ extensions = [
     'nbsphinx',
     'sphinx_tabs.tabs',
 ]
+autosummary_generate = True 
+autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
+set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
 
-autodoc_typehints = 'none'
+# autodoc_typehints = 'none'
 
 pygments_style = 'sphinx'
 
@@ -40,9 +45,9 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 # numpydoc_show_class_members = False
-autosectionlabel_prefix_document = True
+autosectionlabel_prefix_document = False
 html_sourcelink_suffix = ''
-
+numpydoc_show_class_members = False 
 html_static_path = ['_static']
 html_css_files = ['custom.css']
 

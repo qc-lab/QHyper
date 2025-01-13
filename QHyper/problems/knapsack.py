@@ -163,14 +163,16 @@ class KnapsackProblem(Problem):
         self.constraints.append(Constraint(from_sympy(equation)))
 
     def get_score(self, result: np.record, penalty: float = 0) -> float:
-        """Returns score of the provided outcome in bits
+        """Returns score for the provided numpy recor
 
         Parameters
         ----------
-        result : str
-            outcome as a string of zeros and ones
-        penalty : float
-            penalty for incorrect results (default 0)
+        result : np.record
+            Outcome as a numpy record with variables as keys and their values.
+            Dtype is list of tuples with variable name and its value (0 or 1)
+            and tuple ('probability', <float>).
+        penalty : float, default 0
+            Penalty for the constraint violation
 
         Returns
         -------

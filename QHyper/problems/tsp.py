@@ -180,14 +180,16 @@ class TravelingSalesmanProblem(Problem):
         )
 
     def get_score(self, result: np.record, penalty: float = 0) -> float:
-        """Returns length of the route based on provided outcome in bits.
+        """Returns length of the route for provided numpy record.
 
         Parameters
         ----------
         result : np.record
-            route as a numpy record with values of the variables
+            Outcome as a numpy record with variables as keys and their values.
+            Dtype is list of tuples with variable name and its value (0 or 1)
+            and tuple ('probability', <float>).
         penalty : float, default 0
-            penalty for the constraint violation
+            Penalty for the constraint violation
 
         Returns
         -------

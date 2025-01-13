@@ -3,6 +3,20 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
+"""This module contains the Converter class with static methods for converting Problem objects to different formats.
+
+To use different solvers, but with the same Problem representation, some form 
+of conversion is needed. This module provides methods for converting Problem
+objects to ConstrainedQuadraticModel, DiscreteQuadraticModel, and QUBO formats.
+
+.. autosummary:: 
+    :toctree: generated
+    
+    Converter
+
+"""
+
+
 from typing import cast
 
 import dimod
