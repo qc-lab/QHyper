@@ -1,10 +1,7 @@
 Usage Guide
 ===========
 
-Welcome to the usage guide for the `QHyper` library! This guide will provide you
-with practical instructions on using the `QHyper` library for conducting
-experiments. Whether you're new to quantum computing or an experienced
-researcher, this guide will help you navigate the features and capabilities of the library.
+Practical instructions for conducting experiments using QHyper.
 
 .. toctree::
 
@@ -12,11 +9,13 @@ researcher, this guide will help you navigate the features and capabilities of t
 
 
 .. toctree::
+    :maxdepth: 1
     :caption: Get started:
 
     install
 
 .. toctree::
+    :maxdepth: 1
     :caption: Tutorials:
 
     solver_configuration

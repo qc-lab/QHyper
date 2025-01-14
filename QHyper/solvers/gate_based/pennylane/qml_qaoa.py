@@ -48,7 +48,7 @@ class QML_QAOA(QAOA):
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
         Cache for QUBO.
-    dev : qml.Device
+    dev : qml.devices.LegacyDevice
         PennyLane device instance.
     """
     problem: Problem
@@ -61,7 +61,7 @@ class QML_QAOA(QAOA):
     backend: str = "default.qubit"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
         default_factory=dict, init=False)
-    dev: qml.Device | None = field(default=None, init=False)
+    dev: qml.devices.LegacyDevice | None = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         if not isinstance(self.optimizer, QmlGradientDescent):

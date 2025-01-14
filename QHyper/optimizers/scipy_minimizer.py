@@ -94,7 +94,6 @@ class ScipyOptimizer(Optimizer):
             self.kwargs['options'] = {}
         if 'maxfun' not in self.kwargs['options']:
             self.kwargs['options']['maxfun'] = self.maxfun
-        print(init.bounds)
         result = scipy.optimize.minimize(
             wrapper, init.init,
             bounds=init.bounds,

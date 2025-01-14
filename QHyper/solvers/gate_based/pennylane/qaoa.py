@@ -42,7 +42,7 @@ class QAOA(Solver):
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
         Cache for QUBO.
-    dev : qml.Device
+    dev : qml.devices.LegacyDevice
         PennyLane device instance.
     """
 
@@ -56,7 +56,7 @@ class QAOA(Solver):
     mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
         default_factory=dict, init=False)
-    dev: qml.Device | None = field(default=None, init=False)
+    dev: qml.devices.LegacyDevice | None = field(default=None, init=False)
 
     def __init__(
             self,
