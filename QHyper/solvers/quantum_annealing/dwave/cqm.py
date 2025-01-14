@@ -9,6 +9,8 @@ from dwave.system import LeapHybridCQMSampler
 
 from typing import Any
 
+from dataclasses import dataclass
+
 from QHyper.converter import Converter
 from QHyper.problems import Problem
 from QHyper.solvers import Solver, SolverResult
@@ -17,6 +19,7 @@ from QHyper.solvers import Solver, SolverResult
 DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
 
 
+@dataclass
 class CQM(Solver):
     """
     Class for solving a problem using the
@@ -30,19 +33,11 @@ class CQM(Solver):
         The maximum time allowed for the CQM solver.
     """
 
-    def __init__(self, problem: Problem, time: float) -> None:
-        """
-        Parameters
-        ----------
-        problem : Problem
-            The problem to be solved.
-        time : float
-            The maximum time allowed for the CQM solver.
-        """
-        self.problem: Problem = problem
-        self.time: float = time
+    problem: Problem
+    time: float
+    token: str | None = None
 
-    def solve(self, params_inits: dict[str, Any] = {}) -> SolverResult:
+    def solve(self) -> SolverResult:
         """
         Solve the problem using the CQM approach.
 
@@ -53,7 +48,7 @@ class CQM(Solver):
         """
         converter = Converter()
         cqm = converter.to_cqm(self.problem)
-        sampler = LeapHybridCQMSampler(token=DWAVE_API_TOKEN)
+        sampler = LeapHybridCQMSampler(token=self.token or DWAVE_API_TOKEN)
         solutions = sampler.sample_cqm(cqm, self.time).aggregate()
 
         recarray = np.recarray(
@@ -74,8 +69,4 @@ class CQM(Solver):
             recarray['energy'][i] = solution.energy
             recarray['is_feasible'][i] = solution.is_feasible
 
-        return SolverResult(
-            recarray,
-            {},
-            []
-        )
+        return SolverResult(recarray, {}, [])

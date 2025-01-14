@@ -3,6 +3,20 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
+"""This module contains the Converter class with static methods for converting Problem objects to different formats.
+
+To use different solvers, but with the same Problem representation, some form 
+of conversion is needed. This module provides methods for converting Problem
+objects to ConstrainedQuadraticModel, DiscreteQuadraticModel, and QUBO formats.
+
+.. autosummary:: 
+    :toctree: generated
+    
+    Converter
+
+"""
+
+
 from typing import cast
 
 import dimod
@@ -63,7 +77,7 @@ class Converter:
         return weight[0]*lhs + weight[1]*lhs**2
 
     @staticmethod
-    def assign_weights_to_constraints(
+    def assign_penalty_weights_to_constraints(
         constraints_weights: list[float], constraints: list[Constraint]
     ) -> list[tuple[list[float], Constraint]]:
         weights_constraints_list = []
@@ -98,13 +112,13 @@ class Converter:
         return weights_constraints_list
 
     @staticmethod
-    def create_qubo(problem: Problem, weights: list[float]) -> Polynomial:
-        of_weight = weights[0] if len(weights) else 1
+    def create_qubo(problem: Problem, penalty_weights: list[float]) -> Polynomial:
+        of_weight = penalty_weights[0] if len(penalty_weights) else 1
         result = float(of_weight) * problem.objective_function
 
-        constraints_weights = weights[1:]
-        for weight, constraint in Converter.assign_weights_to_constraints(
-            constraints_weights, problem.constraints
+        constraints_penalty_weights = penalty_weights[1:]
+        for weight, constraint in Converter.assign_penalty_weights_to_constraints(
+            constraints_penalty_weights, problem.constraints
         ):
             if constraint.operator == Operator.EQ:
                 result += float(weight[0]) * (

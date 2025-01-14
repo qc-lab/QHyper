@@ -11,18 +11,20 @@ import numpy as np
 from QHyper.optimizers.util import run_parallel
 
 from QHyper.optimizers.base import (
-    Optimizer, OptimizationResult, OptimizerError)
+    Optimizer, OptimizationResult, OptimizerError, OptimizationParameter)
 
 
 class Random(Optimizer):
     """Random optimizer
 
+    The random optimizer is a simple optimization algorithm that
+    generates random samples from the parameter space and evaluates
+    the function at each point.
+    This alogrithm requries the following parameters to be set:
+    - `min` and `max` bounds for each parameter
+
     Attributes
     ----------
-    bounds : numpy.ndarray
-        The bounds for the optimization algorithm. Not all optimizers
-        support bounds. The shape of the array should be (n, 2), where
-        n is the number of parameters (`init` in method :meth:`minimize`).
     verbose : bool, default False
         Whether to print the optimization progress.
     disable_tqdm : bool, default True
@@ -33,7 +35,6 @@ class Random(Optimizer):
         The number of processes to use for parallel computation.
     """
 
-    bounds: NDArray
     verbose: bool
     disable_tqdm: bool
     number_of_samples: int = 100
@@ -41,13 +42,11 @@ class Random(Optimizer):
 
     def __init__(
         self,
-        bounds: NDArray,
         verbose: bool = False,
         disable_tqdm: bool = True,
         number_of_samples: int = 100,
         processes: int = 1,
     ) -> None:
-        self.bounds = bounds
         self.verbose = verbose
         self.disable_tqdm = disable_tqdm
         self.number_of_samples = number_of_samples
@@ -55,17 +54,16 @@ class Random(Optimizer):
 
     def minimize_(
         self,
-        func: Callable[[NDArray], OptimizationResult],
-        init: NDArray | None
+        func: Callable[[list[float]], OptimizationResult],
+        init: OptimizationParameter
     ) -> OptimizationResult:
-        if init is None:
-            raise OptimizerError("Initial point must be provided.")
-        self.check_bounds(init)
+        init.assert_bounds()
+        bounds = np.array(init.bounds)
 
         hyperparams = (
-            (self.bounds[:, 1] - self.bounds[:, 0])
-            * np.random.rand(self.number_of_samples, *init.shape)
-            + self.bounds[:, 0])
+            (bounds[:, 1] - bounds[:, 0])
+            * np.random.rand(self.number_of_samples, len(bounds))
+            + bounds[:, 0])
 
         results = run_parallel(
             func, hyperparams, self.processes, self.disable_tqdm)

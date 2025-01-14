@@ -1,15 +1,17 @@
 import numpy as np
 import networkx as nx
 
-from QHyper.problems import KnapsackProblem, TSPProblem, CommunityDetectionProblem, Network
-from QHyper.problems.knapsack import Item
+from QHyper.problems.tsp import TravelingSalesmanProblem
+from QHyper.problems.community_detection import (
+    CommunityDetectionProblem, Network)
+from QHyper.problems.knapsack import Item, KnapsackProblem
 
 np.random.seed(1244)
 
 
 def test_knapsack():
-    problem = KnapsackProblem(max_weight=2, items_weights=[1, 1, 1],
-                              items_values=[2, 2, 1])
+    problem = KnapsackProblem(max_weight=2, item_weights=[1, 1, 1],
+                              item_values=[2, 2, 1])
 
     assert problem.knapsack.items == [
         Item(weight=1, value=2), Item(weight=1, value=2),
@@ -26,7 +28,8 @@ def test_knapsack():
 
 
 def test_TSP():
-    problem = TSPProblem(number_of_cities=4, cities_coords=[(0, 0), (0, 3), (4, 0), (4, 3)])
+    problem = TravelingSalesmanProblem(
+        number_of_cities=4, cities_coords=[(0, 0), (0, 3), (4, 0), (4, 3)])
     assert problem.objective_function == {
         ('x0', 'x15'): 1.0,
         ('x0', 'x7'): 1.0,

@@ -7,6 +7,8 @@ import os
 import numpy as np
 from typing import Any
 
+from dataclasses import dataclass
+
 from dwave.system import LeapHybridDQMSampler
 from QHyper.problems import Problem
 from QHyper.solvers import Solver, SolverResult
@@ -16,6 +18,7 @@ from QHyper.converter import Converter
 DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
 
 
+@dataclass
 class DQM(Solver):
     """
     DQM solver class.
@@ -31,14 +34,14 @@ class DQM(Solver):
         1 is denoting binary variable.
     """
 
-    def __init__(self, problem: Problem, time: float, cases: int = 1) -> None:
-        self.problem: Problem = problem
-        self.time: float = time
-        self.cases: int = cases
+    problem: Problem
+    time: float
+    cases: int = 1
+    token: str | None = None
 
-    def solve(self, params_inits: dict[str, Any] = {}) -> SolverResult:
+    def solve(self) -> SolverResult:
         dqm = Converter.to_dqm(self.problem, self.cases)
-        sampler = LeapHybridDQMSampler(token=DWAVE_API_TOKEN)
+        sampler = LeapHybridDQMSampler(token=self.token or DWAVE_API_TOKEN)
         solutions = sampler.sample_dqm(dqm, self.time)
 
         recarray = np.recarray(
@@ -57,8 +60,4 @@ class DQM(Solver):
                 solution.num_occurrences / num_of_shots)
             recarray['energy'][i] = solution.energy
 
-        return SolverResult(
-            recarray,
-            {},
-            []
-        )
+        return SolverResult(recarray, {}, [])

@@ -3,6 +3,12 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
+from .qaoa import QAOA
+from .h_qaoa import H_QAOA
+from .wf_qaoa import WF_QAOA
+from .qml_qaoa import QML_QAOA
+
+
 """
 =======================================
 VQA Solvers (:mod:`QHyper.solvers.vqa`)
@@ -39,6 +45,3 @@ Evaluation functions
 
     eval_funcs
 """
-
-
-from .base import VQA  # noqa: F401

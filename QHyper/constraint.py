@@ -1,3 +1,25 @@
+"""This module contains the Constraint class which is used to represent a, well, 
+constraint. It is used in the QUBO formulation to define the left and right
+hand sides of the constraints, and the operator.
+
+.. rubric:: Main class
+
+.. autosummary::
+    :toctree: generated
+
+    Constraint  -- implementation of the constraint.
+
+.. rubric:: Enum Classes
+
+.. autoclass:: MethodsForInequalities
+
+
+.. rubric:: Functions
+
+.. autofunction:: get_number_of_constraints
+
+"""
+
 import uuid
 from enum import Enum
 
@@ -5,6 +27,16 @@ from QHyper.polynomial import Polynomial, PolynomialType
 
 
 class MethodsForInequalities(Enum):
+    """Enum class with different methods for handling inequalities.
+
+    There are two available methods for handling inequalities:
+    .. list-table::
+
+        * - SLACKS_LOG_2
+          - UNBALANCED_PENALIZATION 
+        * - the method uses slack variables in number of log2(n)
+          - the method uses unbalanced penalization
+    """
     SLACKS_LOG_2 = 0
     UNBALANCED_PENALIZATION = 1
 
@@ -14,6 +46,8 @@ UNBALANCED_PENALIZATION = MethodsForInequalities.UNBALANCED_PENALIZATION
 
 
 class Operator(Enum):
+    """Enum class with different operators.
+    """
     EQ = "=="
     GE = ">="
     LE = "<="
@@ -21,7 +55,7 @@ class Operator(Enum):
 
 class Constraint:
     """
-    A class to represent a constraint.
+    A class representing the constraint.
 
     Attributes
     ----------
@@ -42,6 +76,7 @@ class Constraint:
         Example use is assigning same weight to the constraints with the same
         group when creating qubo.
     """
+
     def __init__(
         self,
         lhs: PolynomialType,

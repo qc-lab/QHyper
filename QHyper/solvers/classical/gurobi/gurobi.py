@@ -5,9 +5,12 @@
 
 from typing import Any, Optional
 
+from dataclasses import dataclass
+
+import numpy as np
 import gurobipy as gp
 from QHyper.problems.base import Problem
-from QHyper.solvers.base import Solver
+from QHyper.solvers.base import Solver, SolverResult
 from QHyper.polynomial import Polynomial
 from QHyper.constraint import Operator
 
@@ -22,6 +25,7 @@ def polynomial_to_gurobi(gurobi_vars: dict[str, Any], poly: Polynomial) -> Any:
     return cost_function_1
 
 
+@dataclass
 class Gurobi(Solver):  # todo works only for quadratic expressions
     """
     Gurobi solver class.
@@ -36,21 +40,18 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
         The MIP gap.
     suppress_output : bool, optional, default=True
         If True, the solver's output will be suppressed.
-    threads : int, optional, default=0
+    threads : int, optional, default=1
         The number of threads to be used by the solver.
     """
 
-    def __init__(self, problem: Problem, model_name: str = "",
-                 mip_gap: float | None = None, suppress_output: bool = True,
-                 threads: int = 0) -> None:
-        self.problem = problem
-        self.model_name = model_name
-        self.mip_gap = mip_gap
-        self.supress_output = suppress_output
-        self.threads = threads
+    problem: Problem
+    model_name: str = ""
+    mip_gap: float | None = None
+    suppress_output: bool = True
+    threads: int = 1
 
-    def solve(self, params_inits: Optional[dict[str, Any]] = None) -> Any:
-        if self.supress_output:
+    def solve(self) -> Any:
+        if self.suppress_output:
             env = gp.Env(empty=True)
             env.setParam("OutputFlag", 0)
             env.start()
@@ -64,11 +65,13 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
 
         gpm.setParam('Threads', self.threads)
 
+        all_vars = self.problem.objective_function.get_variables()
+        for con in self.problem.constraints:
+            all_vars |= con.get_variables()
+
         vars = {
             str(var_name): gpm.addVar(vtype=gp.GRB.BINARY, name=str(var_name))
-            for var_name in self.problem.objective_function.get_variables().union(
-                [con.get_variables() for con in self.problem.constraints]
-            )
+            for var_name in all_vars
         }
 
         objective_function = polynomial_to_gurobi(
@@ -94,4 +97,8 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
         for v in allvars:
             solution[v.VarName] = v.X
 
-        return solution
+        recarray = np.recarray(
+            (1, ), dtype=[(var, 'i4') for var in vars]+[('probability', 'f8')])
+        recarray[0] = *(solution[var] for var in vars), 1.0
+
+        return SolverResult(recarray, {}, [])

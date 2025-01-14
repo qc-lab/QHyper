@@ -1,8 +1,8 @@
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
-sys.path.insert(0, os.path.abspath('..'))
+# sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'QHyper'
-copyright = '2022, Cyfronet'
+copyright = '2024, Cyfronet'
 author = 'Cyfronet'
 
 # -- General configuration ---------------------------------------------------
@@ -24,6 +24,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'sphinx_autodoc_typehints',
     'numpydoc',
     'sphinx.ext.graphviz',
     'sphinx.ext.autosectionlabel',
@@ -31,8 +33,11 @@ extensions = [
     'nbsphinx',
     'sphinx_tabs.tabs',
 ]
+autosummary_generate = True 
+autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
+set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
 
-autodoc_typehints = 'none'
+# autodoc_typehints = 'none'
 
 pygments_style = 'sphinx'
 
@@ -42,7 +47,7 @@ exclude_patterns = []
 # numpydoc_show_class_members = False
 autosectionlabel_prefix_document = True
 html_sourcelink_suffix = ''
-
+numpydoc_show_class_members = False 
 html_static_path = ['_static']
 html_css_files = ['custom.css']
 
@@ -52,7 +57,7 @@ html_css_files = ['custom.css']
 html_theme = "pydata_sphinx_theme"
 
 html_logo = "_static/logo.png"
-
+add_module_names = False
 html_theme_options = {
     "logo": {
         "text": "QHyper",

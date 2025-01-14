@@ -23,14 +23,15 @@ class SolverException(Exception):
 
 @dataclass
 class SolverResult:
+    
     """
     Class for storing results of the solver.
 
     Attributes
     ----------
-    results_probabilities : np.recarray
+    probabilities : np.recarray
         Record array with the results of the solver. Contains column for each
-        variable and the probability of the solution.
+        variable and the probability of the solution. 
     params : dict[Any, Any]
         Dictionary with the best parameters for the solver.
     history : list[list[float]]
@@ -54,6 +55,9 @@ class Solver(ABC):
     """
 
     problem: Problem
+
+    def __init__(self, problem: Problem):
+        self.problem = problem
 
     @classmethod
     def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'Solver':

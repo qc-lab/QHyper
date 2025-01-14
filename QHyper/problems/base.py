@@ -30,9 +30,11 @@ class Problem(ABC):
     Attributes
     ----------
     objective_function: Polynomial
-        Objective_function represented as a Polynomial
+        Objective_function represented as a 
+        :py:class:`~QHyper.polynomial.Polynomial`
     constraints : list[Polynomial], optional
-        List of constraints represented as a Polynomials
+        List of constraints represented as a 
+        :py:class:`~QHyper.polynomial.Polynomial`
     """
 
     objective_function: Polynomial
@@ -51,9 +53,11 @@ class Problem(ABC):
         Parameters
         ----------
         result : np.record
-            outcome as a numpy record with values of the variables
+            Outcome as a numpy record with variables as keys and their values.
+            Dtype is list of tuples with variable name and its value (0 or 1)
+            and tuple ('probability', <float>).
         penalty : float, default 0
-            penalty for the constraint violation
+            Penalty for the constraint violation
 
         Returns
         -------

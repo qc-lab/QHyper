@@ -3,6 +3,10 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
+"""
+.. currentmodule:: QHyper.problems.knapsack
+"""
+
 import random
 import sympy
 import numpy as np
@@ -35,8 +39,8 @@ class Knapsack:
         max_weight: int,
         max_item_value: int,
         items_amount: int,
-        items_weights: list[int],
-        items_values: list[int]
+        item_weights: list[int],
+        item_values: list[int]
     ) -> None:
         """
         Parameters
@@ -53,11 +57,11 @@ class Knapsack:
         self.items: list[Item] = []
         self.max_weight: int = max_weight
         self.max_item_value: int = max_item_value
-        if items_weights and items_values:
-            if len(items_weights) != len(items_values):
+        if item_weights and item_values:
+            if len(item_weights) != len(item_values):
                 raise ValueError(
                     "Weights and values must have the same length")
-            self.set_knapsack(items_weights, items_values)
+            self.set_knapsack(item_weights, item_values)
         else:
             if items_amount < 1:
                 raise ValueError(
@@ -91,10 +95,10 @@ class KnapsackProblem(Problem):
         maximum value of an item
     items_amount: int, optional
         items amount, used only for random knapsack. If not provided,
-        then items_weights and items_values must be specified
-    items_weights: list[int], optional
+        then item_weights and item_values must be specified
+    item_weights: list[int], optional
         list of items weights
-    items_values: list[int], optional
+    item_values: list[int], optional
         list of items values
 
     Attributes
@@ -112,11 +116,11 @@ class KnapsackProblem(Problem):
         max_weight: int,
         max_item_value: int = 10,
         items_amount: int = 1,
-        items_weights: list[int] = [],
-        items_values: list[int] = []
+        item_weights: list[int] = [],
+        item_values: list[int] = []
     ) -> None:
         self.knapsack = Knapsack(max_weight, max_item_value,
-                                 items_amount, items_weights, items_values)
+                                 items_amount, item_weights, item_values)
         # self.variables = len(self.knapsack) + self.knapsack.max_weight
         self.variables: tuple[sympy.Symbol] = sympy.symbols(' '.join(
             [f'x{i}' for i
@@ -159,14 +163,16 @@ class KnapsackProblem(Problem):
         self.constraints.append(Constraint(from_sympy(equation)))
 
     def get_score(self, result: np.record, penalty: float = 0) -> float:
-        """Returns score of the provided outcome in bits
+        """Returns score for the provided numpy recor
 
         Parameters
         ----------
-        result : str
-            outcome as a string of zeros and ones
-        penalty : float
-            penalty for incorrect results (default 0)
+        result : np.record
+            Outcome as a numpy record with variables as keys and their values.
+            Dtype is list of tuples with variable name and its value (0 or 1)
+            and tuple ('probability', <float>).
+        penalty : float, default 0
+            Penalty for the constraint violation
 
         Returns
         -------

@@ -7,93 +7,71 @@
     :google-site-verification: -BAN3UWgNz2CPUt5v5AcQpDH8GJc0kX0VdKh2Kfj89I
 
 
-Welcome to QHyper's documentation!
+QHyper documentation
 ==================================
 
-QHyper - a software framework for hybrid quantum-classical combinatorial optimization.
+| QHyper is a Python library that provides a unified interface for experimenting with quantum-related optimization solvers. 
+| It allows users to specify combinatorial optimization problems, select solvers, manage problem hyperparameters, and standardize output for ease of use.
 
-Introduction to QHyper Library
-==============================
+Installation
+^^^^^^^^^^^^
+To install QHyper, use the following command (ensure that you have Python 3.12 installed before running the command).
 
-Welcome to the documentation for the **QHyper** library, a powerful tool designed
-to simplify the process of conducting combinatorial optimization experiments in the realm of quantum
-algorithms. The primary aim of QHyper is to provide a
-user-friendly framework that simplifies the execution of experiments, focusing on
-quantum algorithms while also allowing classical approaches.
+.. code-block:: bash
 
-Key Features
+    pip install qhyper
+
+
+Key features
 ------------
 
-- **Quantum Algorithm Emphasis:** QHyper is tailored for researchers and
-  developers interested in exploring quantum combinatorial optimization algorithms. It offers an environment
-  that facilitates the implementation of quantum-based solvers.
+- **Quantum algorithm emphasis:** QHyper is designed for researchers and developers exploring quantum optimization algorithms, providing an environment for implementing quantum and hybrid quantum-classical solvers.
 
-- **Classical Solver Support:** While the focus is on quantum algorithms,
-  QHyper acknowledges the significance of classical methods. It enables the
-  seamless integration of classical solvers, ensuring a unified platform for
-  comparative experiments.
+- **Classical solver support:** While the focus is on quantum algorithms, QHyper also enables seamless integration of classical solvers, ensuring a unified platform for comparative experiments.
 
-- **Modularity and Extensibility:** One of QHyper's core strengths is its design
-  for easy extensibility. Adding new solvers, algorithms, or problems is
-  straightforward, empowering users to contribute and customize the library to
-  suit their research needs.
+- **Simplified experimentation:** With QHyper, the experimentation process is made more accessible. The users can define, execute, and analyze experiments efficiently due to the unified formats of inputs and outputs, and possibility of using configuration files.
 
-- **Simplified Experimentation:** With QHyper, the experimentation process is
-  made more accessible. Researchers can define, execute, and analyze experiments
-  efficiently, allowing them to focus on the insights derived from the results.
+- **Modularity and extensibility:** One of QHyper's core strengths is easy extensibility. Adding new problems, solvers, or optimizers is straightforward, empowering users to contribute and customize the library to suit their research needs.
 
-- **Hyperparameters optimization:**  QHyper offers set of hyperoptimizers with easy configuration when proper formulation of a constrained optimization problem is needed by quantum  solver accepting unconstrained forms only.
+- **Hyperparameters optimization:** QHyper offers easily configurable hyperoptimizers for converting constrained optimization problems into unconstrained forms required by some quantum solvers.
 
 
 Architecture
-================
+------------
 
-QHyper consists with three main components:
-
-* :doc:`Problems <problems>` - classes describing different types of problems e.g. Knapsack problem or Travelling Salesman Problem
-
-* :doc:`Solvers <solvers>` - classes defining different types of solvers e.g. quantum solvers like QAOA or CQM, but also classical algorithms like Gurobi
-
-* :doc:`Optimizers <optimizers>` - classes implementing different types of optimizer
-
-Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
+The architecture of QHyper is presented on a diagram below:
 
 .. raw:: html
 
       <img src="_static/qhyper_architecture.svg" style="background-color: transparent">
 
+The main components are:
 
-Contents
-========
+* :doc:`Problems <generated/QHyper.problems>` - classes that describe different types of problems, such as the Knapsack Problem or the Traveling Salesman Problem.
+
+* :doc:`Solvers <generated/QHyper.solvers>` - Classes that define different types of solvers, e.g., quantum/hybrid solvers like the Quantum Approximate Optimization Algorithm or the Constrained Quadratic Model, but also classical solvers like Gurobi.
+
+* :doc:`Optimizers <generated/QHyper.optimizers>` - Classes that implement different types of (hyper)optimizers.
+
+Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
+
+
 .. toctree::
     :hidden:
 
     Home <self>
 
-
-User Guide
-----------
-Information on how to install and use QHyper for conducting experiments.
-
 .. toctree::
-    :maxdepth: 2
+    :hidden:
 
     user_guide/index
 
-Contribution Guide
-------------------
-Information on how to contribute to the QHyper library.
-
 .. toctree::
-    :maxdepth: 2
+    :hidden:
 
     contribution
 
-API Reference
--------------
-Detailed information on the classes and methods available in the QHyper library.
-
 .. toctree::
-   :maxdepth: 2
+   :hidden:
 
    api

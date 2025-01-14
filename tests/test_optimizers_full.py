@@ -10,13 +10,23 @@ def get_problem_config():
     problem_config = {
         "type": "knapsack",
         "max_weight": 2,
-        "items_weights": [1, 1, 1],
-        "items_values": [2, 2, 1],
+        "item_weights": [1, 1, 1],
+        "item_values": [2, 2, 1],
     }
 
     params_config = {
-        'angles': [[0.5]*5, [1]*5],
-        'hyper_args': [1, 2.5, 2.5],
+        'gamma': {
+            'init': [0.5]*5,
+            'min': [0]*5,
+            'max': [2*np.pi]*5,
+        },
+        'beta': {
+            'init': [1]*5,
+            'min': [0]*5,
+            'max': [2*np.pi]*5,
+        },
+        # 'angles': [[0.5]*5, [1]*5],
+        # 'hyper_args': [1, 2.5, 2.5],
     }
     hyper_optimizer_bounds = 3*[(1, 10)]
 
@@ -27,10 +37,19 @@ def run_solver(solver_config):
     np.random.seed(0)
     random.seed(0)
 
-    vqa = solver_from_config(solver_config)
-    results = vqa.solve()
+    solver = solver_from_config(solver_config)
+    results = solver.solve()
     return weighted_avg_evaluation(
-        results.probabilities, vqa.problem.get_score, 0)
+        results.probabilities, solver.problem.get_score, 0)
+
+
+def run_hyper_optimizer(solver_config):
+    np.random.seed(0)
+    random.seed(0)
+
+    solver = solver_from_config(solver_config)
+    results = solver.solve()
+    return results.value
 
 
 def test_scipy():
@@ -38,28 +57,26 @@ def test_scipy():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qaoa",
-                "layers": 5,
-                "backend": "default.qubit",
-            },
+            "name": "QAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 5,
+            **params_config,
             "optimizer": {
                 "type": "scipy",
                 "maxfun": 10,
-                "bounds": [(0, 2*np.pi)]*10,
+                # "bounds": [(0, 2*np.pi)]*10,
                 'method': 'L-BFGS-B',
                 'options': {
                     'maxiter': 10,
                 }
             },
-            "params_inits": params_config,
         },
         "problem": problem_config
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.310672502)
+    assert result == pytest.approx(-0.4697774822)
 
 
 def test_qml():
@@ -67,23 +84,21 @@ def test_qml():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qaoa",
-                "layers": 5,
-                "backend": "default.qubit",
-            },
+            "name": "QAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 5,
+            **params_config,
             "optimizer": {
                 "type": "qml",
                 "steps": 10
             },
-            "params_inits": params_config,
         },
         "problem": problem_config
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.171165308)
+    assert result == pytest.approx(-0.4015307189)
 
 
 def test_qml_qaoa():
@@ -91,23 +106,23 @@ def test_qml_qaoa():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qml_qaoa",
-                "layers": 5,
-                "backend": "default.qubit",
-                "optimizer": "adam",
-                "optimizer_args": {
-                    "steps": 10
-                }
+            "name": "QML_QAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 5,
+            "backend": "default.qubit",
+            **params_config,
+            "optimizer": {
+                "type": "qml",
+                "name": "adam",
+                "steps": 10
             },
-            "params_inits": params_config,
         },
         "problem": problem_config
     }
 
     result = run_solver(solver_config)
-    assert result == pytest.approx(-0.171165308)
+    assert result == pytest.approx(-0.4015307189)
 
 
 def test_random():
@@ -115,30 +130,41 @@ def test_random():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qaoa",
-                "layers": 5,
-                "backend": "default.qubit",
-            },
+            "name": "QAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 5,
+            **params_config,
+            # "type": "vqa",
+            # "pqc": {
+            #     "type": "qaoa",
+            #     "layers": 5,
+            #     "backend": "default.qubit",
+            # },
             "optimizer": {
                 "type": "qml",
                 "steps": 10
             },
-            "hyper_optimizer": {
+
+            # "params_inits": params_config,
+        },
+        "hyper_optimizer": {
+            "optimizer": {
                 "type": "random",
                 "processes": 1,
                 "number_of_samples": 2,
-                "bounds": hyperoptimizer_bounds,
                 "disable_tqdm": False
             },
-            "params_inits": params_config,
+            'penalty_weights': {
+                'min': [1]*3,
+                'max': [10]*3,
+            },
         },
         "problem": problem_config
     }
 
-    result = run_solver(solver_config)
-    assert result == pytest.approx(-0.522289003, rel=1e-6, abs=1e-6)
+    result = run_hyper_optimizer(solver_config)
+    assert result == pytest.approx(-0.5250361108, rel=1e-6, abs=1e-6)
 
 
 def test_cem():
@@ -146,31 +172,35 @@ def test_cem():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qaoa",
-                "layers": 5,
-                "backend": "default.qubit",
-            },
+            "name": "QAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 5,
+            **params_config,
             "optimizer": {
                 "type": "qml",
                 "steps": 10
             },
-            "hyper_optimizer": {
+        },
+        "hyper_optimizer": {
+            "optimizer": {
                 "type": "cem",
                 "processes": 1,
                 "samples_per_epoch": 2,
                 "epochs": 2,
-                "bounds": hyperoptimizer_bounds,
-                "disable_tqdm": False
+                "disable_tqdm": False,
             },
-            "params_inits": params_config,
+            'penalty_weights': {
+                'min': [1]*3,
+                'max': [10]*3,
+                'init': [1, 2.5, 2.5],
+            },
         },
         "problem": problem_config
     }
 
-    result = run_solver(solver_config)
-    assert result == pytest.approx(-0.351348368, rel=1e-6, abs=1e-6)
+    result = run_hyper_optimizer(solver_config)
+    assert result == pytest.approx(-0.5078221819, rel=1e-6, abs=1e-6)
 
 
 def test_grid():
@@ -178,27 +208,30 @@ def test_grid():
 
     solver_config = {
         "solver": {
-            "type": "vqa",
-            "pqc": {
-                "type": "qaoa",
-                "layers": 5,
-                "backend": "default.qubit",
-            },
+            "name": "QAOA",
+            "category": "gate_based",
+            "platform": "pennylane",
+            "layers": 5,
+            **params_config,
             "optimizer": {
                 "type": "qml",
                 "steps": 10
             },
-            "hyper_optimizer": {
+        },
+        "hyper_optimizer": {
+            "optimizer": {
                 "type": "grid",
                 "processes": 1,
-                "steps": [8, 7, 6],
-                "bounds": hyperoptimizer_bounds,
-                "disable_tqdm": False
+                "disable_tqdm": False,
             },
-            "params_inits": params_config,
+            'penalty_weights': {
+                'min': [1]*3,
+                'max': [10]*3,
+                'step': [8, 7, 6],
+            },
         },
         "problem": problem_config
     }
 
-    result = run_solver(solver_config)
+    result = run_hyper_optimizer(solver_config)
     assert result == pytest.approx(-1.014492067)
