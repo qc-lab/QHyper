@@ -45,7 +45,7 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 # numpydoc_show_class_members = False
-autosectionlabel_prefix_document = False
+autosectionlabel_prefix_document = True
 html_sourcelink_suffix = ''
 numpydoc_show_class_members = False 
 html_static_path = ['_static']

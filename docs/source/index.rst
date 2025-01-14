@@ -14,7 +14,7 @@ QHyper documentation
 | It allows users to specify combinatorial optimization problems, select solvers, manage problem hyperparameters, and standardize output for ease of use.
 
 Installation
-------------
+^^^^^^^^^^^^
 To install QHyper, use the following command (ensure that you have Python 3.12 installed before running the command).
 
 .. code-block:: bash
@@ -47,11 +47,11 @@ The architecture of QHyper is presented on a diagram below:
 
 The main components are:
 
-* :doc:`Problems <problems>` - classes that describe different types of problems, such as the Knapsack Problem or the Traveling Salesman Problem.
+* :doc:`Problems <generated/QHyper.problems>` - classes that describe different types of problems, such as the Knapsack Problem or the Traveling Salesman Problem.
 
-* :doc:`Solvers <solvers>` - Classes that define different types of solvers, e.g., quantum/hybrid solvers like the Quantum Approximate Optimization Algorithm or the Constrained Quadratic Model, but also classical solvers like Gurobi.
+* :doc:`Solvers <generated/QHyper.solvers>` - Classes that define different types of solvers, e.g., quantum/hybrid solvers like the Quantum Approximate Optimization Algorithm or the Constrained Quadratic Model, but also classical solvers like Gurobi.
 
-* :doc:`Optimizers <optimizers>` - Classes that implement different types of (hyper)optimizers.
+* :doc:`Optimizers <generated/QHyper.optimizers>` - Classes that implement different types of (hyper)optimizers.
 
 Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
 

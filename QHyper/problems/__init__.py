@@ -41,6 +41,9 @@ custom_problems = {}
 def getProblem(name: str) -> Type[Problem]:
     """Get problem class by name. Used for creating Problem objects from config.
     """
+    global custom_fetched
+    global custom_problems
+
     if not custom_fetched:
         custom_problems = (search_for(Problem, 'QHyper/custom')
                                     | search_for(Problem, 'custom'))

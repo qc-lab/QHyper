@@ -26,7 +26,7 @@ Solver types
     * `Note`: for larger problem instances Gurobi `license <https://www.gurobi.com/solutions/licensing/>`_ is required.
 
 Problem definition
-------------
+------------------
 
 This tutorial assumes the following sample optimization problem definition:
 
@@ -63,7 +63,7 @@ This specifies the `Knapsack Problem <https://en.wikipedia.org/wiki/Knapsack_pro
 
 
 Configuring quantum annealing solvers: D-Wave
------------------------------
+---------------------------------------------
 
 
 The initial penalty weights for constrained problems
@@ -184,10 +184,10 @@ Adding a hyperoptimizer
 
 
 Configuring gate-based solvers: QAOA
-------------------------------
+------------------------------------
 
 | A typical example of the QAOA configuration is presented below. 
-| The quantum circuit consists of 5 ``layers``. The variational parameters ``gamma`` and ``beta`` are specified using `OptimizationParameter`s.
+| The quantum circuit consists of 5 ``layers``. The variational parameters ``gamma`` and ``beta`` are specified using ``OptimizationParameters``.
 | A local :py:class:`QmlGradientDescent<.QmlGradientDescent>` ``optimizer`` (by default `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/pennylane.AdamOptimizer.html>`_) with the default settings is used.
 | Problem's penalty weights are defined in ``penalty_weights``.
 
@@ -376,7 +376,7 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
 
 
 Configuring a classical solver: Gurobi
------------------------------
+--------------------------------------
 .. tabs::
 
     .. code-tab:: python
@@ -542,7 +542,7 @@ Additionally, the ``QmlGradientDescent`` set of optimizers can be further specif
 * ``qng``: qml.QNGOptimizer.
 
 Running solvers and hyperoptimizers
---------------------
+-----------------------------------
 
 Running a pure solver:
 
