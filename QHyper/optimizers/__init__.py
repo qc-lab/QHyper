@@ -3,20 +3,29 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 """
-Any optimizer that is in directory 'QHyper/custom' or 'custom' will be
-automatically imported and available for use. Add 'name' attribute to the
-class to make it available in the OPTIMIZERS dictionary (if not optimizer will
-be available by its class name).
+This module contains implementations of different optimizers.
+Some of the optimizers are written from scratch based on popular algorithms,
+while others are just a wrapper for existing solutions.
+No optimizer is imported by deafult to reduce number of dependencies.
+To use any optimizer you can import it directly like
 
+.. code-block:: python
+
+    from QHyper.optimizers.random import Random
+
+or use function :py:func:`Optimizers.get` with the name of the optimizer.
+Any optimizer that is in directory 'QHyper/custom' or 'custom' will be
+also available in this function.
 
 .. rubric:: Optimization result dataclass
 
 .. autoclass:: OptimizationResult
+.. autoclass:: OptimizationParameter
 
 
 .. rubric:: Interface
 
-.. autosummary:: 
+.. autosummary::
     :toctree: generated
 
     Optimizer
@@ -33,6 +42,11 @@ be available by its class name).
     grid_search.GridSearch -- Grid search optimizer.
     dummy.Dummy -- Dummy optimizer.
 
+.. rubric:: Additional functions
+
+.. autoclass:: Optimizers
+    :members:
+
 """
 import copy
 from typing import Type, Any
@@ -46,17 +60,22 @@ from .dummy import Dummy
 
 
 class Optimizers:
-    custom_fetched = False
-    custom_optimizers = {}
+    custom_optimizers: None | dict[str, type] = None
 
     @staticmethod
     def get(name: str) -> Type[Optimizer]:
-        if not Optimizers.custom_fetched:
+        """
+        Get Optimizer class by name.
+
+        The optimizer will be available by the 'name' attribute if defined or
+        by the class name. Letters case doesn't matter.
+        """
+
+        if Optimizers.custom_optimizers is None:
             Optimizers.custom_optimizers = (
                 search_for(Optimizer, 'QHyper/custom')
                 | search_for(Optimizer, 'custom'))
-            Optimizers.custom_fetched = True
-        
+
         name_ = name.lower()
 
         if name_ in Optimizers.custom_optimizers:

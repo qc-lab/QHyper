@@ -12,11 +12,9 @@ import sympy
 import numpy as np
 from collections import namedtuple
 
-from typing import cast
-
+from QHyper.polynomial import Polynomial
 from QHyper.problems.base import Problem
 from QHyper.constraint import Constraint
-from QHyper.parser import from_sympy
 
 Item = namedtuple('Item', "weight value")
 
@@ -121,7 +119,6 @@ class KnapsackProblem(Problem):
     ) -> None:
         self.knapsack = Knapsack(max_weight, max_item_value,
                                  items_amount, item_weights, item_values)
-        # self.variables = len(self.knapsack) + self.knapsack.max_weight
         self.variables: tuple[sympy.Symbol] = sympy.symbols(' '.join(
             [f'x{i}' for i
              in range(len(self.knapsack) + self.knapsack.max_weight)]
@@ -133,34 +130,28 @@ class KnapsackProblem(Problem):
         """
         Create the objective function items on defined in SymPy syntax
         """
-        # xs = [f"x{i}" for i in range(len(self.knapsack))]
-        equation = cast(sympy.Expr, 0)
-        for i, x in enumerate(self.variables[:len(self.knapsack)]):
-            equation += self.knapsack.items[i].value*x
+        equation = Polynomial(0)
+        for i in range(len(self.knapsack.items)):
+            equation += Polynomial({(f"x{i}", ): self.knapsack.items[i].value})
         equation = -equation
 
-        self.objective_function = from_sympy(equation)
+        self.objective_function = equation
 
     def _set_constraints(self) -> None:
         """
         Create constraints defined in SymPy syntax
         """
-        xs = [self.variables[i] for i in range(len(self.knapsack))]
-        ys = [self.variables[i] for i in range(
-            len(self.knapsack), len(self.knapsack) + self.knapsack.max_weight)]
         self.constraints: list[Constraint] = []
-        equation = cast(sympy.Expr, 1)
-        for y in ys:
-            equation -= y
-        # equation = equation
-        self.constraints.append(Constraint(from_sympy(equation)))
-        equation = cast(sympy.Expr, 0)
-        for i, y in enumerate(ys):
-            equation += (i + 1)*y
-        for i, x in enumerate(xs):
-            equation += -(self.knapsack.items[i].weight)*x
-        # equation = equation
-        self.constraints.append(Constraint(from_sympy(equation)))
+        equation = Polynomial(1)
+        for i in range(self.knapsack.max_weight):
+            equation -= Polynomial({(f'x{i+len(self.knapsack)}',): 1})
+        self.constraints.append(Constraint(equation))
+        equation = Polynomial(0)
+        for i in range(self.knapsack.max_weight):
+            equation += Polynomial({(f'x{i+len(self.knapsack)}', ): (i+1)})
+        for i in range(len(self.knapsack.items)):
+            equation -= Polynomial({(f"x{i}",): self.knapsack.items[i].weight})
+        self.constraints.append(Constraint(equation))
 
     def get_score(self, result: np.record, penalty: float = 0) -> float:
         """Returns score for the provided numpy recor
