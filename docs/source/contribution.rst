@@ -83,6 +83,19 @@ Make sure that there are no errors. You will able to view the documentation in y
 Your documentation changes are ready for submission.
 
 
+New release
+-----------
+
+If tag looks like `v[0-9]+.[0-9]+.[0-9]+` new release will be pushed to pypi. If this version starts with `test/` new version will be pushed to testing pypi.
+
+.. code-block:: bash
+
+   git tag <version>
+   git push origin tag <version>
+
+Each push on master will update the documentation available on `Readthedocs <https://qhyper.readthedocs.io/en/latest/>`_.
+
+
 
 Contribution Rules
 ------------------
