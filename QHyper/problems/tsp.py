@@ -127,37 +127,35 @@ class TravelingSalesmanProblem(Problem):
         return i + t * self.tsp_instance.number_of_cities
 
     def _get_objective_function(self) -> Polynomial:
-        equation = cast(sympy.Expr, 0)
+        equation = Polynomial(0)
         for i, j in itertools.permutations(
             range(0, self.tsp_instance.number_of_cities), 2
         ):
-            curr = 0
+            curr = Polynomial(0)
             for t in range(self.tsp_instance.number_of_cities):
                 inc_t = t + 1
                 if inc_t == self.tsp_instance.number_of_cities:
                     inc_t = 0
-                curr += (
-                    self.variables[self._calc_bit(i, t)]
-                    * self.variables[self._calc_bit(j, inc_t)]
-                )
+                curr += Polynomial({(f"x{self._calc_bit(i, t)}",
+                                     f"x{self._calc_bit(j, inc_t)}"): 1})
             equation += (
                 self.tsp_instance.normalized_distance_matrix[i][j] * curr
             )
-        return from_sympy(equation)
+        return equation
 
     def _get_constraints(self) -> list[Constraint]:
         constraints: list[Constraint] = []
         for i in range(self.tsp_instance.number_of_cities):
-            equation = cast(sympy.Expr, 1)
+            equation = Polynomial(1)
             for t in range(self.tsp_instance.number_of_cities):
-                equation -= self.variables[self._calc_bit(i, t)]
-            constraints.append(Constraint(from_sympy(equation), group=0))
+                equation -= Polynomial({(f"x{self._calc_bit(i, t)}",): 1})
+            constraints.append(Constraint(equation, group=0))
 
         for t in range(self.tsp_instance.number_of_cities):
-            equation = cast(sympy.Expr, 1)
+            equation = Polynomial(1)
             for i in range(self.tsp_instance.number_of_cities):
-                equation -= self.variables[self._calc_bit(i, t)]
-            constraints.append(Constraint(from_sympy(equation), group=1))
+                equation -= Polynomial({(f"x{self._calc_bit(i, t)}",): 1})
+            constraints.append(Constraint(equation, group=1))
         return constraints
 
     def _get_distance(self, order_result: np.ndarray) -> float:

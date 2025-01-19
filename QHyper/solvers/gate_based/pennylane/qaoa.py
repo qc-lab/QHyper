@@ -1,17 +1,17 @@
 import pennylane as qml
 from pennylane import numpy as np
 
-from numpy.typing import NDArray
-from typing import Any, Callable, cast
+from typing import Callable, cast
 
 from dataclasses import dataclass, field
 
 from QHyper.problems.base import Problem
-from QHyper.optimizers import OptimizationResult, Optimizer, Dummy, OptimizationParameter
+from QHyper.optimizers import (
+        OptimizationResult, Optimizer, Dummy, OptimizationParameter)
 
 from QHyper.converter import Converter
 from QHyper.polynomial import Polynomial
-from QHyper.solvers.base import Solver, SolverResult, SolverException
+from QHyper.solvers.base import Solver, SolverResult
 
 
 @dataclass
@@ -36,7 +36,7 @@ class QAOA(Solver):
     penalty_weights : list[float] | None
         Penalty weights used for converting Problem to QUBO. They connect cost function
         with constraints. If not specified, all penalty weights are set to 1.
-    backend : str 
+    backend : str
         Backend for PennyLane.
     mixer : str
         Mixer name. Currently only 'pl_x_mixer' is supported.
@@ -84,11 +84,13 @@ class QAOA(Solver):
             raise ValueError("Device not initialized")
         return len(self.dev.wires)
 
-    def create_cost_operator(self, problem: Problem, penalty_weights: list[float]
+    def create_cost_operator(self, problem: Problem,
+                             penalty_weights: list[float]
                              ) -> qml.Hamiltonian:
         if tuple(penalty_weights) not in self.qubo_cache:
             qubo = Converter.create_qubo(problem, penalty_weights)
-            self.qubo_cache[tuple(penalty_weights)] = self._create_cost_operator(qubo)
+            self.qubo_cache[tuple(
+                penalty_weights)] = self._create_cost_operator(qubo)
         return self.qubo_cache[tuple(penalty_weights)]
 
     def _create_cost_operator(self, qubo: Polynomial) -> qml.Hamiltonian:
@@ -184,15 +186,6 @@ class QAOA(Solver):
 
         return probability_circuit
 
-    # def run_opt(
-    #     self,
-    #     problem: Problem,
-    #     opt_args: NDArray,
-    #     hyper_args: NDArray,
-    # ) -> OptimizationResult:
-    #     results = self.get_expval_circuit(problem, hyper_args)(opt_args)
-    #     return OptimizationResult(results, opt_args)
-    #
     def run_with_probs(
         self,
         problem: Problem,
@@ -209,37 +202,6 @@ class QAOA(Solver):
             recarray[i] = *solution, probability
         return recarray
 
-    # def get_opt_args(
-    #     self,
-    #     params_init: dict[str, Any],
-    #     args: Optional[NDArray] = None,
-    #     hyper_args: Optional[NDArray] = None,
-    # ) -> NDArray:
-    #     return np.array(
-    #         args if args is not None
-    #         else np.array(params_init["angles"])
-    #     ).flatten()
-    #
-    # def get_hopt_args(
-    #     self,
-    #     params_init: dict[str, Any],
-    #     args: Optional[NDArray] = None,
-    #     hyper_args: Optional[NDArray] = None,
-    # ) -> NDArray:
-    #     return (
-    #         hyper_args
-    #         if hyper_args is not None
-    #         else np.array(params_init["hyper_args"])
-    #     )
-
-    # def get_params_init_format(
-    #     self, opt_args: NDArray, hyper_args: NDArray
-    # ) -> dict[str, Any]:
-    #     return {
-    #         "angles": opt_args,
-    #         "hyper_args": hyper_args,
-    #     }
-
     def _run_optimizer(self, penalty_weights: list[float],
                        angles: OptimizationParameter) -> OptimizationResult:
         return self.optimizer.minimize(
@@ -248,28 +210,15 @@ class QAOA(Solver):
     def solve(self, penalty_weights: list[float] | None = None,
               gamma: list[float] | None = None,
               beta: list[float] | None = None) -> SolverResult:
-        # if gamma is None and self.gamma is None:
-        #     raise SolverException("Parameter 'gamma' was not provided")
-        # if beta is None and self.beta is None:
-        #     raise SolverException("Parameter 'beta' was not provided")
-
-        # gamma = self.gamma if gamma is None else gamma
-        # beta = self.beta if beta is None else beta
         if penalty_weights is None and self.penalty_weights is None:
             penalty_weights = [1.] * (len(self.problem.constraints) + 1)
-        penalty_weights = self.penalty_weights if penalty_weights is None else penalty_weights
+        penalty_weights = (self.penalty_weights if penalty_weights is None
+                           else penalty_weights)
 
+        assert penalty_weights is not None
         gamma_ = self.gamma if gamma is None else self.gamma.update(init=gamma)
         beta_ = self.beta if beta is None else self.beta.update(init=beta)
 
-        # opt_wrapper = LocalOptimizerFunction(
-        #         self.pqc, self.problem, best_hargs)
-        # opt_res = self.optimizer.minimize(opt_wrapper, opt_args)
-        # func = self.get_expval_circuit(penalty_weights)
-
-        # opt_res = self.optimizer.minimize(func, angles)
-        # assert gamma
-        # assert beta
         angles = gamma_ + beta_
         opt_res = self._run_optimizer(penalty_weights, angles)
 

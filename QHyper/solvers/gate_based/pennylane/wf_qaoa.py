@@ -1,17 +1,13 @@
 import pennylane as qml
 from pennylane import numpy as np
 
-from numpy.typing import NDArray
-from typing import Any, Callable, cast
+from typing import Callable
 
 from dataclasses import dataclass, field
 
 from QHyper.problems.base import Problem
 from QHyper.optimizers import OptimizationResult, Optimizer, Dummy, OptimizationParameter
 
-from QHyper.converter import Converter
-from QHyper.polynomial import Polynomial
-from QHyper.solvers.base import Solver, SolverResult, SolverException
 from QHyper.util import weighted_avg_evaluation
 
 from QHyper.solvers.gate_based.pennylane.qaoa import QAOA
@@ -35,7 +31,7 @@ class WF_QAOA(QAOA):
         Vector of gamma angles used in cost Hamiltonian. Size of the vector
         should be equal to the number of layers.
     beta : OptimizationParameter
-        Vector of beta angles used in mixing Hamiltonian. Size of the vector    
+        Vector of beta angles used in mixing Hamiltonian. Size of the vector
         should be equal to the number of layers.
     optimizer : Optimizer
         Optimizer used in the classical part of the algorithm.
@@ -46,7 +42,7 @@ class WF_QAOA(QAOA):
         Specifies how many results should be considered in the evaluation of
         the objective function. If None, all results are considered.
     penalty : float, default 0
-        When calculating the score of the solution, the penalty is the score 
+        When calculating the score of the solution, the penalty is the score
         for the solution that doesn't satisfy the constraints.
     backend : str, default 'default.qubit'
         Backend for PennyLane.

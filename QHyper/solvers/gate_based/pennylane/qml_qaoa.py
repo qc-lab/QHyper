@@ -5,7 +5,6 @@
 
 from dataclasses import dataclass, field
 
-from numpy.typing import NDArray
 from typing import Any, cast, Callable
 
 import pennylane as qml
@@ -14,8 +13,6 @@ from QHyper.problems.base import Problem
 from QHyper.optimizers.qml_gradient_descent import QmlGradientDescent
 from QHyper.optimizers import (
     OptimizationResult, Optimizer, OptimizationParameter)
-from QHyper.optimizers.qml_gradient_descent import (
-    QML_GRADIENT_DESCENT_OPTIMIZERS)
 
 from QHyper.solvers.gate_based.pennylane.qaoa import QAOA
 
@@ -42,7 +39,7 @@ class QML_QAOA(QAOA):
     penalty_weights : list[float] | None
         Penalty weights used for converting Problem to QUBO. They connect cost function
         with constraints. If not specified, all penalty weights are set to 1.
-    backend : str 
+    backend : str
         Backend for PennyLane.
     mixer : str
         Mixer name. Currently only 'pl_x_mixer' is supported.
@@ -56,7 +53,7 @@ class QML_QAOA(QAOA):
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
-    penalty_weights: NDArray | None = None
+    penalty_weights: list[float] | None = None
     mixer: str = "pl_x_mixer"
     backend: str = "default.qubit"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
@@ -70,7 +67,8 @@ class QML_QAOA(QAOA):
     def get_expval_circuit(
         self, penalty_weights: list[float]
     ) -> Callable[[list[float]], OptimizationResult]:
-        cost_operator = self.create_cost_operator(self.problem, penalty_weights)
+        cost_operator = self.create_cost_operator(
+            self.problem, penalty_weights)
 
         self.dev = qml.device(self.backend, wires=cost_operator.wires)
 

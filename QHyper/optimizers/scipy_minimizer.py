@@ -52,7 +52,7 @@ class ScipyOptimizer(Optimizer):
         self.maxfun = maxfun
         self.kwargs = kwargs
 
-    def minimize_(
+    def minimize(
         self,
         func: Callable[[list[float]], OptimizationResult],
         init: OptimizationParameter

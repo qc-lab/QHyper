@@ -1,9 +1,13 @@
-# <img width="40" alt="qhyper_logo" src="docs/source/_static/logo.png" class="center"> QHyper
-A software framework for hybrid quantum-classical optimization.
 
-# Introduction
+<p align="center">
+    <img width="100px" alt="qhyper_logo" src="docs/source/_static/logo.png">
+</p>
 
-QHyper is a library, which is aimed at researchers working on
+QHyper is a Python library that provides a unified interface for experimenting with quantum-related optimization solvers. It allows users to specify combinatorial optimization problems, select solvers, manage problem hyperparameters, and standardize output for ease of use.
+
+## Introduction
+
+QHyper is a library, which is aimed at users working on
 computational experiments with a variety of quantum combinatorial optimization solvers.
 The library offers a simple and extensible interface for formulating combinatorial
 optimization problems, selecting and running solvers,
@@ -13,68 +17,45 @@ The solvers can be combined with provided local and global (hyper)optimizers.
 The main features of the library are its extensibility on different levels of use
 as well as a straightforward and flexible experiment configuration format.
 
-# Documentation
+## Documentation
 
-Documentation can be found at [qhyper.readthedocs.io](https://qhyper.readthedocs.io/en/latest/)
+The latest documentation can be found on [Readthedocs](https://qhyper.readthedocs.io/en/latest/).
 
-# Code example
+## Installation
 
-```python
-from QHyper.solvers import solver_from_config
+To install QHyper, use the following command (ensure that you have Python 3.12 installed before running the command).
 
-solver_config = {
-    'solver': {
-        'type': 'vqa',
-            'optimizer': {
-            'type': 'scipy',
-            'maxfun': 200,
-            "bounds": [(0, 2 * 3.1415)] * 10
-        },
-        'pqc': {
-            'type': 'wfqaoa',
-            'layers': 5,
-        },
-        'hyper_optimizer': {
-            'type': 'random',
-            'processes': 4,
-            'number_of_samples': 100,
-            'bounds': [(1, 10), (1, 10), (1, 10)]
-        },
-        'params_inits': {
-            'angles': [[0.5]*5, [1]*5],
-            'hyper_args': [1, 2.5, 2.5],
-        }
-    },
-    'problem': {
-        'type': 'knapsack',
-        'max_weight': 2,
-        'item_weights': [1, 1, 1],
-        'item_values': [2, 2, 1],
-    }
-}
-solver = solver_from_config(solver_config)
-solver_results = solver.solve()
-
-print(f"Probabilities: {solver_results.probabilities}")
-# Probabilities: [(0, 0, 0, 0, 0, 0.00812924) (0, 0, 0, 0, 1, 0.01734155)
-#                 (0, 0, 0, 1, 0, 0.01178566) (0, 0, 0, 1, 1, 0.00071086)
-#                 (0, 0, 1, 0, 0, 0.00845063) (0, 0, 1, 0, 1, 0.00710329)
-#                 (0, 0, 1, 1, 0, 0.03270284) (0, 0, 1, 1, 1, 0.02002345)
-#                 (0, 1, 0, 0, 0, 0.01483474) (0, 1, 0, 0, 1, 0.00064556)
-#                 (0, 1, 0, 1, 0, 0.0091675 ) (0, 1, 0, 1, 1, 0.00756625)
-#                 (0, 1, 1, 0, 0, 0.00674517) (0, 1, 1, 0, 1, 0.05076165)
-#                 (0, 1, 1, 1, 0, 0.00835631) (0, 1, 1, 1, 1, 0.00071063)
-#                 (1, 0, 0, 0, 0, 0.01483474) (1, 0, 0, 0, 1, 0.00064556)
-#                 (1, 0, 0, 1, 0, 0.0091675 ) (1, 0, 0, 1, 1, 0.00756625)
-#                 (1, 0, 1, 0, 0, 0.00674517) (1, 0, 1, 0, 1, 0.05076165)
-#                 (1, 0, 1, 1, 0, 0.00835631) (1, 0, 1, 1, 1, 0.00071063)
-#                 (1, 1, 0, 0, 0, 0.02985095) (1, 1, 0, 0, 1, 0.49483852)
-#                 (1, 1, 0, 1, 0, 0.0046068 ) (1, 1, 0, 1, 1, 0.02405322)
-#                 (1, 1, 1, 0, 0, 0.04691337) (1, 1, 1, 0, 1, 0.02574434)
-#                 (1, 1, 1, 1, 0, 0.0651882 ) (1, 1, 1, 1, 1, 0.00498148)]
-
-print(f"Best params: {solver_results.params}")
-# Best params: {'angles': array([0.27298414, 2.2926187 , 0.        , 0.76391714, 0.15569598,
-#                                0.4237506 , 0.93474157, 1.39996954, 1.38701602, 0.36818742]),
-#               'hyper_args': array([8.77582845, 7.32430447, 1.02777043])}
+``` bash
+pip install qhyper
 ```
+
+
+## Key features
+
+- **Quantum algorithm emphasis:** QHyper is designed for researchers and developers exploring quantum optimization algorithms, providing an environment for implementing quantum and hybrid quantum-classical solvers.
+
+- **Classical solver support:** While the focus is on quantum algorithms, QHyper also enables seamless integration of classical solvers, ensuring a unified platform for comparative experiments.
+
+- **Simplified experimentation:** With QHyper, the experimentation process is made more accessible. The users can define, execute, and analyze experiments efficiently due to the unified formats of inputs and outputs, and possibility of using configuration files.
+
+- **Modularity and extensibility:** One of QHyper's core strengths is easy extensibility. Adding new problems, solvers, or optimizers is straightforward, empowering users to contribute and customize the library to suit their research needs.
+
+- **Hyperparameters optimization:** QHyper offers easily configurable hyperoptimizers for converting constrained optimization problems into unconstrained forms required by some quantum solvers.
+
+
+## Architecture
+
+The architecture of QHyper is presented on a diagram below:
+
+<img src="docs/source/_static/qhyper_architecture.svg" style="background-color: transparent">
+
+The main components are:
+
+* [Problems](https://qhyper.readthedocs.io/en/latest/generated/QHyper.problems.html) - classes that describe different types of problems, such as the Knapsack Problem or the Traveling Salesman Problem.
+
+* [Solvers](https://qhyper.readthedocs.io/en/latest/generated/QHyper.solvers.html) - Classes that define different types of solvers, e.g., quantum/hybrid solvers like the Quantum Approximate Optimization Algorithm or the Constrained Quadratic Model, but also classical solvers like Gurobi.
+
+* [Optimizers](https://qhyper.readthedocs.io/en/latest/generated/QHyper.optimizers.html) - Classes that implement different types of (hyper)optimizers.
+
+Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
+

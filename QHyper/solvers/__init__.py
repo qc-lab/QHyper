@@ -3,10 +3,21 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 """
+This module contains implementations of different solvers.
+In QHyper exists three types of solvers: classical, quantum annealing and
+gate-based.
+Some of them are written from scratch based on popular algorithms, while
+others are just a wrapper for existing solutions.
+No solver is imported by deafult to reduce number of dependencies.
+To use any solver you can import it directly like
+
+.. code-block:: python
+
+    from QHyper.solver.gate_based.pennylane.qaoa import QAOA
+
+or use function :py:func:`Solvers.get` with the name, category, and platform.
 Any solver that is in directory 'QHyper/custom' or 'custom' will be
-automatically imported and available for use. Add 'name' attribute to the
-class to make it available in the SOLVERS dictionary (if not solver will be
-available by its class name).
+also available in this function.
 
 .. rubric:: Interface
 
@@ -14,7 +25,7 @@ available by its class name).
     :toctree: generated/
 
     Solver  -- Base class for solvers.
-    SolverResult -- Dataclass for storing
+    SolverResult -- Dataclass for storing results
 
 
 .. rubric:: Classical Solvers
@@ -39,13 +50,13 @@ available by its class name).
 
 .. autosummary::
     :toctree: generated/
-    
+
     gate_based.pennylane.qaoa.QAOA -- QAOA solver.
     gate_based.pennylane.qml_qaoa.QML_QAOA -- QML QAOA solver.
     gate_based.pennylane.wf_qaoa.WF_QAOA -- Weight Free QAOA solver.
     gate_based.pennylane.h_qaoa.H_QAOA -- Hyper QAOA solver.
 
-    
+
 .. rubric:: Hyper-optimizer
 
 Not really a solver, but a class that can be used to optimize the hyperparameters
@@ -55,6 +66,11 @@ of another solver. It is a wrapper around the solver class.
     :toctree: generated/
 
     hyper_optimizer.HyperOptimizer -- Hyper-optimizer.
+
+.. rubric:: Additional functions
+
+.. autoclass:: Solvers
+    :members:
 """
 
 import copy
@@ -74,11 +90,25 @@ from QHyper.solvers.hyper_optimizer import HyperOptimizer
 
 
 class Solvers:
-    custom_solvers = (search_for(Solver, 'QHyper/custom')
-                      | search_for(Solver, 'custom'))
+    custom_solvers: None | dict[str, type] = None
 
     @staticmethod
-    def get(name: str, category: str, platform: str) -> Type[Solver]:
+    def get(name: str, category: str = '', platform: str = '') -> Type[Solver]:
+        """
+        Get solver class by name, category, and platform.
+
+        The name is required, other paramters might be required
+        if there would be more than one solver with the same name.
+        The solver will be available by the 'name' attribute if defined or
+        by the class name. Letters case doesn't matter.
+
+        """
+
+        if Solvers.custom_solvers is None:
+            Solvers.custom_solvers = (
+                search_for(Solver, 'QHyper/custom')
+                | search_for(Solver, 'custom'))
+
         # In the future, the category and platform might be required for some
         # solvers
         if category == "custom":
@@ -88,7 +118,7 @@ class Solvers:
                 raise FileNotFoundError(
                     f"Solver {name} not found in custom solvers"
                 )
-            
+
         name_ = name.lower()
         if name_ in ["qaoa"]:
             from .gate_based.pennylane.qaoa import QAOA
