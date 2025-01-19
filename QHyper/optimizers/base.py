@@ -16,14 +16,14 @@ class OptimizationParameter:
     """
     Dataclass for storing bounds, steps and init values for parameters
     that might be optimized. Most of the time some of this values are not
-    required, but it depends on the chosen optimization algorithm. 
+    required, but it depends on the chosen optimization algorithm.
     Check the documentation of the chosen algorithm to see which values are
     required.
 
     Attributes
     ----------
     min : list[float]
-        List of minimum values for each parameter. 
+        List of minimum values for each parameter.
     max : list[float]
         List of maximum values for each parameter.
     step : list[float]
@@ -133,7 +133,7 @@ class OptimizationResult:
     value : float
         The minimum function value found by the optimization algorithm.
     params : list[float]
-        The optimal point (function arguments) found by the optimization 
+        The optimal point (function arguments) found by the optimization
         algorithm.
     history : list[list[OptimizationResult]]
         The history of the optimization algorithm. Each element of the list
@@ -146,14 +146,6 @@ class OptimizationResult:
     history: list[list['OptimizationResult']] = dataclasses.field(
         default_factory=list)
 
-    def fix_dims(self, dims: tuple[int]) -> 'OptimizationResult':
-        self.params = self.params.reshape(dims)
-
-        for epoch in self.history:
-            for result in epoch:
-                result.params = result.params.reshape(dims)
-        return self
-
 
 class Optimizer(abc.ABC):
     """
@@ -161,16 +153,7 @@ class Optimizer(abc.ABC):
 
     """
 
-    # @overload
-    # def minimize(self, func: Callable[[list[float]], OptimizationResult]
-    #              ) -> OptimizationResult:
-    #     ...
-
-    # @overload
-    # def minimize(self, func: Callable[[list[float]], OptimizationResult],
-    #              init: OptimizationParameter) -> OptimizationResult:
-    #     ...
-
+    @abstractmethod
     def minimize(
         self,
         func: Callable[[list[float]], OptimizationResult],
@@ -178,63 +161,21 @@ class Optimizer(abc.ABC):
     ) -> OptimizationResult:
         """
         Method that minimizes the given function using the
-        implemented optimization algorithm. This method checks
-        the arguments and calls the abstract method :py:meth:`_minimize`.
+        implemented optimization algorithm.
+        This method has to be implemented by the subclass.
 
         Parameters
         ----------
-        func : callable
+        func : Callable[[list[float]], OptimizationResult]
             The objective function to be minimized.
-        init : numpy.ndarray
-            The initial point for the optimization algorithm.
-            Some algorithms requires init just to obtain the shape.
+        init : OptimizationParameter
+            The initial parameter for the optimization algorithm.
+            The required fields are defined by subclass.
 
         Returns
         -------
-        tuple
-            A tuple containing the minimum function value and the
-            corresponding optimal point.
-        """
-        return self.minimize_(func, init)
-        # if init is None:
-        #     return self.minimize_(func, None)
-
-        # _init = np.copy(init).flatten()
-
-        # result = self.minimize_(func, _init)
-        # return result.fix_dims(cast(tuple[int], init.shape))
-
-    # def check_bounds(self, init: NDArray | None) -> None:
-    #     """
-    #     Check if the bounds are correctly set. This method should be
-    #     called before the optimization starts.
-    #     """
-    #     if not hasattr(self, "bounds"):
-    #         raise OptimizerError("This optimizer requires bounds.")
-
-    #     bounds = getattr(self, "bounds")
-    #     if isinstance(bounds, list):
-    #         # warnings.warn("WARNING: bounds should be a numpy array. "
-    #         #               "Converting to numpy array.")
-    #         setattr(self, "bounds", np.array(bounds))
-    #         bounds = getattr(self, "bounds")
-
-    #     if bounds.shape[-1] != 2:
-    #         raise OptimizerError("Bounds should be a 2D "
-    #                              "array with shape (n, 2).")
-
-    #     if init is not None and bounds.shape[:-1] != init.shape:
-    #         raise OptimizerError(
-    #             f"Bounds shape {bounds.shape[:-1]} "
-    #             f"does not match init shape {init.shape}."
-    #         )
-
-    @abstractmethod
-    def minimize_(
-        self,
-        func: Callable[[list[float]], OptimizationResult],
-        init: OptimizationParameter
-    ) -> OptimizationResult:
-        """
-        Abstract method that should be implemented by the subclass.
+        OptimizationResult
+            Result contains the minimum function value, the
+            corresponding optimal point, and the history of
+            the optimization.
         """

@@ -18,7 +18,7 @@ class GridSearch(Optimizer):
 
     The grid search optimizer is a simple optimization algorithm that
     searches through the entire parameter space by evaluating the function
-    at each point. 
+    at each point.
     This alogrithm requries the following parameters to be set:
     - `min` and `max` bounds for each parameter
     - `step` step values for each parameter
@@ -35,19 +35,16 @@ class GridSearch(Optimizer):
         The number of processes to use for parallel computation.
     """
 
-    # bounds: NDArray
     verbose: bool
     disable_tqdm: bool
     processes: int = 1
 
     def __init__(
         self,
-        # bounds: NDArray,
         verbose: bool = False,
         disable_tqdm: bool = True,
         processes: int = 1,
     ) -> None:
-        # self.bounds = bounds
         self.verbose = verbose
         self.disable_tqdm = disable_tqdm
         self.processes = processes
@@ -62,9 +59,9 @@ class GridSearch(Optimizer):
             ), axis=-1
         ).reshape(-1, len(params))
 
-    def minimize_(
+    def minimize(
             self,
-            func: Callable[[NDArray], OptimizationResult],
+            func: Callable[[list[float]], OptimizationResult],
             init: OptimizationParameter | None
     ) -> OptimizationResult:
         if init is None:

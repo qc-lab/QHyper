@@ -87,7 +87,7 @@ class QmlGradientDescent(Optimizer):
         self.steps = steps
         self.verbose = verbose
 
-    def minimize_(
+    def minimize(
         self,
         func: Callable[[list[float]], OptimizationResult],
         init: OptimizationParameter

@@ -103,7 +103,7 @@ class CEM(Optimizer):
 
         return np.vstack(hyperparams)
 
-    def minimize_(
+    def minimize(
         self,
         func: Callable[[list[float]], OptimizationResult],
         init: OptimizationParameter,

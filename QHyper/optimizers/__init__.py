@@ -19,9 +19,11 @@ also available in this function.
 
 .. rubric:: Optimization result dataclass
 
-.. autoclass:: OptimizationResult
-.. autoclass:: OptimizationParameter
+.. autosummary::
+    :toctree: generated
 
+    OptimizationResult
+    OptimizationParameter
 
 .. rubric:: Interface
 

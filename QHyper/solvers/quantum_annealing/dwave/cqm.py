@@ -7,8 +7,6 @@ import os
 import numpy as np
 from dwave.system import LeapHybridCQMSampler
 
-from typing import Any
-
 from dataclasses import dataclass
 
 from QHyper.converter import Converter

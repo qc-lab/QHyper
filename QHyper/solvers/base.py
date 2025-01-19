@@ -23,7 +23,6 @@ class SolverException(Exception):
 
 @dataclass
 class SolverResult:
-    
     """
     Class for storing results of the solver.
 
@@ -31,7 +30,7 @@ class SolverResult:
     ----------
     probabilities : np.recarray
         Record array with the results of the solver. Contains column for each
-        variable and the probability of the solution. 
+        variable and the probability of the solution.
     params : dict[Any, Any]
         Dictionary with the best parameters for the solver.
     history : list[list[float]]
@@ -66,13 +65,9 @@ class Solver(ABC):
     @abstractmethod
     def solve(
             self,
-            params_inits: dict[str, Any] = {}
     ) -> SolverResult:
         """
-        Parameters
-        ----------
-        params_inits : dict[str, Any], optional
-            Initial parameters for the optimization
+        Parameters are specified in solver implementation.
 
         Returns
         -------

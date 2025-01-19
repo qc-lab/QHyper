@@ -52,7 +52,7 @@ class Random(Optimizer):
         self.number_of_samples = number_of_samples
         self.processes = processes
 
-    def minimize_(
+    def minimize(
         self,
         func: Callable[[list[float]], OptimizationResult],
         init: OptimizationParameter

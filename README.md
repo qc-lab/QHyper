@@ -26,7 +26,7 @@ The latest documentation can be found on [Readthedocs](https://qhyper.readthedoc
 To install QHyper, use the following command (ensure that you have Python 3.12 installed before running the command).
 
 ``` bash
-    pip install qhyper
+pip install qhyper
 ```
 
 
