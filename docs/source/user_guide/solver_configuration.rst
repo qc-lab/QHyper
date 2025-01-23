@@ -554,12 +554,15 @@ Running a pure solver:
 
     .. code-tab:: py Python using YAML
 
-        # Note: the solver and problem configs should be in a single <file_name>.yaml file
-        # ---
-        #  solver:
-        #         ...
-        #  problem:
-        #         ...
+        '''
+        Note: the solver and problem configs should be
+        in a single <file_name>.yaml file.
+        ---
+          solver:
+            ...
+          problem:
+            ...
+        '''
 
         import yaml
         from QHyper.solvers import solver_from_config
@@ -572,19 +575,34 @@ Running a pure solver:
 
     .. code-tab:: py Python using JSON
 
-        # Note: the solver and problem configs should be in a single <file_name>.json file
-        # {
-        #  "solver":
-        #           { ... },
-        #  "problem":
-        #           { ... }
-        # }
+        '''
+        Note: there are two ways to use the JSON config:
+        
+        1. The solver and problem configs can be
+        read from a single <file_name>.json file.
+        {
+          "solver":
+                   { ... },
+          "problem":
+                   { ... }
+        }
+        
+        2. Directly in Python code, JSON syntax 
+        can be assigned to a variable for further use.
+        solver_config = {
+                        "solver":
+                                { ... },
+                        "problem":
+                                { ... }
+                        }
+        '''
 
         import json
         from QHyper.solvers import solver_from_config
 
-        with open("<file_name>.json", "r") as file:
-            solver_config = json.load(file)
+        # Uncomment if reading data from a file
+        # with open("<file_name>.json", "r") as file:
+        #     solver_config = json.load(file)
         solver = solver_from_config(solver_config)
         solver.solve()
 
@@ -599,12 +617,17 @@ Running a hyperoptimizer:
 
     .. code-tab:: py Python using YAML
 
-        # Note: the solver and problem configs should be in the same <file_name>.yaml file
-        # ---
-        #  solver:
-        #         ...
-        #  problem:
-        #         ...
+        '''
+        Note: the solver, problem, and hyper_optimizer configs
+        should be in the same <file_name>.yaml file.
+        ---
+          solver:
+            ...
+          problem:
+            ...
+          hyper_optimizer:
+            ...
+        '''
 
         import yaml
         from QHyper.solvers import solver_from_config
@@ -619,19 +642,38 @@ Running a hyperoptimizer:
 
     .. code-tab:: py Python using JSON
 
-        # Note: the solver and problem configs should be in a single <file_name>.json file
-        # {
-        #  "solver":
-        #           { ... },
-        #  "problem":
-        #           { ... }
-        # }
+        '''
+        Note: there are two ways to use the JSON config:
+
+        1. The solver, problem, and hyper optimizer configs 
+        can be read from a single <file_name>.json file.
+        {
+          "solver":
+            { ... },
+          "problem":
+            { ... },
+          "hyper_optimizer":
+            { ... }
+         }
+
+        2. Directly in Python code, JSON syntax 
+        can be assigned to a variable for further use.
+        hyper_optimizer_config = {
+                                    "solver":
+                                        { ... },
+                                    "problem":
+                                        { ... },
+                                    "hyper_optimizer":
+                                        { ... }
+                                  }
+        '''
 
         import json
         from QHyper.solvers import solver_from_config
 
-        with open("<file_name>.json", "r") as file:
-            hyper_optimizer_config = json.load(file)
+        # Uncomment if reading data from a file
+        # with open("<file_name>.json", "r") as file:
+        #   hyper_optimizer_config = json.load(file)
         hyper_optimizer = solver_from_config(hyper_optimizer_config)
         hyper_optimizer.solve()
         hyper_optimizer.run_with_best_params()
