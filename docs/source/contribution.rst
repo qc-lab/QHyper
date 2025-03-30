@@ -86,7 +86,7 @@ Your documentation changes are ready for submission.
 New release
 -----------
 
-If new changes hit main branch, it will trigger Read the Docs and will update the `main <https://qhyper.readthedocs.io/en/main` release.
+If new changes hit main branch, it will trigger Read the Docs and will update the `main <https://qhyper.readthedocs.io/en/main>` release.
 If new changes will be pushed to `production` branch, then the main page of the documentation will be updated. Additionaly new version of library will be created in Pypi. Remember to update `version` in `setup.py`.
 
 
