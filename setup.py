@@ -8,7 +8,7 @@ LONG_DESCRIPTION = 'A package that allows to build and solve quantum and classic
 # Setting up
 setup(
     name="qhyper",
-    version='0.3.1',
+    version='0.3.2',
     author="ACK Cyfronet AGH",
     author_email="tomasz.lamza@cyfronet.pl",
     description=DESCRIPTION,
