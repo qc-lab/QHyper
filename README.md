@@ -28,6 +28,10 @@ To install QHyper, use the following command (ensure that you have Python 3.12 i
 ``` bash
 pip install qhyper
 ```
+The latest version of QHyper can be downloaded and installed directly from github. But please be careful, this version may not be released yet and may contain bugs.
+```bash
+pip install git+https://github.com/qc-lab/QHyper
+```
 
 
 ## Key features

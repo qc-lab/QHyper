@@ -86,15 +86,8 @@ Your documentation changes are ready for submission.
 New release
 -----------
 
-If tag looks like `v[0-9]+.[0-9]+.[0-9]+` new release will be pushed to pypi. If this version starts with `test/` new version will be pushed to testing pypi.
-
-.. code-block:: bash
-
-   git tag <version>
-   git push origin tag <version>
-
-Each push on master will update the documentation available on `Readthedocs <https://qhyper.readthedocs.io/en/latest/>`_.
-
+If new changes hit main branch, it will trigger Read the Docs and will update the `main <https://qhyper.readthedocs.io/en/main` release.
+If new changes will be pushed to `production` branch, then the main page of the documentation will be updated. Additionaly new version of library will be created in Pypi. Remember to update `version` in `setup.py`.
 
 
 Contribution Rules
