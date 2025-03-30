@@ -1,0 +1,55 @@
+[project]
+name = "qhyper"
+version = "0.3.0"
+description = "Quantum and classical problem solvers"
+authors = [
+    {name = "tmek1244",email = "tmek1244@gmail.com"}
+]
+maintainers = [
+    { name = "John Smith", email = "johnsmith@example.org" },
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+keywords = [ "qhyper", "quantum", "qaoa", "configs", "dwave" ]
+dependencies = [
+    "numpy (==1.26)",
+    "pennylane (==0.38)",
+    "tqdm (>=4.67.1,<5.0.0)",
+    "sympy (==1.13)",
+    "dwave-system (>=1.28.0,<2.0.0)",
+    "types-tqdm (>=4.67.0.20241221,<5.0.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "gurobipy (>=12.0.0,<13.0.0)",
+]
+
+[project.urls]
+repository = "https://github.com/qc-lab/QHyper"
+documentation = "https://qhyper.readthedocs.io/en/latest/"
+
+[tool.poetry]
+packages = [
+    { include = "qhyper" },
+    { include = "extra_package/**/*.py" },
+]
+
+[tool.poetry.group.workflows.dependencies]
+wfcommons = {git = "https://github.com/wfcommons/wfcommons.git", rev = "main"}
+
+
+[tool.poetry.group.dev.dependencies]
+pydata-sphinx-theme = ">=0.16.0,<0.17.0"
+sphinx-copybutton = ">=0.5.2,<0.6.0"
+sphinx-autodoc-typehints = ">=3.0.0,<3.1.0"
+sphinx = ">=8.1.3,<8.2.0"
+numpydoc = ">=1.8,<2.0"
+graphviz = ">=0.20,<1.0"
+nbsphinx = ">=0.9,<1.0"
+ipykernel = ">=6.29,<7.0"
+sphinx-tabs = ">=3.4.7,<3.5.0"
+pytest = "^8.3.4"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
