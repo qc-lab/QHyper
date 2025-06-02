@@ -7,7 +7,7 @@ from abc import abstractmethod, ABC
 from dataclasses import dataclass, field
 import numpy as np
 
-from typing import Any
+from typing import Any, Optional
 
 from QHyper.problems.base import Problem
 from QHyper.optimizers import OptimizationResult
@@ -20,6 +20,26 @@ class SolverConfigException(Exception):
 class SolverException(Exception):
     pass
 
+@dataclass
+class SamplesetInfo:
+    """
+    Class for storing additional sampleset information.
+    Attributes
+    ----------
+    dwave_sampleset_info : np.ndarray
+        Record array containing metadata obtained from D-Wave,
+        such as:
+        - qpu_access_time,
+        - qpu_programming_time, etc.
+
+    time_measurements : np.ndarray
+        Record array containining information about time measurements of:
+        - accessing the clique embedding cache file,
+        - creating EmbeddingComposite,
+        - .sample() method execution,
+    """
+    dwave_sampleset_info: np.ndarray
+    time_measurements: np.ndarray
 
 @dataclass
 class SolverResult:
@@ -37,10 +57,14 @@ class SolverResult:
         History of the solver. Each element of the list represents the values
         of the objective function at each iteration - there can be multiple
         results per each iteration (epoch).
+    sampleset_info : Optional[SamplesetInfo]
+        Additional information about the sampleset in case of sampling-based
+        methods such as with quantum annealing.
     """
     probabilities: np.recarray
     params: dict[Any, Any]
     history: list[list[OptimizationResult]] = field(default_factory=list)
+    sampleset_info: Optional[SamplesetInfo] = None
 
 
 class Solver(ABC):
