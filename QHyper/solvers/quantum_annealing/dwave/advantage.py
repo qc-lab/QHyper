@@ -89,12 +89,11 @@ class Advantage(Solver):
             qubo_terms, offset = convert_qubo_keys(qubo)
             bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
 
-            find_clique_emb_handler = find_clique_embedding(
-                bqm.to_networkx_graph(),
-                target_graph=self.sampler.to_networkx_graph(),
-            )
             self.embedding = execute_timed(
-                find_clique_emb_handler,
+                lambda: find_clique_embedding(
+                    bqm.to_networkx_graph(),
+                    target_graph=self.sampler.to_networkx_graph(),
+                ),
                 measure_times,
                 self.times,
                 "find_clique_embedding_time",
@@ -113,14 +112,14 @@ class Advantage(Solver):
 
         if not self.use_clique_embedding:
             embedding_compose = execute_timed(
-                EmbeddingComposite(self.sampler),
+                lambda: EmbeddingComposite(self.sampler),
                 self.measure_times,
                 self.times,
                 "embedding_composite_time",
             )
         else:
             embedding_compose = execute_timed(
-                FixedEmbeddingComposite(self.sampler, self.embedding),
+                lambda: FixedEmbeddingComposite(self.sampler, self.embedding),
                 self.measure_times,
                 self.times,
                 "fixed_embedding_composite_time",
@@ -132,14 +131,16 @@ class Advantage(Solver):
 
         # Additional sampling info
         return_embedding = True
-        sample_func_handler = embedding_compose.sample(
-            bqm,
-            num_reads=self.num_reads,
-            chain_strength=self.chain_strength,
-            return_embedding=return_embedding,
-        )
         sampleset = execute_timed(
-            sample_func_handler, self.measure_times, self.times, "sample_time"
+            lambda: embedding_compose.sample(
+                bqm,
+                num_reads=self.num_reads,
+                chain_strength=self.chain_strength,
+                return_embedding=return_embedding,
+            ),
+            self.measure_times,
+            self.times,
+            "sample_time",
         )
 
         result = np.recarray(
@@ -227,7 +228,7 @@ def execute_timed(
         times_dict[key] = time.perf_counter() - start_time
         return result
     else:
-        return func()  # Execute without timing overhead
+        return func()
 
 
 def time_dict_to_ndarray(sampleset_info_times: dict[str, float]) -> np.ndarray:
