@@ -94,7 +94,7 @@ class Advantage(Solver):
                     bqm.to_networkx_graph(),
                     target_graph=self.sampler.to_networkx_graph(),
                 ),
-                measure_times,
+                self.measure_times,
                 self.times,
                 "find_clique_embedding_time",
             )
