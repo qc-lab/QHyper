@@ -164,6 +164,10 @@ class CommunityDetectionProblem(Problem):
 
         equation = {key: -1 * val for key, val in equation.items()}
 
+        nonzero_terms = sum(1 for v in equation.values() if not np.isclose(v, 0.0))
+        if nonzero_terms == 0:
+            raise ValueError(f"QUBO is empty — all terms in modularity matrix are 0 or have negative values. Try lower resolution (current: {self.resolution})")
+
         self.objective_function = Polynomial(equation)
 
     def _encode_discrete_to_one_hot(
