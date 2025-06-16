@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from collections import defaultdict
 
 from QHyper.problems.base import Problem
-from QHyper.solvers.base import Solver, SolverResult, SamplesetInfo
+from QHyper.solvers.base import Solver, SolverResult, SamplesetData
 from QHyper.converter import Converter
 from QHyper.constraint import Polynomial
 
@@ -14,11 +14,26 @@ from dwave.system import DWaveSampler, EmbeddingComposite
 from dwave.system.composites import FixedEmbeddingComposite
 from dimod import BinaryQuadraticModel
 from dwave.embedding.pegasus import find_clique_embedding
+import warnings
+
+from enum import Enum
 
 import time
 
 
 DWAVE_API_TOKEN = os.environ.get("DWAVE_API_TOKEN")
+
+
+class TimeUnits(str, Enum):
+    S = "s"
+    US = "us"
+
+
+class Timing:
+    FIND_CLIQUE_EMBEDDING = f"find_clique_embedding_time_{TimeUnits.S}"
+    EMBEDDING_COMPOSITE = f"embedding_composite_time_{TimeUnits.S}"
+    FIXED_EMBEDDING_COMPOSITE = f"fixed_embedding_composite_time_{TimeUnits.S}"
+    SAMPLE_FUNCTION = f"sample_time_{TimeUnits.S}"
 
 
 @dataclass
@@ -64,7 +79,7 @@ class Advantage(Solver):
         chain_strength: float | None = None,
         use_clique_embedding: bool = False,
         token: str | None = None,
-        measure_times: bool = False,
+        elapse_times: bool = False,
     ) -> None:
         self.problem = problem
         self.penalty_weights = penalty_weights
@@ -79,11 +94,11 @@ class Advantage(Solver):
             token=token or DWAVE_API_TOKEN,
         )
         self.token = token
-        self.measure_times = measure_times
+        self.elapse_times = elapse_times
         self.times: Dict = {}
 
         if use_clique_embedding:
-            # args = self.weigths if aself.weigths else []
+            # args = self.weigths if self.weigths else []
             args = getattr(self, "weights", [])
             qubo = Converter.create_qubo(self.problem, args)
             qubo_terms, offset = convert_qubo_keys(qubo)
@@ -94,15 +109,15 @@ class Advantage(Solver):
                     bqm.to_networkx_graph(),
                     target_graph=self.sampler.to_networkx_graph(),
                 ),
-                self.measure_times,
+                self.elapse_times,
                 self.times,
-                "find_clique_embedding_time",
+                Timing.FIND_CLIQUE_EMBEDDING,
             )
 
     def solve(
         self,
         penalty_weights: list[float] | None = None,
-        return_sampleset_info: bool = False,
+        return_sampleset_metadata: bool = False,
     ) -> Any:
         if penalty_weights is None and self.penalty_weights is None:
             penalty_weights = [1.0] * (len(self.problem.constraints) + 1)
@@ -113,16 +128,16 @@ class Advantage(Solver):
         if not self.use_clique_embedding:
             embedding_compose = execute_timed(
                 lambda: EmbeddingComposite(self.sampler),
-                self.measure_times,
+                self.elapse_times,
                 self.times,
-                "embedding_composite_time",
+                Timing.EMBEDDING_COMPOSITE,
             )
         else:
             embedding_compose = execute_timed(
                 lambda: FixedEmbeddingComposite(self.sampler, self.embedding),
-                self.measure_times,
+                self.elapse_times,
                 self.times,
-                "fixed_embedding_composite_time",
+                Timing.FIXED_EMBEDDING_COMPOSITE,
             )
 
         qubo = Converter.create_qubo(self.problem, penalty_weights)
@@ -138,9 +153,9 @@ class Advantage(Solver):
                 chain_strength=self.chain_strength,
                 return_embedding=return_embedding,
             ),
-            self.measure_times,
+            self.elapse_times,
             self.times,
-            "sample_time",
+            Timing.SAMPLE_FUNCTION,
         )
 
         result = np.recarray(
@@ -160,10 +175,19 @@ class Advantage(Solver):
             result["probability"][i] = solution.num_occurrences / num_of_shots
             result["energy"][i] = solution.energy
 
-        sampleset_info = None
-        if return_sampleset_info:
-            sampleset_info = SamplesetInfo(
-                time_dict_to_ndarray(sampleset.info["timing"]),
+        if return_sampleset_metadata and not sampleset.info["timing"]:
+            warnings.warn(
+                "No timing information available for the sampleset. ", UserWarning
+            )
+
+        sampleset_info: SamplesetData | None = None
+        if return_sampleset_metadata:
+            sampleset_info = SamplesetData(
+                time_dict_to_ndarray(
+                    add_time_units_to_dwave_timing_info(
+                        sampleset.info["timing"], TimeUnits.US
+                    )
+                ),
                 time_dict_to_ndarray(self.times),
             )
 
@@ -238,3 +262,27 @@ def time_dict_to_ndarray(sampleset_info_times: dict[str, float]) -> np.ndarray:
         setattr(result, key, value)
 
     return result
+
+
+def add_time_units_to_dwave_timing_info(
+    dwave_sampleset_info_timing: dict[str, float], time_unit: TimeUnits = TimeUnits.US
+) -> dict[str, float]:
+    """
+    Add time units to the D-Wave timing info.
+
+    Parameters:
+    -----------
+    sampleset_info_times : dict[str, float]
+        DWave dictionary with timing information.
+    time_unit : TimeUnits, optional
+        The time unit to append to the keys (default by DWave docs is TimeUnits.US).
+
+    Returns:
+    --------
+    np.ndarray
+        A record array with the timing information and units.
+    """
+    dwave_keys_with_unit = [
+        key + f"_{time_unit.value}" for key in dwave_sampleset_info_timing.keys()
+    ]
+    return dict(zip(dwave_keys_with_unit, dwave_sampleset_info_timing.values()))

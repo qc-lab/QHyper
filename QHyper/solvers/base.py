@@ -21,12 +21,12 @@ class SolverException(Exception):
     pass
 
 @dataclass
-class SamplesetInfo:
+class SamplesetData:
     """
     Class for storing additional sampleset information.
     Attributes
     ----------
-    dwave_sampleset_info : np.ndarray
+    dwave_sampleset_metadata : np.ndarray
         Record array containing metadata obtained from D-Wave,
         such as:
         - qpu_access_time,
@@ -38,7 +38,7 @@ class SamplesetInfo:
         - creating EmbeddingComposite,
         - .sample() method execution,
     """
-    dwave_sampleset_info: np.ndarray
+    dwave_sampleset_metadata: np.ndarray
     time_measurements: np.ndarray
 
 @dataclass
@@ -64,7 +64,7 @@ class SolverResult:
     probabilities: np.recarray
     params: dict[Any, Any]
     history: list[list[OptimizationResult]] = field(default_factory=list)
-    sampleset_info: Optional[SamplesetInfo] = None
+    sampleset_info: Optional[SamplesetData] = None
 
 
 class Solver(ABC):
