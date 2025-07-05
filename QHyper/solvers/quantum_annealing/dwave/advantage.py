@@ -14,6 +14,7 @@ from dwave.system import DWaveSampler, EmbeddingComposite
 from dwave.system.composites import FixedEmbeddingComposite
 from dimod import BinaryQuadraticModel
 from dwave.embedding.pegasus import find_clique_embedding
+from minorminer import find_embedding
 import warnings
 
 from enum import Enum
@@ -31,9 +32,9 @@ class TimeUnits(str, Enum):
 
 class Timing:
     FIND_CLIQUE_EMBEDDING = f"find_clique_embedding_time_{TimeUnits.S}"
-    EMBEDDING_COMPOSITE = f"embedding_composite_time_{TimeUnits.S}"
+    FIND_HEURISTIC_EMBEDDING = f"find_heuristic_embedding_time_{TimeUnits.S}"
     FIXED_EMBEDDING_COMPOSITE = f"fixed_embedding_composite_time_{TimeUnits.S}"
-    SAMPLE_FUNCTION = f"sample_time_{TimeUnits.S}"
+    SAMPLE_FUNCTION = f"sample_func_time_{TimeUnits.S}"
 
 
 @dataclass
@@ -125,24 +126,27 @@ class Advantage(Solver):
             self.penalty_weights if penalty_weights is None else penalty_weights
         )
 
-        if not self.use_clique_embedding:
-            embedding_compose = execute_timed(
-                lambda: EmbeddingComposite(self.sampler),
-                self.elapse_times,
-                self.times,
-                Timing.EMBEDDING_COMPOSITE,
-            )
-        else:
-            embedding_compose = execute_timed(
-                lambda: FixedEmbeddingComposite(self.sampler, self.embedding),
-                self.elapse_times,
-                self.times,
-                Timing.FIXED_EMBEDDING_COMPOSITE,
-            )
-
         qubo = Converter.create_qubo(self.problem, penalty_weights)
         qubo_terms, offset = convert_qubo_keys(qubo)
         bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
+
+        if not self.use_clique_embedding:
+            self.embedding = execute_timed(
+                lambda: find_embedding(
+                    bqm.to_networkx_graph(),
+                    self.sampler.to_networkx_graph(),
+                ),
+                self.elapse_times,
+                self.times,
+                Timing.FIND_HEURISTIC_EMBEDDING,
+            )
+
+        embedding_compose = execute_timed(
+            lambda: FixedEmbeddingComposite(self.sampler, self.embedding),
+            self.elapse_times,
+            self.times,
+            Timing.FIXED_EMBEDDING_COMPOSITE,
+        )
 
         # Additional sampling info
         return_embedding = True
