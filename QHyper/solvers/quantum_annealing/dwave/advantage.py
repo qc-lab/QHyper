@@ -46,10 +46,6 @@ class Advantage(Solver):
     ----------
     problem : Problem
         The problem to be solved.
-    version: str, default 'Advantage_system5.4'
-        The version of the D-Wave Advantage system.
-    region : str, default 'eu-central-1'
-        The region in which D-Wave Advantage is available.
     num_reads: int, default 1
         The number of times the solver is run.
     chain_strength: float or None, default None
@@ -60,40 +56,32 @@ class Advantage(Solver):
         The initial parameter settings.
     use_clique_embedding: bool, default False
         Find clique for the embedding
+    **config: Any
+        Config for the D-Wave solver. Documentation available at https://docs.dwavequantum.com 
     """
 
     problem: Problem
     penalty_weights: list[float] | None = None
-    version: str = "Advantage_system5.4"
-    region: str = "eu-central-1"
     num_reads: int = 1
     chain_strength: float | None = None
     token: str | None = None
 
-    def __init__(
-        self,
-        problem: Problem,
-        penalty_weights: list[float] | None = None,
-        version: str = "Advantage_system5.4",
-        region: str = "eu-central-1",
-        num_reads: int = 1,
-        chain_strength: float | None = None,
-        use_clique_embedding: bool = False,
-        token: str | None = None,
-        elapse_times: bool = False,
-    ) -> None:
+    def __init__(self,
+                 problem: Problem,
+                 penalty_weights: list[float] | None = None,
+                 num_reads: int = 1,
+                 chain_strength: float | None = None,
+                 use_clique_embedding: bool = False,
+                 token: str | None = None,
+                 elapse_times: bool = False,
+                 **config: Any) -> None:
         self.problem = problem
         self.penalty_weights = penalty_weights
-        self.version = version
-        self.region = region
         self.num_reads = num_reads
         self.chain_strength = chain_strength
         self.use_clique_embedding = use_clique_embedding
         self.sampler = DWaveSampler(
-            solver=self.version,
-            region=self.region,
-            token=token or DWAVE_API_TOKEN,
-        )
+            token=token or DWAVE_API_TOKEN, **config)
         self.token = token
         self.elapse_times = elapse_times
         self.times: Dict = {}
