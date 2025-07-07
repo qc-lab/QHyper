@@ -66,7 +66,7 @@ class Advantage(Solver):
         self.token = token
 
         if use_clique_embedding:
-            args = self.weigths if self.weigths else []
+            args = getattr(self, "weights", [])
             qubo = Converter.create_qubo(self.problem, args)
             qubo_terms, offset = convert_qubo_keys(qubo)
             bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
