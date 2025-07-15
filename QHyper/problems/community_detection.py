@@ -22,34 +22,31 @@ class Network:
     resolution: float = 1.0
     weight: str | None = "weight"
     community: list | None = None
-    full_modularity_matrix: np.ndarray = field(init=False)
+    full_modularity_matrix: np.ndarray | None = None
     generalized_modularity_matrix: np.ndarray = field(init=False)
 
     def __post_init__(self) -> None:
         if not self.community:
             self.community = [*range(self.graph.number_of_nodes())]
-        (
-            self.full_modularity_matrix,
-            self.generalized_modularity_matrix,
-        ) = self.calculate_modularity_matrix()
+        if self.full_modularity_matrix is None:
+            self.full_modularity_matrix = self.calculate_full_modularity_matrix()
+        self.generalized_modularity_matrix = self.calculate_generalized_modularity_matrix()
+        
 
-    def calculate_modularity_matrix(self) -> np.ndarray:
+    def calculate_full_modularity_matrix(self) -> np.ndarray:
         adj_matrix: np.ndarray = nx.to_numpy_array(self.graph, weight=self.weight)
         in_degree_matrix: np.ndarray = adj_matrix.sum(axis=1)
         out_degree_matrix: np.ndarray = adj_matrix.sum(axis=0)
         m: int = np.sum(adj_matrix)
-        full_modularity_matrix = (
-            adj_matrix
-            - self.resolution * np.outer(in_degree_matrix, out_degree_matrix) / m
-        )
-
-        B_bis = full_modularity_matrix[self.community, :]
+        return adj_matrix - self.resolution * np.outer(in_degree_matrix, out_degree_matrix) / m
+    
+    def calculate_generalized_modularity_matrix(self) -> np.ndarray:
+        B_bis = self.full_modularity_matrix[self.community, :]
         B_community = B_bis[:, self.community]
         B_i = np.sum(B_community, axis=1)
         B_j = np.sum(B_community.T, axis=1)
         delta = np.eye(len(self.community), dtype=np.int32)
-        B_g = 0.5*( B_community + B_community.T ) - 0.5 * delta * (B_i + B_j)
-        return full_modularity_matrix, B_g
+        return 0.5 * (B_community + B_community.T) - 0.5 * delta * (B_i + B_j)
 
 
 class KarateClubNetwork(Network):
