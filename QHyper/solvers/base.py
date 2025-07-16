@@ -27,16 +27,33 @@ class SamplesetData:
     Attributes
     ----------
     dwave_sampleset_metadata : np.ndarray
-        Record array containing metadata obtained from D-Wave,
-        such as:
-        - qpu_access_time,
-        - qpu_programming_time, etc.
+        Record array containing metadata obtained from D-Wave:
+        - qpu_sampling_time_us,
+        - qpu_anneal_time_per_sample_us,
+        - qpu_readout_time_per_sample_us,
+        - qpu_access_time_us,
+        - qpu_access_overhead_time_us,
+        - qpu_programming_time_us,
+        - qpu_delay_time_per_sample_us,
+        - total_post_processing_time_us,
+        - post_processing_overhead_time_us,
+
+    The time units are microseconds (us) according to the D-Wave Docs (July 2025):
+    https://docs.dwavequantum.com/en/latest/quantum_research/operation_timing.html. 
+    
 
     time_measurements : np.ndarray
         Record array containining information about time measurements of:
-        - accessing the clique embedding cache file,
-        - creating EmbeddingComposite,
-        - .sample() method execution,
+        - find_clique_embedding_time_s - in case of clique embedding:
+        first call to that function after installment results
+        in the embedding search (might take minutes), next calls are accessing the clique
+        emedding cache file,
+        or
+        - find_heuristic_embedding_time_s - in case of heuristic embedding: search for heuristic embedding,
+        - fixed_embedding_composite_time_s - creating FixedEmbeddingComposite object,
+        - sample_func_time_s - method execution of the .sample function - communication with the solver itself.
+        (https://dwave-systemdocs.readthedocs.io/en/link_fix/reference/composites/generated/dwave.system.composites.FixedEmbeddingComposite.sample.html#dwave.system.composites.FixedEmbeddingComposite.sample),
+
     """
     dwave_sampleset_metadata: np.ndarray
     time_measurements: np.ndarray
@@ -57,7 +74,7 @@ class SolverResult:
         History of the solver. Each element of the list represents the values
         of the objective function at each iteration - there can be multiple
         results per each iteration (epoch).
-    sampleset_info : Optional[SamplesetInfo]
+    sampleset_info : Optional[SamplesetData]
         Additional information about the sampleset in case of sampling-based
         methods such as with quantum annealing.
     """

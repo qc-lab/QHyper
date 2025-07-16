@@ -106,7 +106,7 @@ class Advantage(Solver):
     def solve(
         self,
         penalty_weights: list[float] | None = None,
-        return_sampleset_metadata: bool = False,
+        return_metadata: bool = False,
     ) -> Any:
         if penalty_weights is None and self.penalty_weights is None:
             penalty_weights = [1.0] * (len(self.problem.constraints) + 1)
@@ -167,13 +167,12 @@ class Advantage(Solver):
             result["probability"][i] = solution.num_occurrences / num_of_shots
             result["energy"][i] = solution.energy
 
-        if return_sampleset_metadata and not sampleset.info["timing"]:
+        if return_metadata and not sampleset.info["timing"]:
             warnings.warn(
                 "No timing information available for the sampleset. ", UserWarning
             )
 
-        sampleset_info: SamplesetData | None = None
-        if return_sampleset_metadata:
+        if return_metadata:
             sampleset_info = SamplesetData(
                 time_dict_to_ndarray(
                     add_time_units_to_dwave_timing_info(
@@ -182,6 +181,8 @@ class Advantage(Solver):
                 ),
                 time_dict_to_ndarray(self.times),
             )
+        else:
+            sampleset_info = None
 
         return SolverResult(
             result, {"penalty_weights": penalty_weights}, [], sampleset_info
@@ -264,7 +265,7 @@ def add_time_units_to_dwave_timing_info(
 
     Parameters:
     -----------
-    sampleset_info_times : dict[str, float]
+    dwave_sampleset_info_timing  : dict[str, float]
         DWave dictionary with timing information.
     time_unit : TimeUnits, optional
         The time unit to append to the keys (default by DWave docs is TimeUnits.US).
