@@ -141,26 +141,18 @@ class Advantage(Solver):
         # Additional sampling info
         return_embedding = True
 
-        # Resolving from the sampleset future-like object
-        def _resolve_future_and_return(
-            sampleset: dimod.sampleset.SampleSet,
-        ) -> dimod.sampleset.SampleSet:
-            sampleset.resolve()
-            return sampleset
-
-        sampleset: dimod.sampleset.SampleSet = execute_timed(
-            lambda: _resolve_future_and_return(
-                embedding_compose.sample(
+        start = time.perf_counter()
+        sampleset = embedding_compose.sample(
                     bqm,
                     num_reads=self.num_reads,
                     chain_strength=self.chain_strength,
                     return_embedding=return_embedding,
-                )
-            ),
-            self.elapse_times,
-            self.times,
-            Timing.SAMPLE_FUNCTION,
-        )
+            )
+        # Resolving from the sampleset future-like object
+        sampleset.resolve()
+        end = time.perf_counter()
+        if self.elapse_times:
+            self.times[Timing.SAMPLE_FUNCTION] = end - start
 
         result = np.recarray(
             (len(sampleset),),
