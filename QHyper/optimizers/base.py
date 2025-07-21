@@ -8,7 +8,8 @@ import dataclasses
 
 from abc import abstractmethod
 
-from typing import Callable, Self
+from typing import Callable
+from typing_extensions import Self
 
 
 @dataclasses.dataclass
