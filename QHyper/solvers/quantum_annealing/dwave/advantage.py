@@ -10,7 +10,7 @@ from QHyper.solvers.base import Solver, SolverResult, SamplesetData
 from QHyper.converter import Converter
 from QHyper.constraint import Polynomial
 
-from dwave.system import DWaveSampler, EmbeddingComposite
+from dwave.system import DWaveSampler
 from dwave.system.composites import FixedEmbeddingComposite
 from dimod import BinaryQuadraticModel
 from dwave.embedding.pegasus import find_clique_embedding
@@ -20,6 +20,7 @@ import warnings
 from enum import Enum
 
 import time
+import dimod
 
 
 DWAVE_API_TOKEN = os.environ.get("DWAVE_API_TOKEN")
@@ -57,7 +58,7 @@ class Advantage(Solver):
     use_clique_embedding: bool, default False
         Find clique for the embedding
     **config: Any
-        Config for the D-Wave solver. Documentation available at https://docs.dwavequantum.com 
+        Config for the D-Wave solver. Documentation available at https://docs.dwavequantum.com
     """
 
     problem: Problem
@@ -66,22 +67,23 @@ class Advantage(Solver):
     chain_strength: float | None = None
     token: str | None = None
 
-    def __init__(self,
-                 problem: Problem,
-                 penalty_weights: list[float] | None = None,
-                 num_reads: int = 1,
-                 chain_strength: float | None = None,
-                 use_clique_embedding: bool = False,
-                 token: str | None = None,
-                 elapse_times: bool = False,
-                 **config: Any) -> None:
+    def __init__(
+        self,
+        problem: Problem,
+        penalty_weights: list[float] | None = None,
+        num_reads: int = 1,
+        chain_strength: float | None = None,
+        use_clique_embedding: bool = False,
+        token: str | None = None,
+        elapse_times: bool = False,
+        **config: Any,
+    ) -> None:
         self.problem = problem
         self.penalty_weights = penalty_weights
         self.num_reads = num_reads
         self.chain_strength = chain_strength
         self.use_clique_embedding = use_clique_embedding
-        self.sampler = DWaveSampler(
-            token=token or DWAVE_API_TOKEN, **config)
+        self.sampler = DWaveSampler(token=token or DWAVE_API_TOKEN, **config)
         self.token = token
         self.elapse_times = elapse_times
         self.times: Dict = {}
@@ -138,12 +140,22 @@ class Advantage(Solver):
 
         # Additional sampling info
         return_embedding = True
-        sampleset = execute_timed(
-            lambda: embedding_compose.sample(
-                bqm,
-                num_reads=self.num_reads,
-                chain_strength=self.chain_strength,
-                return_embedding=return_embedding,
+
+        # Resolving from the sampleset future-like object
+        def _resolve_future_and_return(
+            sampleset: dimod.sampleset.SampleSet,
+        ) -> dimod.sampleset.SampleSet:
+            sampleset.resolve()
+            return sampleset
+
+        sampleset: dimod.sampleset.SampleSet = execute_timed(
+            lambda: _resolve_future_and_return(
+                embedding_compose.sample(
+                    bqm,
+                    num_reads=self.num_reads,
+                    chain_strength=self.chain_strength,
+                    return_embedding=return_embedding,
+                )
             ),
             self.elapse_times,
             self.times,
