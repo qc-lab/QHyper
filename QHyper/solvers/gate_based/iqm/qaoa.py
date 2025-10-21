@@ -33,8 +33,14 @@ class QAOA(Solver):
     optimizer: Optimizer = Dummy()
     penalty_weights: Optional[List[float]] = None
 
-    backend_url: str = "https://cocos.resonance.meetiqm.com/garnet"
+    backend_url: Optional[str] = "https://cocos.resonance.meetiqm.com/garnet"
     backend_token: Optional[str] = None
+    
+    use_lexis: bool = False
+    lexis_project: Optional[str] = None
+    lexis_resource_name: Optional[str] = None
+    lexis_token: Optional[str] = None
+    
     shots: int = 1000
 
     qubo_cache: Dict[Tuple[float, ...], Tuple[SparsePauliOp, List[str]]] = field(
@@ -43,10 +49,10 @@ class QAOA(Solver):
     _backend = None
 
     def __post_init__(self):
-        if self.backend_token is not None:
-            os.environ["IQM_TOKEN"] = self.backend_token
-        provider = IQMProvider(url=self.backend_url)
-        self._backend = provider.get_backend()
+        if self.use_lexis:
+            self._initialize_lexis_backend()
+        else:
+            self._initialize_iqm_backend()
 
         if self.layers <= 0:
             raise ValueError("layers must be >= 1")
@@ -56,6 +62,38 @@ class QAOA(Solver):
                 f"does not match the number of layers ({self.layers}).",
                 UserWarning,
             )
+
+    def _initialize_iqm_backend(self):
+        if self.backend_token is not None:
+            os.environ["IQM_TOKEN"] = self.backend_token
+        if self.backend_url is None:
+            raise ValueError("backend_url must be provided when not using Lexis")
+        provider = IQMProvider(url=self.backend_url)
+        self._backend = provider.get_backend()
+
+    def _initialize_lexis_backend(self):
+        try:
+            from py4lexis.session import LexisSession
+            from qaas import QProvider
+        except ImportError as e:
+            raise ImportError(
+                "Lexis connection requires 'py4lexis' and 'qaas' packages. "
+                "Install them to use Lexis connection method."
+            ) from e
+
+        if self.lexis_project is None:
+            raise ValueError("lexis_project must be provided when use_lexis=True")
+        if self.lexis_resource_name is None:
+            raise ValueError("lexis_resource_name must be provided when use_lexis=True")
+
+        if self.lexis_token is None:
+            lexis_session = LexisSession()
+            token = lexis_session.get_access_token()
+        else:
+            token = self.lexis_token
+
+        provider = QProvider(token, self.lexis_project, self.lexis_resource_name)
+        self._backend = provider.get_backend()
 
     def _clean_bitstring(self, key, n: int) -> str:
         s = "".join(ch for ch in str(key) if ch in "01")
@@ -161,7 +199,12 @@ class QAOA(Solver):
         qc_meas.add_register(creg)
         qc_meas.measure(range(n), range(n))
 
-        tqc = transpile(qc_meas, backend=self._backend, optimization_level=3)
+        if self.use_lexis:
+            from qaas.backend import transpile_to_IQM
+            tqc = transpile_to_IQM(qc_meas, self._backend, optimize_single_qubits=False, remote=True)
+        else:
+            tqc = transpile(qc_meas, backend=self._backend, optimization_level=3)
+        
         job = self._backend.run(tqc, shots=self.shots)
         res = job.result()
         counts = res.get_counts()
