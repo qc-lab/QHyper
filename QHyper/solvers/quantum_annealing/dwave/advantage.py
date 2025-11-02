@@ -44,6 +44,8 @@ class Advantage(Solver):
 
     problem: Problem
     penalty_weights: list[float] | None = None
+    version: str | None = None
+    region: str | None = None
     num_reads: int = 1
     chain_strength: float | None = None
     token: str | None = None
@@ -51,6 +53,8 @@ class Advantage(Solver):
     def __init__(self,
                  problem: Problem,
                  penalty_weights: list[float] | None = None,
+                 version: str | None = None,
+                 region: str | None = None,
                  num_reads: int = 1,
                  chain_strength: float | None = None,
                  use_clique_embedding: bool = False,
@@ -61,12 +65,18 @@ class Advantage(Solver):
         self.num_reads = num_reads
         self.chain_strength = chain_strength
         self.use_clique_embedding = use_clique_embedding
-        self.sampler = DWaveSampler(
+        if (self.version and not self.region) or (self.region and not self.version):
+            raise ValueError("Both 'version' and 'region' must be specified together.")
+        if self.version and self.region:
+            self.sampler = DWaveSampler(
+            solver=self.version, region=self.region,
             token=token or DWAVE_API_TOKEN, **config)
+        else:
+            self.sampler = DWaveSampler(token=token or DWAVE_API_TOKEN, **config)
         self.token = token
 
         if use_clique_embedding:
-            args = self.weigths if self.weigths else []
+            args = self.penalty_weights if self.penalty_weights else []
             qubo = Converter.create_qubo(self.problem, args)
             qubo_terms, offset = convert_qubo_keys(qubo)
             bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
