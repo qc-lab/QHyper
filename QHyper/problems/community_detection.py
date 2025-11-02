@@ -30,16 +30,20 @@ class Network:
             self.community = [*range(self.graph.number_of_nodes())]
         if self.full_modularity_matrix is None:
             self.full_modularity_matrix = self.calculate_full_modularity_matrix()
-        self.generalized_modularity_matrix = self.calculate_generalized_modularity_matrix()
-        
+        self.generalized_modularity_matrix = (
+            self.calculate_generalized_modularity_matrix()
+        )
 
     def calculate_full_modularity_matrix(self) -> np.ndarray:
         adj_matrix: np.ndarray = nx.to_numpy_array(self.graph, weight=self.weight)
         in_degree_matrix: np.ndarray = adj_matrix.sum(axis=1)
         out_degree_matrix: np.ndarray = adj_matrix.sum(axis=0)
         m: int = np.sum(adj_matrix)
-        return adj_matrix - self.resolution * np.outer(in_degree_matrix, out_degree_matrix) / m
-    
+        return (
+            adj_matrix
+            - self.resolution * np.outer(in_degree_matrix, out_degree_matrix) / m
+        )
+
     def calculate_generalized_modularity_matrix(self) -> np.ndarray:
         B_bis = self.full_modularity_matrix[self.community, :]
         B_community = B_bis[:, self.community]
@@ -128,9 +132,9 @@ class CommunityDetectionProblem(Problem):
             self._set_objective_function()
             self._set_one_hot_constraints(communities)
         else:
-            self.variables: tuple[
-                sympy.Symbol
-            ] = self._get_discrete_variable_representation()
+            self.variables: tuple[sympy.Symbol] = (
+                self._get_discrete_variable_representation()
+            )
             self._set_objective_function()
 
     def _get_discrete_variable_representation(
@@ -163,7 +167,9 @@ class CommunityDetectionProblem(Problem):
 
         nonzero_terms = sum(1 for v in equation.values() if not np.isclose(v, 0.0))
         if nonzero_terms == 0:
-            raise ValueError(f"QUBO is empty — all terms in modularity matrix are 0 or have negative values. Try lower resolution (current: {self.resolution})")
+            raise ValueError(
+                f"The objective function is a zero polynomial - all terms in the generalized modularity matrix are 0. Try different resolution (current: {self.resolution})"
+            )
 
         self.objective_function = Polynomial(equation)
 
