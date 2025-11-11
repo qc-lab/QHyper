@@ -15,7 +15,11 @@ from dwave.system.composites import FixedEmbeddingComposite
 from dimod import BinaryQuadraticModel
 from dwave.embedding.pegasus import find_clique_embedding
 from minorminer import find_embedding
+from dwave.system import LeapHybridBQMSampler
 import warnings
+import pickle
+import dwave.inspector
+from dwave.inspector.adapters import enable_data_capture
 
 from enum import Enum
 
@@ -105,10 +109,13 @@ class Advantage(Solver):
                 Timing.FIND_CLIQUE_EMBEDDING,
             )
 
+        enable_data_capture()
+
     def solve(
         self,
         penalty_weights: list[float] | None = None,
         return_metadata: bool = False,
+        saving_path: str | None = None,
     ) -> Any:
         if penalty_weights is None and self.penalty_weights is None:
             penalty_weights = [1.0] * (len(self.problem.constraints) + 1)
@@ -148,11 +155,49 @@ class Advantage(Solver):
                     chain_strength=self.chain_strength,
                     return_embedding=return_embedding,
             )
+        # bqm = dimod.BQM.from_qubo(qubo_terms, offset=offset)
+        # sampleset = dimod.ExactSolver().sample(bqm)
         # Resolving from the sampleset future-like object
         sampleset.resolve()
-        end = time.perf_counter()
+        end = time.perf_counter()        
         if self.elapse_times:
             self.times[Timing.SAMPLE_FUNCTION] = end - start
+
+        arr_to_save = np.array(sampleset, dtype=object)
+
+        # try:
+        #     dwave.inspector.show(sampleset)
+        # except Exception as e:
+        #     print(f"Could not open DWave Inspector: {e}")
+        
+        try:
+            with open(f"{saving_path}.pkl" if saving_path else "sampleset_adv.pkl", "wb") as f:
+                pickle.dump(arr_to_save, f)
+        except Exception as e:
+            print(f"Could not save sampleset to .pkl file: {e}")
+
+        
+        try:
+            pickle_bytes = pickle.dumps(sampleset.to_serializable())
+            with open(f"{saving_path}_serializable.pkl" if saving_path else "sampleset_adv_serializable.pkl", "wb") as f:
+                f.write(pickle_bytes)
+        except Exception as e:
+            print(f"Could not save serializable sampleset to .pkl file: {e}")
+
+        try:
+            pickle.dumps(sampleset)
+        except Exception as e:
+            print(f"Could not pickle sampleset object: {e}")        
+
+        try:
+            np.save(f"{saving_path}.npy" if saving_path else "sampleset_adv.npy", arr_to_save)
+        except Exception as e:
+            print(f"Could not save times to .npy file: {e}")
+        
+        try:
+            sampleset.to_file(f"{saving_path}.json" if saving_path else "sampleset_adv.json", cls='json')
+        except Exception as e:
+            print(f"Could not save sampleset to .json file: {e}")
 
         result = np.recarray(
             (len(sampleset),),
@@ -171,20 +216,25 @@ class Advantage(Solver):
             result["probability"][i] = solution.num_occurrences / num_of_shots
             result["energy"][i] = solution.energy
 
-        if return_metadata and not sampleset.info["timing"]:
+        if return_metadata or not "timing" in sampleset.info or not sampleset.info["timing"]:
             warnings.warn(
                 "No timing information available for the sampleset. ", UserWarning
             )
 
         if return_metadata:
-            sampleset_info = SamplesetData(
-                time_dict_to_ndarray(
-                    add_time_units_to_dwave_timing_info(
-                        sampleset.info["timing"], TimeUnits.US
-                    )
-                ),
-                time_dict_to_ndarray(self.times),
-            )
+            if "timing" in sampleset.info and sampleset.info["timing"]:
+                sampleset_info = SamplesetData(
+                    time_dict_to_ndarray(
+                        add_time_units_to_dwave_timing_info(
+                            sampleset.info["timing"], TimeUnits.US
+                        )
+                    ),
+                    time_dict_to_ndarray(self.times),
+                )
+            else:
+                sampleset_info = SamplesetData(
+                    None, time_dict_to_ndarray(self.times)
+                )
         else:
             sampleset_info = None
 
@@ -283,3 +333,9 @@ def add_time_units_to_dwave_timing_info(
         key + f"_{time_unit.value}" for key in dwave_sampleset_info_timing.keys()
     ]
     return dict(zip(dwave_keys_with_unit, dwave_sampleset_info_timing.values()))
+
+
+def __str__(self) -> str:
+    G = self.problem.network_data.graph
+    n = G.number_of_nodes()
+
