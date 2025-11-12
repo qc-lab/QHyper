@@ -127,6 +127,8 @@ class Advantage(Solver):
         qubo_terms, offset = convert_qubo_keys(qubo)
         bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
 
+        label = f"n={str(self.problem.G.number_of_nodes())}_" + f"qubo_size={str(len(qubo_terms))}_" + str(hash(tuple(qubo_terms.items())))
+
         if not self.use_clique_embedding:
             self.embedding = execute_timed(
                 lambda: find_embedding(
@@ -154,6 +156,8 @@ class Advantage(Solver):
                     num_reads=self.num_reads,
                     chain_strength=self.chain_strength,
                     return_embedding=return_embedding,
+                    warnings=dwave.system.warnings.SAVE,
+                    label=label
             )
         # bqm = dimod.BQM.from_qubo(qubo_terms, offset=offset)
         # sampleset = dimod.ExactSolver().sample(bqm)
@@ -163,6 +167,26 @@ class Advantage(Solver):
         if self.elapse_times:
             self.times[Timing.SAMPLE_FUNCTION] = end - start
 
+        first = next(sampleset.data(sorted_by=["energy"], name="Sample", index=True))
+        chain_break_fraction = first.chain_break_fraction
+
+        try:
+            problem_id = sampleset.info["problem_id"]
+            embedding_context = sampleset.info["embedding_context"]
+            chain_strength_extracted = embedding_context["chain_strength"]
+            chain_break_method = embedding_context["chain_break_method"]
+            embedding_extracted = embedding_context["embedding"]
+            timing = sampleset.info["timing"]
+            warnings_sampleset = sampleset.info.get("warnings", {})
+        except Exception as e:
+            print(f"Could not extract some info from sampleset.info: {e}")
+            problem_id = None
+            embedding_context = None
+            chain_break_method = None
+            embedding_extracted = None
+            timing = None
+            warnings_sampleset = None
+
         arr_to_save = np.array(sampleset, dtype=object)
 
         # try:
@@ -171,15 +195,14 @@ class Advantage(Solver):
         #     print(f"Could not open DWave Inspector: {e}")
         
         try:
-            with open(f"{saving_path}.pkl" if saving_path else "sampleset_adv.pkl", "wb") as f:
+            with open(f"{saving_path}_{label}.pkl" if saving_path else f"{label}_sampleset_adv.pkl", "wb") as f:
                 pickle.dump(arr_to_save, f)
         except Exception as e:
             print(f"Could not save sampleset to .pkl file: {e}")
-
         
         try:
             pickle_bytes = pickle.dumps(sampleset.to_serializable())
-            with open(f"{saving_path}_serializable.pkl" if saving_path else "sampleset_adv_serializable.pkl", "wb") as f:
+            with open(f"{saving_path}_{label}_serializable.pkl" if saving_path else f"{label}_sampleset_adv_serializable.pkl", "wb") as f:
                 f.write(pickle_bytes)
         except Exception as e:
             print(f"Could not save serializable sampleset to .pkl file: {e}")
@@ -190,12 +213,12 @@ class Advantage(Solver):
             print(f"Could not pickle sampleset object: {e}")        
 
         try:
-            np.save(f"{saving_path}.npy" if saving_path else "sampleset_adv.npy", arr_to_save)
+            np.save(f"{saving_path}_{label}.npy" if saving_path else f"{label}_sampleset_adv.npy", arr_to_save)
         except Exception as e:
             print(f"Could not save times to .npy file: {e}")
         
         try:
-            sampleset.to_file(f"{saving_path}.json" if saving_path else "sampleset_adv.json", cls='json')
+            sampleset.to_file(f"{saving_path}_{label}.json" if saving_path else f"{label}_sampleset_adv.json", cls='json')
         except Exception as e:
             print(f"Could not save sampleset to .json file: {e}")
 
@@ -223,18 +246,25 @@ class Advantage(Solver):
 
         if return_metadata:
             if "timing" in sampleset.info and sampleset.info["timing"]:
-                sampleset_info = SamplesetData(
-                    time_dict_to_ndarray(
+                dwave_sampleset_metadata=time_dict_to_ndarray(
                         add_time_units_to_dwave_timing_info(
                             sampleset.info["timing"], TimeUnits.US
                         )
-                    ),
-                    time_dict_to_ndarray(self.times),
                 )
             else:
-                sampleset_info = SamplesetData(
-                    None, time_dict_to_ndarray(self.times)
-                )
+                dwave_sampleset_metadata=None
+            sampleset_info = SamplesetData(
+                dwave_sampleset_metadata=dwave_sampleset_metadata,
+                time_measurements=time_dict_to_ndarray(self.times),
+                dwave_sampleset=sampleset,
+                timing=timing,
+                problem_id=problem_id,
+                chain_strength=chain_strength_extracted,
+                chain_break_fraction=chain_break_fraction,
+                chain_break_method=chain_break_method,
+                embedding=embedding_extracted,
+                warnings=warnings_sampleset,
+            )
         else:
             sampleset_info = None
 

@@ -20,6 +20,7 @@ class SolverConfigException(Exception):
 class SolverException(Exception):
     pass
 
+
 @dataclass
 class SamplesetData:
     """
@@ -55,8 +56,16 @@ class SamplesetData:
         (https://dwave-systemdocs.readthedocs.io/en/link_fix/reference/composites/generated/dwave.system.composites.FixedEmbeddingComposite.sample.html#dwave.system.composites.FixedEmbeddingComposite.sample),
 
     """
-    dwave_sampleset_metadata: np.ndarray
-    time_measurements: np.ndarray
+    dwave_sampleset_metadata: np.ndarray | None = None
+    time_measurements: np.ndarray | None = None
+    dwave_sampleset: dict | None = None
+    timing: dict | None = None
+    problem_id: str | int | float = None
+    chain_strength: float | None = None
+    chain_break_fraction: float | None = None
+    chain_break_method: str | None = None
+    embedding: dict | None = None
+    warnings: dict | None = None
 
 @dataclass
 class SolverResult:
