@@ -135,6 +135,9 @@ class Solvers:
         elif name_ in ["gurobi"]:
             from .classical.gurobi.gurobi import Gurobi
             return Gurobi
+        elif name_ in ["simulated_annealing"]:
+            from .classical.sa.simulated_annealing import SimulatedAnnealingSolver
+            return SimulatedAnnealingSolver
         elif name_ in ["cqm"]:
             from .quantum_annealing.dwave.cqm import CQM
             return CQM

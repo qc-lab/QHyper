@@ -6,4 +6,5 @@ dwave-system
 gurobipy
 types-tqdm
 pandas
+simanneal
 git+https://github.com/wfcommons/wfcommons.git@main
