@@ -127,7 +127,7 @@ class Advantage(Solver):
         qubo_terms, offset = convert_qubo_keys(qubo)
         bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
 
-        label = f"n={str(self.problem.G.number_of_nodes())}_" + f"qubo_size={str(len(qubo_terms))}_" + str(hash(tuple(qubo_terms.items())))
+        label = f"n={str(self.problem.G.number_of_nodes())}_" + f"qubo_size={str(len(qubo_terms))}_"
 
         if not self.use_clique_embedding:
             self.embedding = execute_timed(
@@ -157,7 +157,7 @@ class Advantage(Solver):
                     chain_strength=self.chain_strength,
                     return_embedding=return_embedding,
                     warnings=dwave.system.warnings.SAVE,
-                    label=label
+                    label=label+str(hash(tuple(qubo_terms.items())))
             )
         # bqm = dimod.BQM.from_qubo(qubo_terms, offset=offset)
         # sampleset = dimod.ExactSolver().sample(bqm)
@@ -193,7 +193,7 @@ class Advantage(Solver):
         #     dwave.inspector.show(sampleset)
         # except Exception as e:
         #     print(f"Could not open DWave Inspector: {e}")
-        
+        label += f"_id={problem_id}"
         try:
             with open(f"{saving_path}_{label}.pkl" if saving_path else f"{label}_sampleset_adv.pkl", "wb") as f:
                 pickle.dump(arr_to_save, f)
