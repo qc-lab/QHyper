@@ -21,6 +21,9 @@ class SolverException(Exception):
     pass
 
 
+# class SamplesetDataHandler
+
+
 @dataclass
 class SamplesetData:
     """
@@ -61,11 +64,13 @@ class SamplesetData:
     dwave_sampleset: dict | None = None
     timing: dict | None = None
     problem_id: str | int | float = None
+    community_hash: str | int | None = None
     chain_strength: float | None = None
     chain_break_fraction: float | None = None
     chain_break_method: str | None = None
     embedding: dict | None = None
     warnings: dict | None = None
+    community: list[int] | None = None
 
 @dataclass
 class SolverResult:

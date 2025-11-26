@@ -30,6 +30,11 @@ import dimod
 DWAVE_API_TOKEN = os.environ.get("DWAVE_API_TOKEN")
 
 
+def enable_DWave_inspector_results_data_capture():
+    """Enables DWave Inspector sampler's results saving in local memory."""
+    enable_data_capture()
+
+
 class TimeUnits(str, Enum):
     S = "s"
     US = "us"
@@ -109,7 +114,7 @@ class Advantage(Solver):
                 Timing.FIND_CLIQUE_EMBEDDING,
             )
 
-        enable_data_capture()
+        enable_DWave_inspector_results_data_capture()
 
     def solve(
         self,
@@ -127,7 +132,9 @@ class Advantage(Solver):
         qubo_terms, offset = convert_qubo_keys(qubo)
         bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
 
-        label = f"n={str(self.problem.G.number_of_nodes())}_" + f"qubo_size={str(len(qubo_terms))}_"
+        # label = f"n={str(self.problem.G.number_of_nodes())}_" + f"qubo_size={str(len(qubo_terms))}_"
+        label = f"n={str(self.problem.G.number_of_nodes())}_" + f"comm_hash={str(hash(tuple(self.problem.community)))}_"
+
 
         if not self.use_clique_embedding:
             self.embedding = execute_timed(
@@ -239,9 +246,13 @@ class Advantage(Solver):
             result["probability"][i] = solution.num_occurrences / num_of_shots
             result["energy"][i] = solution.energy
 
-        if return_metadata or not "timing" in sampleset.info or not sampleset.info["timing"]:
+        
+
+        if return_metadata and (not "timing" in sampleset.info or not sampleset.info["timing"]):
             warnings.warn(
-                "No timing information available for the sampleset. ", UserWarning
+                "No timing information available for the sampleset " +
+                f" for problem with community: {self.problem.community}" +
+                f" problem_id: {problem_id}", UserWarning
             )
 
         if return_metadata:
@@ -259,6 +270,7 @@ class Advantage(Solver):
                 dwave_sampleset=sampleset,
                 timing=timing,
                 problem_id=problem_id,
+                community_hash=hash(tuple(self.problem.community)),
                 chain_strength=chain_strength_extracted,
                 chain_break_fraction=chain_break_fraction,
                 chain_break_method=chain_break_method,

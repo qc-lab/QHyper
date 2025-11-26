@@ -139,7 +139,8 @@ class CommunityDetectionProblem(Problem):
     def _get_discrete_variable_representation(
         self,
     ) -> tuple[sympy.Symbol] | Any:
-        return sympy.symbols(" ".join([f"x{i}" for i in range(len(self.community))]))
+        # return sympy.symbols(" ".join([f"x{i}" for i in range(len(self.community))]))
+        return sympy.symbols(" ".join([f"x{n}" for n in self.community]))
 
     def _set_objective_function(self) -> None:
         equation: dict[tuple[str, ...], float] = {}
