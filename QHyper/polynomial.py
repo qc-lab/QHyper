@@ -64,10 +64,15 @@ class Polynomial:
 
         self.terms = defaultdict(float)
 
+        non_zero_found = False
         for term, coefficient in terms.items():
             if coefficient == 0:
                 continue
+            non_zero_found = True
             self.terms[tuple(sorted(term))] += coefficient
+
+        if not non_zero_found:
+            self.terms[tuple()] = 0.0
 
     @overload
     def __add__(self, other: float | int) -> 'Polynomial': ...
@@ -204,6 +209,8 @@ class Polynomial:
         int
             The degree of the polynomial.
         """
+        if not self.terms:
+            return 0
         return max(len(term) for term in self.terms)
 
     def get_variables(self) -> set[str]:

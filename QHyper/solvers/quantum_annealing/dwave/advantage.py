@@ -72,6 +72,8 @@ class Advantage(Solver):
 
     problem: Problem
     penalty_weights: list[float] | None = None
+    version: str | None = None
+    region: str | None = None
     num_reads: int = 1
     chain_strength: float | None = None
     token: str | None = None
@@ -80,6 +82,8 @@ class Advantage(Solver):
         self,
         problem: Problem,
         penalty_weights: list[float] | None = None,
+        version: str | None = None,
+        region: str | None = None,
         num_reads: int = 1,
         chain_strength: float | None = None,
         use_clique_embedding: bool = False,
@@ -92,14 +96,22 @@ class Advantage(Solver):
         self.num_reads = num_reads
         self.chain_strength = chain_strength
         self.use_clique_embedding = use_clique_embedding
-        self.sampler = DWaveSampler(token=token or DWAVE_API_TOKEN, **config)
+        self.version = version
+        self.region = region
+        if (self.version and not self.region) or (self.region and not self.version):
+            raise ValueError("Both 'version' and 'region' must be specified together.")
+        if self.version and self.region:
+            self.sampler = DWaveSampler(
+            solver=self.version, region=self.region,
+            token=token or DWAVE_API_TOKEN, **config)
+        else:
+            self.sampler = DWaveSampler(token=token or DWAVE_API_TOKEN, **config)
         self.token = token
         self.elapse_times = elapse_times
         self.times: Dict = {}
 
         if use_clique_embedding:
-            # args = self.weigths if self.weigths else []
-            args = getattr(self, "weights", [])
+            args = self.penalty_weights if self.penalty_weights else []
             qubo = Converter.create_qubo(self.problem, args)
             qubo_terms, offset = convert_qubo_keys(qubo)
             bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
@@ -121,6 +133,7 @@ class Advantage(Solver):
         penalty_weights: list[float] | None = None,
         return_metadata: bool = False,
         saving_path: str | None = None,
+        label: str | None = None
     ) -> Any:
         if penalty_weights is None and self.penalty_weights is None:
             penalty_weights = [1.0] * (len(self.problem.constraints) + 1)
@@ -132,9 +145,7 @@ class Advantage(Solver):
         qubo_terms, offset = convert_qubo_keys(qubo)
         bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
 
-        # label = f"n={str(self.problem.G.number_of_nodes())}_" + f"qubo_size={str(len(qubo_terms))}_"
-        label = f"n={str(self.problem.G.number_of_nodes())}_" + f"comm_hash={str(hash(tuple(self.problem.community)))}_"
-
+        label = f"{label}_" + f"n={str(self.problem.G.number_of_nodes())}_" + f"comm_hash={str(hash(tuple(self.problem.community)))}_"
 
         if not self.use_clique_embedding:
             self.embedding = execute_timed(
@@ -166,17 +177,17 @@ class Advantage(Solver):
                     warnings=dwave.system.warnings.SAVE,
                     label=label+str(hash(tuple(qubo_terms.items())))
             )
-        # bqm = dimod.BQM.from_qubo(qubo_terms, offset=offset)
-        # sampleset = dimod.ExactSolver().sample(bqm)
-        # Resolving from the sampleset future-like object
+        # Promise is supposed to be returned, needs resolving
         sampleset.resolve()
         end = time.perf_counter()        
         if self.elapse_times:
             self.times[Timing.SAMPLE_FUNCTION] = end - start
 
         first = next(sampleset.data(sorted_by=["energy"], name="Sample", index=True))
+        
         chain_break_fraction = first.chain_break_fraction
-
+        
+        # There might a case when the problem solution failed and there is no info in return
         try:
             problem_id = sampleset.info["problem_id"]
             embedding_context = sampleset.info["embedding_context"]
@@ -186,7 +197,7 @@ class Advantage(Solver):
             timing = sampleset.info["timing"]
             warnings_sampleset = sampleset.info.get("warnings", {})
         except Exception as e:
-            print(f"Could not extract some info from sampleset.info: {e}")
+            print(f"Could not extract info from sampleset.info: {e}")
             problem_id = None
             embedding_context = None
             chain_break_method = None
@@ -194,40 +205,15 @@ class Advantage(Solver):
             timing = None
             warnings_sampleset = None
 
-        arr_to_save = np.array(sampleset, dtype=object)
 
-        # try:
-        #     dwave.inspector.show(sampleset)
-        # except Exception as e:
-        #     print(f"Could not open DWave Inspector: {e}")
         label += f"_id={problem_id}"
-        try:
-            with open(f"{saving_path}_{label}.pkl" if saving_path else f"{label}_sampleset_adv.pkl", "wb") as f:
-                pickle.dump(arr_to_save, f)
-        except Exception as e:
-            print(f"Could not save sampleset to .pkl file: {e}")
-        
+       
         try:
             pickle_bytes = pickle.dumps(sampleset.to_serializable())
             with open(f"{saving_path}_{label}_serializable.pkl" if saving_path else f"{label}_sampleset_adv_serializable.pkl", "wb") as f:
                 f.write(pickle_bytes)
         except Exception as e:
             print(f"Could not save serializable sampleset to .pkl file: {e}")
-
-        try:
-            pickle.dumps(sampleset)
-        except Exception as e:
-            print(f"Could not pickle sampleset object: {e}")        
-
-        try:
-            np.save(f"{saving_path}_{label}.npy" if saving_path else f"{label}_sampleset_adv.npy", arr_to_save)
-        except Exception as e:
-            print(f"Could not save times to .npy file: {e}")
-        
-        try:
-            sampleset.to_file(f"{saving_path}_{label}.json" if saving_path else f"{label}_sampleset_adv.json", cls='json')
-        except Exception as e:
-            print(f"Could not save sampleset to .json file: {e}")
 
         result = np.recarray(
             (len(sampleset),),
@@ -276,6 +262,7 @@ class Advantage(Solver):
                 chain_break_method=chain_break_method,
                 embedding=embedding_extracted,
                 warnings=warnings_sampleset,
+                community=self.problem.community,
             )
         else:
             sampleset_info = None
@@ -375,9 +362,4 @@ def add_time_units_to_dwave_timing_info(
         key + f"_{time_unit.value}" for key in dwave_sampleset_info_timing.keys()
     ]
     return dict(zip(dwave_keys_with_unit, dwave_sampleset_info_timing.values()))
-
-
-def __str__(self) -> str:
-    G = self.problem.network_data.graph
-    n = G.number_of_nodes()
 
