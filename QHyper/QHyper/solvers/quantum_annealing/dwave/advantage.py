@@ -25,7 +25,6 @@ from enum import Enum
 
 import time
 import dimod
-import json
 
 
 DWAVE_API_TOKEN = os.environ.get("DWAVE_API_TOKEN")

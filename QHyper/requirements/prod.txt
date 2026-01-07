@@ -1,0 +1,10 @@
+numpy==1.26
+PennyLane==0.38
+tqdm
+sympy==1.13
+dwave-system
+gurobipy
+types-tqdm
+pandas
+autoray==0.6.11
+git+https://github.com/wfcommons/wfcommons.git@main
