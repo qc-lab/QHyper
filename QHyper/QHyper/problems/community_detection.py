@@ -52,6 +52,13 @@ class Network:
         delta = np.eye(len(self.community), dtype=np.int32)
         return 0.5 * (B_community + B_community.T) - 0.5 * delta * (B_i + B_j)
 
+    def to_serializable(self) -> dict:
+        return {
+            "community": self.community,
+            "full_modularity_matrix": self.full_modularity_matrix,
+            "generalized_modularity_matrix": self.generalized_modularity_matrix,
+        }
+
 
 class KarateClubNetwork(Network):
     def __init__(self, resolution: float = 1):
@@ -237,3 +244,14 @@ class CommunityDetectionProblem(Problem):
     def sort_decoded_solution(self, decoded_solution: dict) -> dict:
         keyorder = [int(str(v)[1:]) for v in self.variables]
         return {k: decoded_solution[k] for k in keyorder if k in decoded_solution}
+    
+    def to_serializable(self) -> dict:
+        return {
+            # "graph": nx.adjacency_data(self.G),
+            # "resolution": self.resolution,
+            "community": self.community,
+            # "cases": self.cases,
+            # "one_hot_encoding": self.one_hot_encoding,
+            "variables": [str(v) for v in self.variables],
+            "objective_function": self.objective_function.terms
+        }

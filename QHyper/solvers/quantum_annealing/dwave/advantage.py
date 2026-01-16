@@ -209,12 +209,12 @@ class Advantage(Solver):
 
         label += f"_id={problem_id}"
        
-        try:
-            pickle_bytes = pickle.dumps(sampleset.to_serializable())
-            with open(f"{saving_path}_{label}_serializable.pkl" if saving_path else f"{label}_sampleset_adv_serializable.pkl", "wb") as f:
-                f.write(pickle_bytes)
-        except Exception as e:
-            print(f"Could not save serializable sampleset to .pkl file: {e}")
+        # try:
+        #     pickle_bytes = pickle.dumps(sampleset.to_serializable())
+        #     with open(f"{saving_path}_{label}_serializable.pkl" if saving_path else f"{label}_sampleset_adv_serializable.pkl", "wb") as f:
+        #         f.write(pickle_bytes)
+        # except Exception as e:
+        #     print(f"Could not save serializable sampleset to .pkl file: {e}")
 
         result = np.recarray(
             (len(sampleset),),
