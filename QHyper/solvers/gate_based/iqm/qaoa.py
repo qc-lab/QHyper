@@ -1,12 +1,12 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Sequence, Tuple, Optional
-import os
-import time
-import numpy as np
-import warnings
 
-from qiskit import QuantumCircuit, transpile, ClassicalRegister
+import os
+import warnings
+from dataclasses import dataclass, field
+from typing import Callable
+
+import numpy as np
+from qiskit import QuantumCircuit, transpile as qiskit_transpile, ClassicalRegister
 from qiskit.circuit.library import PauliEvolutionGate
 from qiskit.quantum_info import SparsePauliOp
 
@@ -31,25 +31,29 @@ class QAOA(Solver):
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer = Dummy()
-    penalty_weights: Optional[List[float]] = None
+    penalty_weights: list[float] | None = None
 
-    backend_url: Optional[str] = "https://cocos.resonance.meetiqm.com/garnet"
-    backend_token: Optional[str] = None
-    
+    backend_url: str | None = "https://cocos.resonance.meetiqm.com/garnet"
+    backend_token: str | None = None
+
+    use_simulator: bool = False
+
     use_lexis: bool = False
-    lexis_project: Optional[str] = None
-    lexis_resource_name: Optional[str] = None
-    lexis_token: Optional[str] = None
-    
+    lexis_project: str | None = None
+    lexis_resource_name: str | None = None
+    lexis_token: str | None = None
+
     shots: int = 1000
 
-    qubo_cache: Dict[Tuple[float, ...], Tuple[SparsePauliOp, List[str]]] = field(
+    qubo_cache: dict[tuple[float, ...], tuple[SparsePauliOp, list[str]]] = field(
         default_factory=dict, init=False
     )
     _backend = None
 
-    def __post_init__(self):
-        if self.use_lexis:
+    def __post_init__(self) -> None:
+        if self.use_simulator:
+            self._initialize_simulator()
+        elif self.use_lexis:
             self._initialize_lexis_backend()
         else:
             self._initialize_iqm_backend()
@@ -58,12 +62,13 @@ class QAOA(Solver):
             raise ValueError("layers must be >= 1")
         if len(self.gamma) != self.layers or len(self.beta) != self.layers:
             warnings.warn(
-                f"Length of gamma ({len(self.gamma)}) or beta ({len(self.beta)}) "
-                f"does not match the number of layers ({self.layers}).",
+                f"Length of gamma ({len(self.gamma)}) or beta "
+                f"({len(self.beta)}) does not match the number of "
+                f"layers ({self.layers}).",
                 UserWarning,
             )
 
-    def _initialize_iqm_backend(self):
+    def _initialize_iqm_backend(self) -> None:
         if self.backend_token is not None:
             os.environ["IQM_TOKEN"] = self.backend_token
         if self.backend_url is None:
@@ -71,7 +76,17 @@ class QAOA(Solver):
         provider = IQMProvider(url=self.backend_url)
         self._backend = provider.get_backend()
 
-    def _initialize_lexis_backend(self):
+    def _initialize_simulator(self) -> None:
+        try:
+            from qiskit_aer import AerSimulator
+        except ImportError as e:
+            raise ImportError(
+                "Simulator requires the 'qiskit-aer' package. "
+                "Install it with: pip install qiskit-aer"
+            ) from e
+        self._backend = AerSimulator()
+
+    def _initialize_lexis_backend(self) -> None:
         try:
             from py4lexis.session import LexisSession
             from qaas import QProvider
@@ -92,128 +107,115 @@ class QAOA(Solver):
         else:
             token = self.lexis_token
 
-        provider = QProvider(token, self.lexis_project, self.lexis_resource_name)
-        self._backend = provider.get_backend()
+        provider = QProvider(token, self.lexis_project)
+        self._backend = provider.get_backend(self.lexis_resource_name)
 
-    def _clean_bitstring(self, key, n: int) -> str:
-        s = "".join(ch for ch in str(key) if ch in "01")
-        if len(s) < n:
-            return s.zfill(n)
-        if len(s) > n:
-            return s[-n:]
-        return s
-
-    def _get_cost_operator(
-        self, penalty_weights: List[float]
-    ) -> Tuple[SparsePauliOp, List[str]]:
-        key = tuple(float(x) for x in penalty_weights)
+    def create_cost_operator(
+        self, problem: Problem, penalty_weights: list[float]
+    ) -> tuple[SparsePauliOp, list[str]]:
+        key = tuple(penalty_weights)
         if key not in self.qubo_cache:
-            qubo: Polynomial = Converter.create_qubo(self.problem, penalty_weights)
-
-            var_names = sorted(
-                {str(v) for term in qubo.terms.keys() for v in term if v is not None}
-            )
-            n = len(var_names)
-            name_to_idx = {name: i for i, name in enumerate(var_names)}
-
-            coeffs: Dict[str, float] = {}
-            const = 0.0
-
-            def _all_subsets(items: Sequence[int]):
-                yield ()
-                m = len(items)
-                for r in range(1, m + 1):
-
-                    def rec(start: int, left: int, acc: List[int]):
-                        if left == 0:
-                            yield tuple(acc)
-                            return
-                        for j in range(start, m - left + 1):
-                            acc.append(items[j])
-                            yield from rec(j + 1, left - 1, acc)
-                            acc.pop()
-
-                    yield from rec(0, r, [])
-
-            for variables, coeff in qubo.terms.items():
-                if not variables:
-                    const += coeff
-                    continue
-                idxs = [name_to_idx[str(v)] for v in variables]
-                m = len(idxs)
-                norm = (0.5) ** m
-                for subset in _all_subsets(idxs):
-                    sign = (-1.0) ** (len(subset))
-                    if len(subset) == 0:
-                        const += coeff * norm
-                    else:
-                        zset = set(subset)
-                        label = "".join("Z" if j in zset else "I" for j in range(n))
-                        coeffs[label] = coeffs.get(label, 0.0) + coeff * sign * norm
-
-            if abs(const) > 0.0:
-                label_I = "I" * max(1, n)
-                coeffs[label_I] = coeffs.get(label_I, 0.0) + const
-
-            if not coeffs:
-                op = SparsePauliOp.from_list([("I" * max(1, n), 0.0)])
-            else:
-                labels, values = zip(*coeffs.items())
-                op = SparsePauliOp.from_list(list(zip(labels, values)))
-
-            op = op.simplify()
-            self.qubo_cache[key] = (op, var_names)
+            qubo = Converter.create_qubo(problem, penalty_weights)
+            self.qubo_cache[key] = self._create_cost_operator(qubo)
         return self.qubo_cache[key]
 
-    def _hadamards(self, qc: QuantumCircuit):
+    def _create_cost_operator(
+        self, qubo: Polynomial
+    ) -> tuple[SparsePauliOp, list[str]]:
+        var_names = sorted(
+            {str(v) for term in qubo.terms for v in term if v is not None}
+        )
+        n = len(var_names)
+        name_to_idx = {name: i for i, name in enumerate(var_names)}
+
+        coeffs: dict[str, float] = {}
+        const = 0.0
+
+        for variables, coeff in qubo.terms.items():
+            if not variables:
+                const += coeff
+                continue
+
+            idxs = list(dict.fromkeys(name_to_idx[str(v)] for v in variables))
+
+            m = len(idxs)
+            for mask in range(1 << m):
+                z_positions = {idxs[bit] for bit in range(m) if mask & (1 << bit)}
+                sign = (-0.5) ** len(z_positions) * 0.5 ** (m - len(z_positions))
+                value = coeff * sign
+
+                if not z_positions:
+                    const += value
+                else:
+                    label = "".join("Z" if j in z_positions else "I" for j in range(n))
+                    coeffs[label] = coeffs.get(label, 0.0) + value
+
+        if abs(const) > 0.0:
+            label_I = "I" * max(1, n)
+            coeffs[label_I] = coeffs.get(label_I, 0.0) + const
+
+        if not coeffs:
+            op = SparsePauliOp.from_list([("I" * max(1, n), 0.0)])
+        else:
+            op = SparsePauliOp.from_list(list(coeffs.items()))
+
+        return op.simplify(), var_names
+
+    def _hadamard_layer(self, qc: QuantumCircuit) -> None:
         for q in range(qc.num_qubits):
             qc.h(q)
 
-    def _cost_layer(self, qc: QuantumCircuit, cost_op: SparsePauliOp, gamma: float):
+    def _cost_layer(
+        self, qc: QuantumCircuit, cost_op: SparsePauliOp, gamma: float
+    ) -> None:
         qc.append(PauliEvolutionGate(cost_op, time=float(gamma)), qc.qubits)
 
-    def _mixer_layer(self, qc: QuantumCircuit, beta: float):
+    def _mixer_layer(self, qc: QuantumCircuit, beta: float) -> None:
         for q in range(qc.num_qubits):
             qc.rx(2.0 * float(beta), q)
 
-    def _build_qaoa_circuit(
-        self, cost_op: SparsePauliOp, angles: Sequence[float]
-    ) -> QuantumCircuit:
-        p = int(self.layers)
-        assert len(angles) == 2 * p, f"angles length {len(angles)} != 2*layers ({2*p})"
-        gamma = angles[:p]
-        beta = angles[p:]
-
+    def _circuit(self, cost_op: SparsePauliOp, angles: list[float]) -> QuantumCircuit:
+        gamma, beta = angles[: len(angles) // 2], angles[len(angles) // 2 :]
         n = cost_op.num_qubits
-        qc = QuantumCircuit(n, name=f"QAOA_p{p}")
-        self._hadamards(qc)
-        for l in range(p):
-            self._cost_layer(qc, cost_op, gamma[l])
-            self._mixer_layer(qc, beta[l])
+        qc = QuantumCircuit(n, name=f"QAOA_p{self.layers}")
+
+        self._hadamard_layer(qc)
+        for layer in range(self.layers):
+            self._cost_layer(qc, cost_op, gamma[layer])
+            self._mixer_layer(qc, beta[layer])
+
         return qc
 
-    def _counts(self, qc: QuantumCircuit) -> Dict[str, int]:
+    def _clean_bitstring(self, key: str, n: int) -> str:
+        s = "".join(ch for ch in str(key) if ch in "01")
+        return s.zfill(n)[-n:]
+
+    def _run_circuit(self, qc: QuantumCircuit) -> dict[str, int]:
         n = qc.num_qubits
         qc_meas = qc.copy()
         creg = ClassicalRegister(n, "c")
         qc_meas.add_register(creg)
         qc_meas.measure(range(n), range(n))
 
-        if self.use_lexis:
-            from qaas.backend import transpile_to_IQM
-            tqc = transpile_to_IQM(qc_meas, self._backend, optimize_single_qubits=False, remote=True)
-        else:
-            tqc = transpile(qc_meas, backend=self._backend, optimization_level=3)
-        
-        job = self._backend.run(tqc, shots=self.shots)
-        res = job.result()
-        counts = res.get_counts()
-        return counts
+        if self.use_simulator:
+            tqc = qiskit_transpile(qc_meas, backend=self._backend)
+        elif self.use_lexis:
+            from qaas.backend import transpile as lexis_transpile
 
-    def _exp_from_counts(self, counts: Dict[str, int], cost_op: SparsePauliOp) -> float:
-        shots = max(1, sum(counts.values()))
+            tqc = lexis_transpile(qc_meas, self._backend, optimize_single_qubits=False)
+        else:
+            tqc = qiskit_transpile(qc_meas, backend=self._backend, optimization_level=3)
+
+        job = self._backend.run(tqc, shots=self.shots)
+        return job.result().get_counts()
+
+    def _expval_from_counts(
+        self, counts: dict[str, int], cost_op: SparsePauliOp
+    ) -> float:
+        total = max(1, sum(counts.values()))
         n = cost_op.num_qubits
         expval = 0.0
+
         for label, coeff in cost_op.to_list():
             c = float(np.real(coeff))
             if label == "I" * n:
@@ -227,76 +229,73 @@ class QAOA(Solver):
                 for qi in range(n):
                     if label[qi] == "Z" and s[-1 - qi] == "1":
                         parity *= -1
-                acc += parity * (freq / shots)
+                acc += parity * (freq / total)
             expval += c * acc
+
         return float(expval)
 
-    def _expectation(self, qc: QuantumCircuit, cost_op: SparsePauliOp) -> float:
-        counts = self._counts(qc)
-        return self._exp_from_counts(counts, cost_op)
-
     def get_expval_circuit(
-        self, penalty_weights: List[float]
-    ) -> Callable[[List[float]], OptimizationResult]:
-        cost_op, _ = self._get_cost_operator(penalty_weights)
+        self, penalty_weights: list[float]
+    ) -> Callable[[list[float]], OptimizationResult]:
+        cost_op, _ = self.create_cost_operator(self.problem, penalty_weights)
 
-        def f(angles: List[float]) -> OptimizationResult:
-            qc = self._build_qaoa_circuit(cost_op, angles)
-            val = self._expectation(qc, cost_op)
-            params = [float(np.asarray(v)) for v in angles]
-            return OptimizationResult(val, params)
+        def wrapper(angles: list[float]) -> OptimizationResult:
+            qc = self._circuit(cost_op, angles)
+            counts = self._run_circuit(qc)
+            val = self._expval_from_counts(counts, cost_op)
+            return OptimizationResult(val, list(angles))
 
-        return f
+        return wrapper
 
     def get_probs_func(
-        self, problem: Problem, penalty_weights: List[float]
-    ) -> Callable[[List[float]], List[float]]:
-        cost_op, _ = self._get_cost_operator(penalty_weights)
+        self, problem: Problem, penalty_weights: list[float]
+    ) -> Callable[[list[float]], list[float]]:
+        cost_op, _ = self.create_cost_operator(problem, penalty_weights)
 
-        def probs_fn(angles: List[float]) -> List[float]:
-            qc = self._build_qaoa_circuit(cost_op, angles)
-            counts = self._counts(qc)
+        def probability_fn(angles: list[float]) -> list[float]:
+            qc = self._circuit(cost_op, angles)
+            counts = self._run_circuit(qc)
             n = cost_op.num_qubits
-            size = 1 << n
             total = max(1, sum(counts.values()))
 
-            probs = [0.0] * size
-            for key, c in counts.items():
+            probs = [0.0] * (1 << n)
+            for key, freq in counts.items():
                 s = self._clean_bitstring(key, n)
-                idx = int(s, 2)
-                probs[idx] += c / total
+                probs[int(s, 2)] += freq / total
             return probs
 
-        return probs_fn
+        return probability_fn
 
     def run_with_probs(
-        self, problem: Problem, angles: List[float], penalty_weights: List[float]
+        self,
+        problem: Problem,
+        angles: list[float],
+        penalty_weights: list[float],
     ) -> np.recarray:
         probs = self.get_probs_func(problem, penalty_weights)(angles)
-        cost_op, var_names = self._get_cost_operator(penalty_weights)
-        n = cost_op.num_qubits
+        _, var_names = self.create_cost_operator(problem, penalty_weights)
+        n = len(var_names)
 
-        rec = np.recarray(
+        recarray = np.recarray(
             (len(probs),),
             dtype=[(name, "i4") for name in var_names] + [("probability", "f8")],
         )
-        for i, p in enumerate(probs):
-            bits = format(i, f"0{n}b")
-            rec[i] = (*[int(b) for b in bits], float(p))
-        return rec
+        for i, probability in enumerate(probs):
+            solution = format(i, "b").zfill(n)
+            recarray[i] = *solution, probability
+        return recarray
 
     def _run_optimizer(
-        self, penalty_weights: List[float], angles: OptimizationParameter
+        self, penalty_weights: list[float], angles: OptimizationParameter
     ) -> OptimizationResult:
         return self.optimizer.minimize(self.get_expval_circuit(penalty_weights), angles)
 
     def solve(
         self,
-        penalty_weights: Optional[List[float]] = None,
-        gamma: Optional[List[float]] = None,
-        beta: Optional[List[float]] = None,
+        penalty_weights: list[float] | None = None,
+        gamma: list[float] | None = None,
+        beta: list[float] | None = None,
     ) -> SolverResult:
-
         if penalty_weights is None and self.penalty_weights is None:
             penalty_weights = [1.0] * (len(self.problem.constraints) + 1)
         penalty_weights = (
@@ -305,12 +304,12 @@ class QAOA(Solver):
 
         gamma_ = self.gamma if gamma is None else self.gamma.update(init=gamma)
         beta_ = self.beta if beta is None else self.beta.update(init=beta)
-        angles = gamma_ + beta_
 
+        angles = gamma_ + beta_
         opt_res = self._run_optimizer(penalty_weights, angles)
-        p = int(self.layers)
-        gamma_res = opt_res.params[:p]
-        beta_res = opt_res.params[p:]
+
+        gamma_res = opt_res.params[: len(opt_res.params) // 2]
+        beta_res = opt_res.params[len(opt_res.params) // 2 :]
 
         return SolverResult(
             self.run_with_probs(self.problem, opt_res.params, penalty_weights),
