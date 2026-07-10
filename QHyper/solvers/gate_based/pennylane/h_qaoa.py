@@ -113,7 +113,7 @@ class H_QAOA(QAOA):
             penalty_weights = penalty_weights_
 
             cost_operator = self.create_cost_operator(self.problem, penalty_weights)
-            self.dev = qml.device(self.backend, wires=cost_operator.wires)
+            self.dev = self._make_device(cost_operator.wires)
             probs_func = self.get_probs_func(self.problem, penalty_weights)
 
             probs = probs_func(angles)

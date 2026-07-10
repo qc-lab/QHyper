@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import warnings
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Any, Callable
 
 import numpy as np
 from qiskit import QuantumCircuit, transpile as qiskit_transpile, ClassicalRegister
@@ -18,33 +18,79 @@ from QHyper.optimizers import (
     Optimizer,
     Dummy,
     OptimizationParameter,
+    create_optimizer,
 )
 from QHyper.converter import Converter
 from QHyper.polynomial import Polynomial
 from QHyper.solvers.base import Solver, SolverResult
 
 
+SUPPORTED_BACKENDS = ("simulator", "iqm", "lexis")
+IQM_BACKEND_URLS = {
+    "garnet": "https://cocos.resonance.meetiqm.com/garnet",
+    "emerald": "https://cocos.resonance.meetiqm.com/emerald",
+    "sirius": "https://cocos.resonance.meetiqm.com/sirius",
+}
+
+
 @dataclass
 class QAOA(Solver):
+    """
+      QAOA implementation running on IQM quantum processors.
+
+      Attributes
+      ----------
+      problem : Problem
+          The problem to be solved.
+      layers : int
+          Number of layers.
+      gamma : OptimizationParameter
+          Vector of gamma angles used in cost Hamiltonian. Size of the vector
+          should be equal to the number of layers.
+      beta : OptimizationParameter
+          Vector of beta angles used in mixing Hamiltonian. Size of the vector
+          should be equal to the number of layers.
+      optimizer : Optimizer
+          Optimizer used in the classical part of the algorithm.
+      penalty_weights : list[float] | None
+          Penalty weights used for converting Problem to QUBO. They connect cost
+          function with constraints. If not specified, all penalty weights are
+          set to 1.
+      backend_url : str | None
+          URL of the IQM Resonance backend. Used when running on IQM hardware (``use_simulator`` and ``use_lexis`` both False).
+      backend_token : str | None
+          IQM API token. If set, it is exported to the ``IQM_TOKEN`` environment
+          variable, otherwise the existing ``IQM_TOKEN`` is used.
+      use_simulator : bool, default False
+          Run the circuit on a local Qiskit Aer simulator instead of hardware.
+      use_lexis : bool, default False
+          Connect through the LEXIS/IT4I platform.
+      lexis_project : str | None
+          LEXIS project name. Required when ``use_lexis`` is True.
+      lexis_resource_name : str | None
+          LEXIS resource name. Required when ``use_lexis`` is True.
+      lexis_token : str | None
+          LEXIS access token. If None, a ``LexisSession`` is used to obtain one.
+      shots : int, default 1000
+          Number of measurement shots per circuit execution.
+      qubo_cache : dict[tuple[float, ...], tuple[SparsePauliOp, list[str]]]
+          Cache mapping penalty weights to the cost operator and its variable
+          names.
+      """
     problem: Problem
     layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer = Dummy()
     penalty_weights: list[float] | None = None
-
-    backend_url: str | None = "https://cocos.resonance.meetiqm.com/garnet"
+    backend_url: str | None = None
     backend_token: str | None = None
-
     use_simulator: bool = False
-
     use_lexis: bool = False
     lexis_project: str | None = None
     lexis_resource_name: str | None = None
     lexis_token: str | None = None
-
     shots: int = 1000
-
     qubo_cache: dict[tuple[float, ...], tuple[SparsePauliOp, list[str]]] = field(
         default_factory=dict, init=False
     )
@@ -316,3 +362,90 @@ class QAOA(Solver):
             {"gamma": gamma_res, "beta": beta_res},
             opt_res.history,
         )
+
+    @classmethod
+    def from_config(cls, problem: Problem,
+                    config: dict[str, Any]) -> 'QAOA':
+
+        config = dict(config)
+        
+        for param_name in ('gamma', 'beta'):
+            if param_name in config and isinstance(config[param_name], dict):
+                config[param_name] = OptimizationParameter(
+                    **config[param_name])
+
+        if 'optimizer' in config and isinstance(config['optimizer'], dict):
+            config['optimizer'] = create_optimizer(config['optimizer'])
+
+        if 'device' not in config:
+            raise ValueError("'solver.device' is required for IQM solver")
+
+        device_config = config.pop('device')
+        if not isinstance(device_config, dict):
+            raise ValueError("'solver.device' must be a mapping")
+
+        device_type = str(device_config.get('type', '')).lower()
+        device_name = str(device_config.get('name', '')).lower()
+        backend_name = device_config.get('backend', config.pop('backend', None))
+        token = device_config.get('token', config.pop('token', None))
+        project = device_config.get('project', config.pop('project', None))
+        resource_name = device_config.get(
+            'resource_name', config.pop('resource_name', None)
+        )
+
+        config['use_simulator'] = False
+        config['use_lexis'] = False
+
+        if device_type == 'simulator':
+            config['use_simulator'] = True
+            if token is not None or project is not None or resource_name is not None:
+                raise ValueError(
+                    "Simulator device does not use token/project/resource_name"
+                )
+
+        elif device_type == 'qpu':
+            if not device_name:
+                raise ValueError("'solver.device.name' must be a non-empty string")
+
+            if device_name in ('it4i', 'lexis'):
+                config['use_lexis'] = True
+                if backend_name is not None and str(backend_name).lower() != 'vlq':
+                    raise ValueError("LEXIS device supports only backend='vlq'")
+                if project is None or resource_name is None:
+                    raise ValueError(
+                        "LEXIS device requires 'project' and 'resource_name'"
+                    )
+                config['lexis_project'] = project
+                config['lexis_resource_name'] = resource_name
+                if token is not None:
+                    config['lexis_token'] = token
+
+            elif device_name in ('iqm.resonance', 'iqm', 'resonance'):
+                backend_key = (
+                    str(backend_name).lower() if backend_name is not None else ''
+                )
+                if backend_key not in IQM_BACKEND_URLS:
+                    raise ValueError(
+                        "IQM qpu device requires 'backend' set to one of: "
+                        f"{sorted(IQM_BACKEND_URLS)}"
+                    )
+                config['backend_url'] = IQM_BACKEND_URLS[backend_key]
+                if token is not None:
+                    config['backend_token'] = token
+                if project is not None or resource_name is not None:
+                    raise ValueError(
+                        "IQM qpu device does not use project/resource_name"
+                    )
+
+            else:
+                raise ValueError(
+                    f"Unsupported IQM qpu device name '{device_name}'. "
+                    "Use 'iqm.resonance' for IQM or 'it4i'/'lexis' for LEXIS"
+                )
+
+        else:
+            raise ValueError(
+                "'solver.device.type' must be either 'simulator' or 'qpu'"
+            )
+
+        return cls(problem, **config)

@@ -70,7 +70,7 @@ class QML_QAOA(QAOA):
         cost_operator = self.create_cost_operator(
             self.problem, penalty_weights)
 
-        self.dev = qml.device(self.backend, wires=cost_operator.wires)
+        self.dev = self._make_device(cost_operator.wires)
 
         @qml.qnode(self.dev)
         def expval_circuit(angles: list[float]) -> Any:

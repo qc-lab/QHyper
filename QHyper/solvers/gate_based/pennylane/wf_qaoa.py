@@ -45,7 +45,7 @@ class WF_QAOA(QAOA):
         When calculating the score of the solution, the penalty is the score
         for the solution that doesn't satisfy the constraints.
     backend : str, default 'default.qubit'
-        Backend for PennyLane.
+        PennyLane device name.
     mixer : str, default 'pl_x_mixer'
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
@@ -97,7 +97,7 @@ class WF_QAOA(QAOA):
                            ) -> Callable[[list[float]], float]:
         cost_operator = self.create_cost_operator(self.problem, penalty_weights)
 
-        self.dev = qml.device(self.backend, wires=cost_operator.wires)
+        self.dev = self._make_device(cost_operator.wires)
 
         probs_func = self.get_probs_func(self.problem, penalty_weights)
 

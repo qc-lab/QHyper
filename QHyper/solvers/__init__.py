@@ -55,6 +55,7 @@ also available in this function.
     gate_based.pennylane.qml_qaoa.QML_QAOA -- QML QAOA solver.
     gate_based.pennylane.wf_qaoa.WF_QAOA -- Weight Free QAOA solver.
     gate_based.pennylane.h_qaoa.H_QAOA -- Hyper QAOA solver.
+    gate_based.iqm.qaoa.QAOA -- IQM QAOA solver.
 
 
 .. rubric:: Hyper-optimizer
@@ -120,9 +121,14 @@ class Solvers:
                 )
 
         name_ = name.lower()
+        platform_ = platform.lower()
         if name_ in ["qaoa"]:
-            from .gate_based.pennylane.qaoa import QAOA
-            return QAOA
+            if platform_ == "iqm":
+                from .gate_based.iqm.qaoa import QAOA
+                return QAOA
+            elif platform_ == "pennylane":
+                from .gate_based.pennylane.qaoa import QAOA
+                return QAOA
         elif name_ in ["qml_qaoa"]:
             from .gate_based.pennylane.qml_qaoa import QML_QAOA
             return QML_QAOA
@@ -195,20 +201,30 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
             f"Solver {config['solver']['name']} not found"
         )
 
+    solver_config = config['solver']
+    solver_category = solver_config.get('category', '').lower()
+    solver_platform = solver_config.get('platform', '').lower()
+
+    if solver_category == 'gate_based':
+        if 'device' not in solver_config:
+            raise SolverConfigException(
+                "Gate-based solvers require 'solver.device' in configuration"
+            )
+
     for field in dataclasses.fields(solver_class):
         if not field.init:
             continue
 
-        if field.name not in config['solver']:
+        if field.name not in solver_config:
             continue
 
         if field.type == Optimizer:
-            config['solver'][field.name] = create_optimizer(
-                config['solver'][field.name]
+            solver_config[field.name] = create_optimizer(
+                solver_config[field.name]
             )
         elif field.type == OptimizationParameter:
-            config['solver'][field.name] = OptimizationParameter(
-                **config['solver'][field.name]
+            solver_config[field.name] = OptimizationParameter(
+                **solver_config[field.name]
             )
 
     try:

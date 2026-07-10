@@ -60,6 +60,7 @@ def test_scipy():
             "name": "QAOA",
             "category": "gate_based",
             "platform": "pennylane",
+            "device": {"type": "simulator", "name": "default.qubit"},
             "layers": 5,
             **params_config,
             "optimizer": {
@@ -87,6 +88,7 @@ def test_qml():
             "name": "QAOA",
             "category": "gate_based",
             "platform": "pennylane",
+            "device": {"type": "simulator", "name": "default.qubit"},
             "layers": 5,
             **params_config,
             "optimizer": {
@@ -109,8 +111,8 @@ def test_qml_qaoa():
             "name": "QML_QAOA",
             "category": "gate_based",
             "platform": "pennylane",
+            "device": {"type": "simulator", "name": "default.qubit"},
             "layers": 5,
-            "backend": "default.qubit",
             **params_config,
             "optimizer": {
                 "type": "qml",
@@ -133,6 +135,7 @@ def test_random():
             "name": "QAOA",
             "category": "gate_based",
             "platform": "pennylane",
+            "device": {"type": "simulator", "name": "default.qubit"},
             "layers": 5,
             **params_config,
             # "type": "vqa",
@@ -175,6 +178,7 @@ def test_cem():
             "name": "QAOA",
             "category": "gate_based",
             "platform": "pennylane",
+            "device": {"type": "simulator", "name": "default.qubit"},
             "layers": 5,
             **params_config,
             "optimizer": {
@@ -211,6 +215,7 @@ def test_grid():
             "name": "QAOA",
             "category": "gate_based",
             "platform": "pennylane",
+            "device": {"type": "simulator", "name": "default.qubit"},
             "layers": 5,
             **params_config,
             "optimizer": {

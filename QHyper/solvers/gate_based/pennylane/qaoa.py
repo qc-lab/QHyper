@@ -1,7 +1,7 @@
 import pennylane as qml
 from pennylane import numpy as np
 
-from typing import Callable, cast
+from typing import Any, Callable, cast
 
 from dataclasses import dataclass, field
 
@@ -12,6 +12,13 @@ from QHyper.optimizers import (
 from QHyper.converter import Converter
 from QHyper.polynomial import Polynomial
 from QHyper.solvers.base import Solver, SolverResult
+
+SIMULATOR_DEVICES = {
+    'default.qubit', 'default.mixed', 'default.tensor',
+    'lightning.qubit', 'lightning.gpu', 'lightning.kokkos', 'lightning.tensor',
+    'qiskit.aer', 'qiskit.basicsim',
+}
+QISKIT_REMOTE = 'qiskit.remote'
 
 
 @dataclass
@@ -53,6 +60,7 @@ class QAOA(Solver):
     optimizer: Optimizer
     penalty_weights: list[float] | None = None
     backend: str = "default.qubit"
+    backend_name: str | None = field(default=None, init=False)
     mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
         default_factory=dict, init=False)
@@ -78,11 +86,66 @@ class QAOA(Solver):
         self.backend = backend
         self.mixer = mixer
         self.qubo_cache = {}
+        self.backend_name = None
+
+    @classmethod
+    def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'QAOA':
+        config = dict(config)
+
+        if 'device' not in config:
+            raise ValueError("'device' is required for PennyLane solvers")
+
+        device_config = config.pop('device')
+        if not isinstance(device_config, dict):
+            raise ValueError("'device' must be a mapping")
+
+        device_type = str(device_config.get('type', '')).lower()
+        device_name = device_config.get('name')
+        if not isinstance(device_name, str) or not device_name:
+            raise ValueError("'device.name' must be a non-empty string")
+
+        device_backend = device_config.get('backend')
+        name_key = device_name.lower()
+
+        if device_type == 'simulator':
+            if name_key == QISKIT_REMOTE:
+                raise ValueError(
+                    "'qiskit.remote' is a remote QPU device, not a simulator. "
+                    "Use 'qiskit.aer' for local Aer simulation, or device.type "
+                    "'qpu' with a hardware backend"
+                )
+        elif device_type == 'qpu':
+
+            if name_key == QISKIT_REMOTE and not device_backend:
+                raise ValueError(
+                    "'qiskit.remote' requires 'device.backend' "
+                    "(e.g. a hardware backend like 'melbourne')"
+                )
+            if name_key in SIMULATOR_DEVICES:
+                raise ValueError(
+                    f"'{device_name}' is a simulator, use device.type 'simulator' "
+                    "or 'qiskit.remote' with a backend for a real qpu"
+                )
+        else:
+            raise ValueError(
+                "'device.type' must be either 'simulator' or 'qpu'"
+            )
+
+        config['backend'] = device_name
+
+        solver = cls(problem, **config)
+        if device_backend is not None:
+            solver.backend_name = str(device_backend)
+        return solver
 
     def _get_num_of_wires(self) -> int:
         if self.dev is None:
             raise ValueError("Device not initialized")
         return len(self.dev.wires)
+
+    def _make_device(self, wires: Any) -> qml.devices.LegacyDevice:
+        kwargs = {'backend': self.backend_name} if self.backend_name else {}
+        return qml.device(self.backend, wires=wires, **kwargs)
 
     def create_cost_operator(self, problem: Problem,
                              penalty_weights: list[float]
@@ -143,8 +206,7 @@ class QAOA(Solver):
         self, penalty_weights: list[float]
     ) -> Callable[[list[float]], OptimizationResult]:
         cost_operator = self.create_cost_operator(self.problem, penalty_weights)
-
-        self.dev = qml.device(self.backend, wires=cost_operator.wires)
+        self.dev = self._make_device(cost_operator.wires)
 
         @qml.qnode(self.dev)
         def expval_circuit(angles: list[float]) -> OptimizationResult:
@@ -174,8 +236,7 @@ class QAOA(Solver):
             Returns function that takes angles and returns probabilities
         """
         cost_operator = self.create_cost_operator(problem, penalty_weights)
-
-        self.dev = qml.device(self.backend, wires=cost_operator.wires)
+        self.dev = self._make_device(cost_operator.wires)
 
         @qml.qnode(self.dev)
         def probability_circuit(angles: list[float]) -> list[float]:
