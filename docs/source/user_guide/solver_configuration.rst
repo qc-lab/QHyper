@@ -213,6 +213,9 @@ Configuring gate-based solvers: QAOA
             category: gate_based
             platform: pennylane
             name: QAOA
+            device:
+                type: simulator
+                name: default.qubit
             layers: 5
             gamma:
                 init: [0.25, 0.25, 0.25, 0.25, 0.25]
@@ -229,6 +232,10 @@ Configuring gate-based solvers: QAOA
                 "category": "gate_based",
                 "platform": "pennylane",
                 "name": "QAOA",
+                "device": {
+                    "type": "simulator",
+                    "name": "default.qubit"
+                },
                 "layers": 5,
                 "gamma": {
                     "init": [0.25, 0.25, 0.25, 0.25, 0.25]
@@ -245,7 +252,7 @@ Configuring gate-based solvers: QAOA
 
 
 It is possible to further customize the :py:class:`QAOA<.QAOA>` with additional keyword arguments (see the QHyper API documentation). Below is presented an example of setting the `Pennylane simulator
-type <https://pennylane.ai/plugins/>`_ using the ``backend`` keyword.
+type <https://pennylane.ai/plugins/>`_ by using the ``device`` block
 
 .. tabs::
 
@@ -271,6 +278,9 @@ type <https://pennylane.ai/plugins/>`_ using the ``backend`` keyword.
             category: gate_based
             platform: pennylane
             name: QAOA
+            device:
+                type: simulator
+                name: default.qubit
             layers: 5
             gamma:
                 init: [0.25, 0.25, 0.25, 0.25, 0.25]
@@ -278,7 +288,6 @@ type <https://pennylane.ai/plugins/>`_ using the ``backend`` keyword.
                 init: [-0.5, -0.5, -0.5, -0.5, -0.5]
             optimizer: 
                 type: QmlGradientDescent
-            backend: default.qubit
             penalty_weights: [1, 2.5, 2.5]
 
     .. code-tab:: json
@@ -288,6 +297,10 @@ type <https://pennylane.ai/plugins/>`_ using the ``backend`` keyword.
                     "category": "gate_based",
                     "platform": "pennylane",
                     "name": "QAOA",
+                    "device": {
+                        "type": "simulator",
+                        "name": "default.qubit"
+                    },
                     "layers": 5,
                     "gamma": {
                         "init": [0.25, 0.25, 0.25, 0.25, 0.25]
@@ -298,7 +311,6 @@ type <https://pennylane.ai/plugins/>`_ using the ``backend`` keyword.
                     "optimizer": {
                         "type": "QmlGradientDescent"
                     },
-                    "backend": "default.qubit",
                     "penalty_weights": [1, 2.5, 2.5]
                 }
             }
@@ -336,6 +348,9 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
             category: gate_based
             platform: pennylane
             name: QAOA
+            device:
+                type: simulator
+                name: default.qubit
             layers: 5
             gamma:
                 init: [0.25, 0.25, 0.25, 0.25, 0.25]
@@ -346,7 +361,6 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
                 name: adam
                 steps: 200
                 stepsize: 0.005
-            backend: default.qubit
             penalty_weights: [1, 2.5, 2.5]
 
     .. code-tab:: json
@@ -356,6 +370,10 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
                 "category": "gate_based",
                 "platform": "pennylane",
                 "name": "QAOA",
+                "device": {
+                    "type": "simulator",
+                    "name": "default.qubit"
+                },
                 "layers": 5,
                 "gamma": {
                         "init": [0.25, 0.25, 0.25, 0.25, 0.25]
@@ -369,7 +387,6 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
                     "steps": 200,
                     "stepsize": 0.005
                 },
-                "backend": "default.qubit",
                 "penalty_weights": [1, 2.5, 2.5]
             }
         }
@@ -453,6 +470,9 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
             category: gate_based
             platform: pennylane
             name: WF_QAOA
+            device:
+                type: simulator
+                name: default.qubit
             layers: 5
             gamma:
                 min: [0, 0, 0, 0, 0]
@@ -464,7 +484,6 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
                 max: [6.28, 6.28, 6.28, 6.28, 6.28]
             optimizer: 
                 type: scipy
-            backend: default.qubit
         hyper_optimizer:
             optimizer: 
                 type: cem
@@ -483,6 +502,10 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
                 "category": "gate_based",
                 "platform": "pennylane",
                 "name": "WF_QAOA",
+                "device": {
+                    "type": "simulator",
+                    "name": "default.qubit"
+                },
                 "layers": 5,
                 "gamma": {
                     "min": [0.0, 0.0, 0.0, 0.0, 0.0],
@@ -496,8 +519,7 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
                 },
                 "optimizer": {
                 "type": "scipy"
-                },
-                "backend": "default.qubit"
+                }
             },
             "hyper_optimizer": {
                 "optimizer": {

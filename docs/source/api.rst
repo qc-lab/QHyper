@@ -13,6 +13,10 @@ Here is the list of all the modules in the QHyper package.
 
    problems
    optimizers
+
+.. toctree::
+   :maxdepth: 2
+
    solvers
 
 .. rubric:: Simple Modules

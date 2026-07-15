@@ -49,7 +49,7 @@ The main components are:
 
 * :doc:`Problems <generated/QHyper.problems>` - classes that describe different types of problems, such as the Knapsack Problem or the Traveling Salesman Problem.
 
-* :doc:`Solvers <generated/QHyper.solvers>` - Classes that define different types of solvers, e.g., quantum/hybrid solvers like the Quantum Approximate Optimization Algorithm or the Constrained Quadratic Model, but also classical solvers like Gurobi.
+* :doc:`Solvers <solvers>` - Classes that define different types of solvers, e.g., quantum/hybrid solvers like the Quantum Approximate Optimization Algorithm or the Constrained Quadratic Model, but also classical solvers like Gurobi.
 
 * :doc:`Optimizers <generated/QHyper.optimizers>` - Classes that implement different types of (hyper)optimizers.
 

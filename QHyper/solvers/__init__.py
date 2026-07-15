@@ -18,60 +18,6 @@ To use any solver you can import it directly like
 or use function :py:func:`Solvers.get` with the name, category, and platform.
 Any solver that is in directory 'QHyper/custom' or 'custom' will be
 also available in this function.
-
-.. rubric:: Interface
-
-.. autosummary::
-    :toctree: generated/
-
-    Solver  -- Base class for solvers.
-    SolverResult -- Dataclass for storing results
-
-
-.. rubric:: Classical Solvers
-
-.. autosummary::
-    :toctree: generated/
-
-    classical.gurobi.Gurobi -- Gurobi solver.
-
-
-.. rubric:: Quantum Annealing Solvers
-
-.. autosummary::
-    :toctree: generated/
-
-    quantum_annealing.dwave.cqm.CQM -- CQM solver.
-    quantum_annealing.dwave.dqm.DQM -- DQM solver.
-    quantum_annealing.dwave.advantage.Advantage -- Advantage solver.
-
-
-.. rubric:: Gate-based solvers
-
-.. autosummary::
-    :toctree: generated/
-
-    gate_based.pennylane.qaoa.QAOA -- QAOA solver.
-    gate_based.pennylane.qml_qaoa.QML_QAOA -- QML QAOA solver.
-    gate_based.pennylane.wf_qaoa.WF_QAOA -- Weight Free QAOA solver.
-    gate_based.pennylane.h_qaoa.H_QAOA -- Hyper QAOA solver.
-    gate_based.iqm.qaoa.QAOA -- IQM QAOA solver.
-
-
-.. rubric:: Hyper-optimizer
-
-Not really a solver, but a class that can be used to optimize the hyperparameters
-of another solver. It is a wrapper around the solver class.
-
-.. autosummary::
-    :toctree: generated/
-
-    hyper_optimizer.HyperOptimizer -- Hyper-optimizer.
-
-.. rubric:: Additional functions
-
-.. autoclass:: Solvers
-    :members:
 """
 
 import copy
