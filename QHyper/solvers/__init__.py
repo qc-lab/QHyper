@@ -27,7 +27,7 @@ import dataclasses
 from typing import Type, Any
 
 from QHyper.problems import problem_from_config, ProblemConfigException
-from QHyper.util import search_for
+from QHyper.util import search_for, normalize_key, remap_keys
 
 from QHyper.optimizers import Optimizer, create_optimizer, OptimizationParameter
 
@@ -58,46 +58,46 @@ class Solvers:
 
         # In the future, the category and platform might be required for some
         # solvers
-        if category == "custom":
-            if name in Solvers.custom_solvers:
-                return Solvers.custom_solvers[name]
-            else:
-                raise FileNotFoundError(
-                    f"Solver {name} not found in custom solvers"
-                )
+        name_ = normalize_key(name)
 
-        name_ = name.lower()
-        platform_ = platform.lower()
-        if name_ in ["qaoa"]:
+        if normalize_key(category) == "custom":
+            custom = {normalize_key(k): v
+                      for k, v in Solvers.custom_solvers.items()}
+            if name_ in custom:
+                return custom[name_]
+            raise FileNotFoundError(
+                f"Solver {name} not found in custom solvers")
+
+        platform_ = normalize_key(platform)
+        if name_ == "qaoa":
             if platform_ == "iqm":
                 from .gate_based.iqm.qaoa import QAOA
                 return QAOA
             elif platform_ == "pennylane":
                 from .gate_based.pennylane.qaoa import QAOA
                 return QAOA
-        elif name_ in ["qml_qaoa"]:
+        elif name_ == "qmlqaoa":
             from .gate_based.pennylane.qml_qaoa import QML_QAOA
             return QML_QAOA
-        elif name_ in ["wf_qaoa"]:
+        elif name_ == "wfqaoa":
             from .gate_based.pennylane.wf_qaoa import WF_QAOA
             return WF_QAOA
-        elif name_ in ["h_qaoa"]:
+        elif name_ == "hqaoa":
             from .gate_based.pennylane.h_qaoa import H_QAOA
             return H_QAOA
-        elif name_ in ["gurobi"]:
+        elif name_ == "gurobi":
             from .classical.gurobi.gurobi import Gurobi
             return Gurobi
-        elif name_ in ["cqm"]:
+        elif name_ == "cqm":
             from .quantum_annealing.dwave.cqm import CQM
             return CQM
-        elif name_ in ["dqm"]:
+        elif name_ == "dqm":
             from .quantum_annealing.dwave.dqm import DQM
             return DQM
-        elif name_ in ["advantage"]:
+        elif name_ == "advantage":
             from .quantum_annealing.dwave.advantage import Advantage
             return Advantage
-        else:
-            raise SolverConfigException(f"Solver {name} not found")
+        raise SolverConfigException(f"Solver {name} not found")
 
 
 def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
@@ -120,7 +120,8 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
         Initialized Solver object
     """
 
-    config = copy.deepcopy(config)
+    config = remap_keys(
+        copy.deepcopy(config), ['problem', 'solver', 'hyper_optimizer'])
 
     try:
         problem_config = config.pop('problem')
@@ -133,6 +134,10 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
 
     if 'solver' not in config:
         raise SolverConfigException("Solver configuration was not provided")
+
+    config['solver'] = remap_keys(
+        config['solver'], ['name', 'category', 'platform', 'device'])
+
     if 'name' not in config['solver']:
         raise SolverConfigException("Solver name was not provided")
 
@@ -147,11 +152,17 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
             f"Solver {config['solver']['name']} not found"
         )
 
-    solver_config = config['solver']
-    solver_category = solver_config.get('category', '').lower()
-    solver_platform = solver_config.get('platform', '').lower()
+    solver_config = remap_keys(
+        config['solver'],
+        [f.name for f in dataclasses.fields(solver_class)]
+        + ['name', 'category', 'platform'])
+    if isinstance(solver_config.get('device'), dict):
+        solver_config['device'] = remap_keys(
+            solver_config['device'],
+            ['type', 'name', 'backend', 'project', 'resource_name', 'token'])
+    config['solver'] = solver_config
 
-    if solver_category == 'gate_based':
+    if normalize_key(solver_config.get('category', '')) == 'gatebased':
         if 'device' not in solver_config:
             raise SolverConfigException(
                 "Gate-based solvers require 'solver.device' in configuration"
@@ -170,7 +181,8 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
             )
         elif field.type == OptimizationParameter:
             solver_config[field.name] = OptimizationParameter(
-                **solver_config[field.name]
+                **remap_keys(solver_config[field.name],
+                             ['min', 'max', 'step', 'init'])
             )
 
     try:

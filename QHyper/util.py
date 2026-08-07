@@ -25,11 +25,22 @@ import re
 import numpy as np
 import numpy.typing as npt
 
-from typing import Callable, NewType, Any
+from typing import Callable, NewType, Any, Iterable
 
 Array1D = NewType("Array1D", npt.NDArray)
 Array2D = NewType("Array2D", npt.NDArray)
 ArrayND = NewType("ArrayND", npt.NDArray)
+
+
+def normalize_key(name: str) -> str:
+    return re.sub(r"[_-]", "", str(name)).lower()
+
+
+def remap_keys(config: dict[str, Any], valid_names: Iterable[str]
+               ) -> dict[str, Any]:
+    lookup = {normalize_key(name): name for name in valid_names}
+    return {lookup.get(normalize_key(key), key): value
+            for key, value in config.items()}
 
 
 def weighted_avg_evaluation(

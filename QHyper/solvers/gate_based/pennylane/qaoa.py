@@ -43,8 +43,18 @@ class QAOA(Solver):
     penalty_weights : list[float] | None
         Penalty weights used for converting Problem to QUBO. They connect cost function
         with constraints. If not specified, all penalty weights are set to 1.
-    backend : str
-        Backend for PennyLane.
+    device : dict
+        Device configuration (required). Accepted keys:
+
+        - ``type`` -- ``'simulator'`` or ``'qpu'`` (required)
+        - ``name`` -- PennyLane device name (required)
+
+          - simulator: ``'default.qubit'``, ``'lightning.qubit'``,
+            ``'qiskit.aer'``, ...
+          - qpu: ``'qiskit.remote'`` (or another plugin)
+
+        - ``backend`` -- hardware backend, required for ``'qiskit.remote'``
+          (e.g. ``'melbourne'``), otherwise omit
     mixer : str
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
@@ -58,8 +68,9 @@ class QAOA(Solver):
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
+    device: dict[str, Any]
     penalty_weights: list[float] | None = None
-    backend: str = "default.qubit"
+    backend: str = field(default="default.qubit", init=False)
     backend_name: str | None = field(default=None, init=False)
     mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
@@ -72,9 +83,9 @@ class QAOA(Solver):
             layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
+            device: dict[str, Any],
             penalty_weights: list[float] | None = None,
             optimizer: Optimizer = Dummy(),
-            backend: str = "default.qubit",
             mixer: str = "pl_x_mixer"
     ) -> None:
         self.problem = problem
@@ -83,28 +94,22 @@ class QAOA(Solver):
         self.beta = beta
         self.penalty_weights = penalty_weights
         self.layers = layers
-        self.backend = backend
+        self.device = device
+        self.backend, self.backend_name = self._parse_device(device)
         self.mixer = mixer
         self.qubo_cache = {}
-        self.backend_name = None
 
-    @classmethod
-    def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'QAOA':
-        config = dict(config)
-
-        if 'device' not in config:
-            raise ValueError("'device' is required for PennyLane solvers")
-
-        device_config = config.pop('device')
-        if not isinstance(device_config, dict):
+    @staticmethod
+    def _parse_device(device: dict[str, Any]) -> tuple[str, str | None]:
+        if not isinstance(device, dict):
             raise ValueError("'device' must be a mapping")
 
-        device_type = str(device_config.get('type', '')).lower()
-        device_name = device_config.get('name')
+        device_type = str(device.get('type', '')).lower()
+        device_name = device.get('name')
         if not isinstance(device_name, str) or not device_name:
             raise ValueError("'device.name' must be a non-empty string")
 
-        device_backend = device_config.get('backend')
+        device_backend = device.get('backend')
         name_key = device_name.lower()
 
         if device_type == 'simulator':
@@ -115,7 +120,6 @@ class QAOA(Solver):
                     "'qpu' with a hardware backend"
                 )
         elif device_type == 'qpu':
-
             if name_key == QISKIT_REMOTE and not device_backend:
                 raise ValueError(
                     "'qiskit.remote' requires 'device.backend' "
@@ -131,12 +135,12 @@ class QAOA(Solver):
                 "'device.type' must be either 'simulator' or 'qpu'"
             )
 
-        config['backend'] = device_name
+        return device_name, (
+            str(device_backend) if device_backend is not None else None)
 
-        solver = cls(problem, **config)
-        if device_backend is not None:
-            solver.backend_name = str(device_backend)
-        return solver
+    @classmethod
+    def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'QAOA':
+        return cls(problem, **dict(config))
 
     def _get_num_of_wires(self) -> int:
         if self.dev is None:

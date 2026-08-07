@@ -39,8 +39,18 @@ class QML_QAOA(QAOA):
     penalty_weights : list[float] | None
         Penalty weights used for converting Problem to QUBO. They connect cost function
         with constraints. If not specified, all penalty weights are set to 1.
-    backend : str
-        Backend for PennyLane.
+    device : dict
+        Device configuration (required). Accepted keys:
+
+        - ``type`` -- ``'simulator'`` or ``'qpu'`` (required)
+        - ``name`` -- PennyLane device name (required)
+
+          - simulator: ``'default.qubit'``, ``'lightning.qubit'``,
+            ``'qiskit.aer'``, ...
+          - qpu: ``'qiskit.remote'`` (or another plugin)
+
+        - ``backend`` -- hardware backend, required for ``'qiskit.remote'``
+          (e.g. ``'melbourne'``), otherwise omit
     mixer : str
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
@@ -53,9 +63,9 @@ class QML_QAOA(QAOA):
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
+    device: dict[str, Any]
     penalty_weights: list[float] | None = None
     mixer: str = "pl_x_mixer"
-    backend: str = "default.qubit"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
         default_factory=dict, init=False)
     dev: qml.devices.LegacyDevice | None = field(default=None, init=False)
@@ -63,6 +73,7 @@ class QML_QAOA(QAOA):
     def __post_init__(self) -> None:
         if not isinstance(self.optimizer, QmlGradientDescent):
             raise ValueError(f"Optimizer {self.optimizer} not supported")
+        self.backend, self.backend_name = self._parse_device(self.device)
 
     def get_expval_circuit(
         self, penalty_weights: list[float]

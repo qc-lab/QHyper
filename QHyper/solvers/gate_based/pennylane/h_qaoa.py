@@ -1,7 +1,7 @@
 import pennylane as qml
 from pennylane import numpy as np
 
-from typing import Callable
+from typing import Any, Callable
 
 from dataclasses import dataclass, field
 
@@ -48,8 +48,18 @@ class H_QAOA(QAOA):
     penalty : float, default 0
         When calculating the score of the solution, the penalty is the score
         for the solution that doesn't satisfy the constraints.
-    backend : str, default 'default.qubit'
-        Backend for PennyLane.
+    device : dict
+        Device configuration (required). Accepted keys:
+
+        - ``type`` -- ``'simulator'`` or ``'qpu'`` (required)
+        - ``name`` -- PennyLane device name (required)
+
+          - simulator: ``'default.qubit'``, ``'lightning.qubit'``,
+            ``'qiskit.aer'``, ...
+          - qpu: ``'qiskit.remote'`` (or another plugin)
+
+        - ``backend`` -- hardware backend, required for ``'qiskit.remote'``
+          (e.g. ``'melbourne'``), otherwise omit
     mixer : str, default 'pl_x_mixer'
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
@@ -64,9 +74,9 @@ class H_QAOA(QAOA):
     beta: OptimizationParameter
     penalty_weights: OptimizationParameter
     optimizer: Optimizer
+    device: dict[str, Any]
     limit_results: int | None = None
     penalty: float = 0
-    backend: str = "default.qubit"
     mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
         default_factory=dict, init=False)
@@ -80,7 +90,7 @@ class H_QAOA(QAOA):
             beta: OptimizationParameter,
             penalty_weights: OptimizationParameter,
             penalty: float,
-            backend: str = "default.qubit",
+            device: dict[str, Any],
             mixer: str = "pl_x_mixer",
             limit_results: int | None = None,
             optimizer: Optimizer = Dummy(),
@@ -93,7 +103,8 @@ class H_QAOA(QAOA):
         self.penalty = penalty
         self.limit_results = limit_results
         self.layers = layers
-        self.backend = backend
+        self.device = device
+        self.backend, self.backend_name = self._parse_device(device)
         self.mixer = mixer
         self.qubo_cache = {}
 

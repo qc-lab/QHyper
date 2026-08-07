@@ -5,7 +5,7 @@ from typing import Any
 from QHyper.optimizers import OptimizationResult, Optimizer, OptimizationParameter
 from QHyper.solvers import Solver, SolverResult
 from QHyper.problems import Problem
-from QHyper.util import weighted_avg_evaluation
+from QHyper.util import weighted_avg_evaluation, remap_keys
 
 
 class HyperOptimizerProperty:
@@ -62,7 +62,8 @@ class HyperOptimizer:
         self.history = []
 
         for property, values in properties.items():
-            self.properties[property] = OptimizationParameter(**values)
+            self.properties[property] = OptimizationParameter(
+                **remap_keys(values, ['min', 'max', 'step', 'init']))
 
     @property
     def problem(self) -> Problem:

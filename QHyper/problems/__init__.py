@@ -43,8 +43,9 @@ also available in this function.
 
 from typing import Type, Any
 import copy
+import inspect
 
-from QHyper.util import search_for
+from QHyper.util import search_for, normalize_key, remap_keys
 
 from QHyper.problems.base import Problem
 
@@ -66,10 +67,11 @@ class Problems:
                 search_for(Problem, 'QHyper/custom')
                 | search_for(Problem, 'custom'))
 
-        name_ = name.lower()
-
-        if name_ in Problems.custom_problems:
-            return Problems.custom_problems[name_]
+        name_ = normalize_key(name)
+        custom = {normalize_key(k): v
+                  for k, v in Problems.custom_problems.items()}
+        if name_ in custom:
+            return custom[name_]
         elif name_ in ["knapsack", "knapsackproblem"]:
             from .knapsack import KnapsackProblem
             return KnapsackProblem
@@ -79,10 +81,10 @@ class Problems:
         elif name_ in ["maxcut", "maxcutproblem"]:
             from .maxcut import MaxCutProblem
             return MaxCutProblem
-        elif name_ in ["workflow_scheduling", "workflowschedulingproblem"]:
+        elif name_ in ["workflowscheduling", "workflowschedulingproblem"]:
             from .workflow_scheduling import WorkflowSchedulingProblem
             return WorkflowSchedulingProblem
-        elif name_ in ["community_detection", "communitydetectionproblem"]:
+        elif name_ in ["communitydetection", "communitydetectionproblem"]:
             from .community_detection import CommunityDetectionProblem
             return CommunityDetectionProblem
         else:
@@ -111,7 +113,6 @@ def problem_from_config(config: dict[str, Any]) -> Problem:
     config_ = copy.deepcopy(config)
     if "type" not in config_:
         raise ProblemConfigException("Problem type was not provided")
-    problem_type = config_.pop('type')
-    problem_class = Problems.get(problem_type)
-
-    return problem_class(**config_)
+    problem_class = Problems.get(config_.pop('type'))
+    return problem_class(
+        **remap_keys(config_, inspect.signature(problem_class).parameters))
