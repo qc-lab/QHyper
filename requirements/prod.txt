@@ -6,4 +6,9 @@ dwave-system
 gurobipy
 types-tqdm
 pandas
+qiskit
+qiskit-aer
+iqm-client
+git+https://opencode.it4i.eu/lexis-platform/clients/py4lexis.git
+git+https://github.com/It4innovations/quantum-as-a-service.git
 git+https://github.com/wfcommons/wfcommons.git@main

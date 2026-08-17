@@ -1,0 +1,1 @@
+from QHyper.devices.dwave.base import DWaveDevice

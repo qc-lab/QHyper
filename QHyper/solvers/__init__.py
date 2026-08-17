@@ -109,8 +109,6 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
 
     Parameters
     ----------
-    problem : Problem
-        The problem to be solved
     config : dict[str. Any]
         Configuration in form of dict
 
@@ -156,10 +154,6 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
         config['solver'],
         [f.name for f in dataclasses.fields(solver_class)]
         + ['name', 'category', 'platform'])
-    if isinstance(solver_config.get('device'), dict):
-        solver_config['device'] = remap_keys(
-            solver_config['device'],
-            ['type', 'name', 'backend', 'project', 'resource_name', 'token'])
     config['solver'] = solver_config
 
     if normalize_key(solver_config.get('category', '')) == 'gatebased':

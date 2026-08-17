@@ -12,13 +12,7 @@ from QHyper.optimizers import (
 from QHyper.converter import Converter
 from QHyper.polynomial import Polynomial
 from QHyper.solvers.base import Solver, SolverResult
-
-SIMULATOR_DEVICES = {
-    'default.qubit', 'default.mixed', 'default.tensor',
-    'lightning.qubit', 'lightning.gpu', 'lightning.kokkos', 'lightning.tensor',
-    'qiskit.aer', 'qiskit.basicsim',
-}
-QISKIT_REMOTE = 'qiskit.remote'
+from QHyper.devices.pennylane import PennyLaneDevice
 
 
 @dataclass
@@ -30,6 +24,8 @@ class QAOA(Solver):
     ----------
     problem : Problem
         The problem to be solved.
+    device : PennyLaneDevice
+        Configuration of the device the solver runs the problem on.
     layers : int
         Number of layers.
     gamma : OptimizationParameter
@@ -43,18 +39,6 @@ class QAOA(Solver):
     penalty_weights : list[float] | None
         Penalty weights used for converting Problem to QUBO. They connect cost function
         with constraints. If not specified, all penalty weights are set to 1.
-    device : dict
-        Device configuration (required). Accepted keys:
-
-        - ``type`` -- ``'simulator'`` or ``'qpu'`` (required)
-        - ``name`` -- PennyLane device name (required)
-
-          - simulator: ``'default.qubit'``, ``'lightning.qubit'``,
-            ``'qiskit.aer'``, ...
-          - qpu: ``'qiskit.remote'`` (or another plugin)
-
-        - ``backend`` -- hardware backend, required for ``'qiskit.remote'``
-          (e.g. ``'melbourne'``), otherwise omit
     mixer : str
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
@@ -64,14 +48,12 @@ class QAOA(Solver):
     """
 
     problem: Problem
+    device: PennyLaneDevice
     layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
-    device: dict[str, Any]
     penalty_weights: list[float] | None = None
-    backend: str = field(default="default.qubit", init=False)
-    backend_name: str | None = field(default=None, init=False)
     mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
         default_factory=dict, init=False)
@@ -80,10 +62,10 @@ class QAOA(Solver):
     def __init__(
             self,
             problem: Problem,
+            device: PennyLaneDevice,
             layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
-            device: dict[str, Any],
             penalty_weights: list[float] | None = None,
             optimizer: Optimizer = Dummy(),
             mixer: str = "pl_x_mixer"
@@ -95,52 +77,15 @@ class QAOA(Solver):
         self.penalty_weights = penalty_weights
         self.layers = layers
         self.device = device
-        self.backend, self.backend_name = self._parse_device(device)
         self.mixer = mixer
         self.qubo_cache = {}
 
-    @staticmethod
-    def _parse_device(device: dict[str, Any]) -> tuple[str, str | None]:
-        if not isinstance(device, dict):
-            raise ValueError("'device' must be a mapping")
-
-        device_type = str(device.get('type', '')).lower()
-        device_name = device.get('name')
-        if not isinstance(device_name, str) or not device_name:
-            raise ValueError("'device.name' must be a non-empty string")
-
-        device_backend = device.get('backend')
-        name_key = device_name.lower()
-
-        if device_type == 'simulator':
-            if name_key == QISKIT_REMOTE:
-                raise ValueError(
-                    "'qiskit.remote' is a remote QPU device, not a simulator. "
-                    "Use 'qiskit.aer' for local Aer simulation, or device.type "
-                    "'qpu' with a hardware backend"
-                )
-        elif device_type == 'qpu':
-            if name_key == QISKIT_REMOTE and not device_backend:
-                raise ValueError(
-                    "'qiskit.remote' requires 'device.backend' "
-                    "(e.g. a hardware backend like 'melbourne')"
-                )
-            if name_key in SIMULATOR_DEVICES:
-                raise ValueError(
-                    f"'{device_name}' is a simulator, use device.type 'simulator' "
-                    "or 'qiskit.remote' with a backend for a real qpu"
-                )
-        else:
-            raise ValueError(
-                "'device.type' must be either 'simulator' or 'qpu'"
-            )
-
-        return device_name, (
-            str(device_backend) if device_backend is not None else None)
-
     @classmethod
     def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'QAOA':
-        return cls(problem, **dict(config))
+        config = dict(config)
+        if 'device' in config:
+            config['device'] = PennyLaneDevice.from_config(config['device'])
+        return cls(problem, **config)
 
     def _get_num_of_wires(self) -> int:
         if self.dev is None:
@@ -148,8 +93,7 @@ class QAOA(Solver):
         return len(self.dev.wires)
 
     def _make_device(self, wires: Any) -> qml.devices.LegacyDevice:
-        kwargs = {'backend': self.backend_name} if self.backend_name else {}
-        return qml.device(self.backend, wires=wires, **kwargs)
+        return self.device.make_device(wires)
 
     def create_cost_operator(self, problem: Problem,
                              penalty_weights: list[float]

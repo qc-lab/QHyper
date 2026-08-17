@@ -11,6 +11,7 @@ from QHyper.optimizers import OptimizationResult, Optimizer, Dummy, Optimization
 from QHyper.util import weighted_avg_evaluation
 
 from QHyper.solvers.gate_based.pennylane.qaoa import QAOA
+from QHyper.devices.pennylane import PennyLaneDevice
 
 
 @dataclass
@@ -25,6 +26,8 @@ class WF_QAOA(QAOA):
     ----------
     problem : Problem
         The problem to be solved.
+    device : PennyLaneDevice
+        Configuration of the device the solver runs the problem on.
     layers : int
         Number of layers.
     gamma : OptimizationParameter
@@ -44,18 +47,6 @@ class WF_QAOA(QAOA):
     penalty : float, default 0
         When calculating the score of the solution, the penalty is the score
         for the solution that doesn't satisfy the constraints.
-    device : dict
-        Device configuration (required). Accepted keys:
-
-        - ``type`` -- ``'simulator'`` or ``'qpu'`` (required)
-        - ``name`` -- PennyLane device name (required)
-
-          - simulator: ``'default.qubit'``, ``'lightning.qubit'``,
-            ``'qiskit.aer'``, ...
-          - qpu: ``'qiskit.remote'`` (or another plugin)
-
-        - ``backend`` -- hardware backend, required for ``'qiskit.remote'``
-          (e.g. ``'melbourne'``), otherwise omit
     mixer : str, default 'pl_x_mixer'
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
@@ -65,12 +56,12 @@ class WF_QAOA(QAOA):
     """
 
     problem: Problem
+    device: PennyLaneDevice
     layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
     penalty_weights: list[float] | None
-    device: dict[str, Any]
     penalty: float = 0
     mixer: str = "pl_x_mixer"
     limit_results: int | None = None
@@ -81,10 +72,10 @@ class WF_QAOA(QAOA):
     def __init__(
             self,
             problem: Problem,
+            device: PennyLaneDevice,
             layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
-            device: dict[str, Any],
             penalty_weights: list[float] | None = None,
             penalty: float = 0,
             mixer: str = "pl_x_mixer",
@@ -100,7 +91,6 @@ class WF_QAOA(QAOA):
         self.limit_results = limit_results
         self.layers = layers
         self.device = device
-        self.backend, self.backend_name = self._parse_device(device)
         self.mixer = mixer
         self.qubo_cache = {}
 

@@ -1,22 +1,19 @@
-import os
-from typing import Any
 import numpy as np
 import numpy.typing as npt
+from typing import Any
 from dataclasses import dataclass
 from collections import defaultdict
 
+from QHyper.devices.dwave import DWaveDevice
 from QHyper.problems.base import Problem
 from QHyper.solvers.base import Solver, SolverResult
 from QHyper.converter import Converter
 from QHyper.constraint import Polynomial
 
-from dwave.system import DWaveSampler, EmbeddingComposite
+from dwave.system import EmbeddingComposite
 from dwave.system.composites import FixedEmbeddingComposite
 from dimod import BinaryQuadraticModel
 from dwave.embedding.pegasus import find_clique_embedding
-
-
-DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
 
 
 @dataclass
@@ -28,46 +25,33 @@ class Advantage(Solver):
     ----------
     problem : Problem
         The problem to be solved.
+    device : DWaveDevice
+        Configuration of the device the solver runs the problem on.
+    penalty_weights : list[float] | None, default None
+        Penalty weights used for converting Problem to QUBO. They connect
+        cost function with constraints. If not specified, all penalty
+        weights are set to 1.
     num_reads: int, default 1
         The number of times the solver is run.
     chain_strength: float or None, default None
         The coupling strength between qubits.
-    hyper_optimizer: Optimizer or None, default None
-        The optimizer for hyperparameters.
-    params_inits: dict[str, Any], default {}
-        The initial parameter settings.
     use_clique_embedding: bool, default False
         Find clique for the embedding
-    **config: Any
-        Config for the D-Wave solver. Documentation available at https://docs.dwavequantum.com 
     """
 
     problem: Problem
+    device: DWaveDevice
     penalty_weights: list[float] | None = None
     num_reads: int = 1
     chain_strength: float | None = None
-    token: str | None = None
+    use_clique_embedding: bool = False
 
-    def __init__(self,
-                 problem: Problem,
-                 penalty_weights: list[float] | None = None,
-                 num_reads: int = 1,
-                 chain_strength: float | None = None,
-                 use_clique_embedding: bool = False,
-                 token: str | None = None,
-                 **config: Any) -> None:
-        self.problem = problem
-        self.penalty_weights = penalty_weights
-        self.num_reads = num_reads
-        self.chain_strength = chain_strength
-        self.use_clique_embedding = use_clique_embedding
-        self.sampler = DWaveSampler(
-            token=token or DWAVE_API_TOKEN, **config)
-        self.token = token
+    def __post_init__(self) -> None:
+        self.sampler = self.device.make_sampler('advantage')
 
-        if use_clique_embedding:
-            args = self.weigths if self.weigths else []
-            qubo = Converter.create_qubo(self.problem, args)
+        if self.use_clique_embedding:
+            penalty_weights = self.penalty_weights or []
+            qubo = Converter.create_qubo(self.problem, penalty_weights)
             qubo_terms, offset = convert_qubo_keys(qubo)
             bqm = BinaryQuadraticModel.from_qubo(qubo_terms, offset=offset)
 
@@ -75,6 +59,14 @@ class Advantage(Solver):
                 bqm.to_networkx_graph(),
                 target_graph=self.sampler.to_networkx_graph()
             )
+
+    @classmethod
+    def from_config(cls, problem: Problem, config: dict[str, Any]
+                    ) -> 'Advantage':
+        config = dict(config)
+        if 'device' in config:
+            config['device'] = DWaveDevice.from_config(config['device'])
+        return cls(problem, **config)
 
     def solve(self, penalty_weights: list[float] | None = None) -> Any:
         if penalty_weights is None and self.penalty_weights is None:

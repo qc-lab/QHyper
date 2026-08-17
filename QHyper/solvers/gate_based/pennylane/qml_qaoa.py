@@ -15,6 +15,7 @@ from QHyper.optimizers import (
     OptimizationResult, Optimizer, OptimizationParameter)
 
 from QHyper.solvers.gate_based.pennylane.qaoa import QAOA
+from QHyper.devices.pennylane import PennyLaneDevice
 
 
 @dataclass
@@ -26,6 +27,8 @@ class QML_QAOA(QAOA):
     ----------
     problem : Problem
         The problem to be solved.
+    device : PennyLaneDevice
+        Configuration of the device the solver runs the problem on.
     layers : int
         Number of layers.
     gamma : OptimizationParameter
@@ -39,18 +42,6 @@ class QML_QAOA(QAOA):
     penalty_weights : list[float] | None
         Penalty weights used for converting Problem to QUBO. They connect cost function
         with constraints. If not specified, all penalty weights are set to 1.
-    device : dict
-        Device configuration (required). Accepted keys:
-
-        - ``type`` -- ``'simulator'`` or ``'qpu'`` (required)
-        - ``name`` -- PennyLane device name (required)
-
-          - simulator: ``'default.qubit'``, ``'lightning.qubit'``,
-            ``'qiskit.aer'``, ...
-          - qpu: ``'qiskit.remote'`` (or another plugin)
-
-        - ``backend`` -- hardware backend, required for ``'qiskit.remote'``
-          (e.g. ``'melbourne'``), otherwise omit
     mixer : str
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
@@ -59,11 +50,11 @@ class QML_QAOA(QAOA):
         PennyLane device instance.
     """
     problem: Problem
+    device: PennyLaneDevice
     layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
-    device: dict[str, Any]
     penalty_weights: list[float] | None = None
     mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
@@ -73,7 +64,6 @@ class QML_QAOA(QAOA):
     def __post_init__(self) -> None:
         if not isinstance(self.optimizer, QmlGradientDescent):
             raise ValueError(f"Optimizer {self.optimizer} not supported")
-        self.backend, self.backend_name = self._parse_device(self.device)
 
     def get_expval_circuit(
         self, penalty_weights: list[float]

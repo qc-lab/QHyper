@@ -3,18 +3,15 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 
-import os
 import numpy as np
-from dwave.system import LeapHybridCQMSampler
 
+from typing import Any
 from dataclasses import dataclass
 
 from QHyper.converter import Converter
+from QHyper.devices.dwave import DWaveDevice
 from QHyper.problems import Problem
 from QHyper.solvers import Solver, SolverResult
-
-
-DWAVE_API_TOKEN = os.environ.get('DWAVE_API_TOKEN')
 
 
 @dataclass
@@ -27,13 +24,25 @@ class CQM(Solver):
     ----------
     problem : Problem
         The problem to be solved.
+    device : DWaveDevice
+        Configuration of the device the solver runs the problem on.
     time : float
         The maximum time allowed for the CQM solver.
     """
 
     problem: Problem
+    device: DWaveDevice
     time: float
-    token: str | None = None
+
+    def __post_init__(self) -> None:
+        self.sampler = self.device.make_sampler('cqm')
+
+    @classmethod
+    def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'CQM':
+        config = dict(config)
+        if 'device' in config:
+            config['device'] = DWaveDevice.from_config(config['device'])
+        return cls(problem, **config)
 
     def solve(self) -> SolverResult:
         """
@@ -46,8 +55,7 @@ class CQM(Solver):
         """
         converter = Converter()
         cqm = converter.to_cqm(self.problem)
-        sampler = LeapHybridCQMSampler(token=self.token or DWAVE_API_TOKEN)
-        solutions = sampler.sample_cqm(cqm, self.time).aggregate()
+        solutions = self.sampler.sample_cqm(cqm, self.time).aggregate()
 
         recarray = np.recarray(
             (len(solutions),),
