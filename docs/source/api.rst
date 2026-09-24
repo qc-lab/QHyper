@@ -13,6 +13,7 @@ Here is the list of all the modules in the QHyper package.
 
    problems
    optimizers
+   devices
 
 .. toctree::
    :maxdepth: 2

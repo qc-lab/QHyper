@@ -53,6 +53,8 @@ The main components are:
 
 * :doc:`Optimizers <generated/QHyper.optimizers>` - Classes that implement different types of (hyper)optimizers.
 
+* :doc:`Devices <generated/QHyper.devices>` - Classes that describe where a solver should be run: a local simulator or real quantum hardware with specific configuration options.
+
 Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
 
 

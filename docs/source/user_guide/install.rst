@@ -33,10 +33,12 @@ Use the library's classes to create a solver.
 .. code-block:: python
 
     from QHyper.solvers.gate_based.pennylane import QAOA
+    from QHyper.devices.pennylane import PennyLaneDevice
     from QHyper.optimizers import OptimizationParameter
     from QHyper.optimizers.qml_gradient_descent import QmlGradientDescent
 
     solver = QAOA(problem,
+        device=PennyLaneDevice(type="simulator", name="default.qubit"),
         layers=5,
         gamma=OptimizationParameter(init=[0.25, 0.25, 0.25, 0.25, 0.25]),
         beta=OptimizationParameter(init=[-0.5, -0.5, -0.5, -0.5, -0.5]),
@@ -80,4 +82,4 @@ Sort and display top 5 results.
 
 You have successfully installed the QHyper library and set up your first experiment. 
 
-Check out more advanced the tutorials: :doc:`solver_configuration`, :doc:`demo/typical_use_cases`, and :doc:`demo/defining_problems`.
+Check out more advanced tutorials: :doc:`solver_configuration`, :doc:`demo/typical_use_cases`, :doc:`demo/defining_problems` and :doc:`demo/iqm_tutorial`.
