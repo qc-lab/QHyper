@@ -21,18 +21,19 @@ from QHyper.converter import Converter
 from QHyper.polynomial import Polynomial
 from QHyper.solvers.base import Solver, SolverResult
 from QHyper.devices.iqm import IQMDevice
+from QHyper.devices.qiskit_aer import AerDevice
 
 
 @dataclass
 class QAOA(Solver):
     """
-    QAOA implementation running on IQM quantum processors.
+    Classic QAOA implemented with Qiskit.
 
     Attributes
     ----------
     problem : Problem 
         The problem to be solved. 
-    device : IQMDevice
+    device : IQMDevice | AerDevice
         Configuration of the device the solver runs the problem on.
     layers : int
         Number of layers.
@@ -56,7 +57,7 @@ class QAOA(Solver):
     """
 
     problem: Problem
-    device: IQMDevice
+    device: IQMDevice | AerDevice
     layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
@@ -292,7 +293,8 @@ class QAOA(Solver):
             config['optimizer'] = create_optimizer(config['optimizer'])
 
         if 'device' not in config:
-            raise ValueError("'solver.device' is required for IQM solver")
-        config['device'] = IQMDevice.from_config(config['device'])
+            config['device'] = AerDevice()
+        elif not isinstance(config['device'], AerDevice):
+            config['device'] = IQMDevice.from_config(config['device'])
 
         return cls(problem, **config)

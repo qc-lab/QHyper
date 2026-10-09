@@ -13,7 +13,7 @@ To use any solver you can import it directly like
 
 .. code-block:: python
 
-    from QHyper.solver.gate_based.pennylane.qaoa import QAOA
+    from QHyper.solvers.gate_based.pennylane.qaoa import QAOA
 
 or use function :py:func:`Solvers.get` with the name, category, and platform.
 Any solver that is in directory 'QHyper/custom' or 'custom' will be
@@ -70,8 +70,8 @@ class Solvers:
 
         platform_ = normalize_key(platform)
         if name_ == "qaoa":
-            if platform_ == "iqm":
-                from .gate_based.iqm.qaoa import QAOA
+            if platform_ in ("iqm", "qiskitaer"):
+                from .gate_based.qiskit.qaoa import QAOA
                 return QAOA
             elif platform_ == "pennylane":
                 from .gate_based.pennylane.qaoa import QAOA
@@ -156,11 +156,17 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
         + ['name', 'category', 'platform'])
     config['solver'] = solver_config
 
-    if normalize_key(solver_config.get('category', '')) == 'gatebased':
+    category = normalize_key(solver_config.get('category', ''))
+    platform = normalize_key(solver_config.get('platform', ''))
+    if category == 'gatebased' or platform in ('iqm', 'qiskitaer'):
         if 'device' not in solver_config:
             raise SolverConfigException(
                 "Gate-based solvers require 'solver.device' in configuration"
             )
+    if platform == 'qiskitaer':
+        from QHyper.devices.qiskit_aer import AerDevice
+        solver_config['device'] = AerDevice.from_config(
+            solver_config['device'])
 
     for field in dataclasses.fields(solver_class):
         if not field.init:

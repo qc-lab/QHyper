@@ -18,7 +18,7 @@ from QHyper.devices.pennylane import PennyLaneDevice
 @dataclass
 class QAOA(Solver):
     """
-    Clasic QAOA implementation.
+    Classic QAOA implemented with PennyLane.
 
     Attributes
     ----------

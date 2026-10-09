@@ -5,10 +5,22 @@ from dataclasses import dataclass
 from typing import Any
 
 from qiskit import QuantumCircuit, transpile as qiskit_transpile
-from qiskit_aer import AerSimulator
 from iqm.qiskit_iqm import IQMProvider
+from iqm.qiskit_iqm.fake_backends import (
+    IQMFakeAdonis, IQMFakeAphrodite, IQMFakeApollo, IQMFakeDeneb,
+)
+from iqm.qiskit_iqm.fake_backends.fake_garnet import IQMFakeGarnet
 
 from QHyper.devices.iqm.base import IQMDevice, IQM_BACKEND_URLS
+
+
+IQM_FAKE_BACKENDS = {
+    "adonis": IQMFakeAdonis,
+    "apollo": IQMFakeApollo,
+    "aphrodite": IQMFakeAphrodite,
+    "deneb": IQMFakeDeneb,
+    "garnet": IQMFakeGarnet,
+}
 
 
 @dataclass
@@ -22,8 +34,10 @@ class ResonanceDevice(IQMDevice):
         Type of the device the problem is solved on.
         Either 'simulator' or 'qpu' (IQM Resonance) is accepted.
     backend : str | None, default None
-        Name of the backend, IQM machine: 'garnet', 'emerald' or 'sirius'.
-        Required for type 'qpu', not used by the simulator.
+        For type 'qpu' name of the IQM machine: 'garnet', 'emerald' or
+        'sirius' (required). For type 'simulator' name of the IQM fake
+        backend: 'adonis', 'apollo', 'aphrodite', 'deneb' or 'garnet'
+        (default 'garnet').
     token : str | None, default None
         IQM Resonance access token. Not used by the simulator.
     """
@@ -38,6 +52,12 @@ class ResonanceDevice(IQMDevice):
             if self.token is not None:
                 raise ValueError(
                     "Simulator device does not use token/project/resource_name"
+                )
+            self.backend = str(self.backend or 'garnet').lower()
+            if self.backend not in IQM_FAKE_BACKENDS:
+                raise ValueError(
+                    "IQM simulator device requires 'backend' set to one of: "
+                    f"{sorted(IQM_FAKE_BACKENDS)}"
                 )
         elif self.type == 'qpu':
             backend_key = (
@@ -55,7 +75,7 @@ class ResonanceDevice(IQMDevice):
 
     def make_backend(self) -> Any:
         if self.type == 'simulator':
-            return AerSimulator()
+            return IQM_FAKE_BACKENDS[self.backend]()
 
         if self.token is not None:
             os.environ["IQM_TOKEN"] = self.token

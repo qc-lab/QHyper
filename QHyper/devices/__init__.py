@@ -24,6 +24,7 @@ local simulator or on real hardware just by changing the device.
     pennylane.PennyLaneDevice -- PennyLane device configuration.
     iqm.ResonanceDevice -- IQM Resonance device configuration.
     iqm.VLQDevice -- VLQ device configuration.
+    qiskit_aer.AerDevice -- Qiskit Aer simulator device.
     dwave.DWaveDevice -- D-Wave device configuration.
 
 """
