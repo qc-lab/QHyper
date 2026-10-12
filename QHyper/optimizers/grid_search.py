@@ -19,7 +19,7 @@ class GridSearch(Optimizer):
     The grid search optimizer is a simple optimization algorithm that
     searches through the entire parameter space by evaluating the function
     at each point.
-    This alogrithm requries the following parameters to be set:
+    This algorithm requires the following parameters to be set:
     - `min` and `max` bounds for each parameter
     - `step` step values for each parameter
     Values for n-th parameter will be generated as:

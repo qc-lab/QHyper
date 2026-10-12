@@ -3,7 +3,7 @@
 # under the grant agreement no. POIR.04.02.00-00-D014/20-00
 
 """
-This module contains implementaions of different problems.
+This module contains implementations of different problems.
 Problems are defined using :py:class:`~QHyper.polynomial.Polynomial` module.
 No problem is imported by deafult to reduce number of dependencies.
 To use any problem you can import it directly like
@@ -75,7 +75,7 @@ class Problems:
         elif name_ in ["knapsack", "knapsackproblem"]:
             from .knapsack import KnapsackProblem
             return KnapsackProblem
-        elif name_ in ["tsp", "travelingsalesmanproblem"]:
+        elif name_ in ["tsp", "travelingsalesman", "travelingsalesmanproblem"]:
             from .tsp import TravelingSalesmanProblem
             return TravelingSalesmanProblem
         elif name_ in ["maxcut", "maxcutproblem"]:

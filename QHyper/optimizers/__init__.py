@@ -6,7 +6,7 @@
 This module contains implementations of different optimizers.
 Some of the optimizers are written from scratch based on popular algorithms,
 while others are just a wrapper for existing solutions.
-No optimizer is imported by deafult to reduce number of dependencies.
+No optimizer is imported by default to reduce number of dependencies.
 To use any optimizer you can import it directly like
 
 .. code-block:: python
@@ -39,7 +39,7 @@ also available in this function.
 
     scipy_minimizer.ScipyOptimizer -- Wrapper for the scipy.optimize.minimize function.
     qml_gradient_descent.QmlGradientDescent -- Wrapper for the PennyLane gradient descent optimizers.
-    cem.CEM -- Cross-entropy method optimizer.
+    cem.CEM -- Cross Entropy Search method optimizer.
     random.Random -- Random search optimizer.
     grid_search.GridSearch -- Grid search optimizer.
     dummy.Dummy -- Dummy optimizer.

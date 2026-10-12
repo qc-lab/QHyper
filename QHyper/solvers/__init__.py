@@ -8,7 +8,7 @@ In QHyper exists three types of solvers: classical, quantum annealing and
 gate-based.
 Some of them are written from scratch based on popular algorithms, while
 others are just a wrapper for existing solutions.
-No solver is imported by deafult to reduce number of dependencies.
+No solver is imported by default to reduce number of dependencies.
 To use any solver you can import it directly like
 
 .. code-block:: python
@@ -44,7 +44,7 @@ class Solvers:
         """
         Get solver class by name, category, and platform.
 
-        The name is required, other paramters might be required
+        The name is required, other parameters might be required
         if there would be more than one solver with the same name.
         The solver will be available by the 'name' attribute if defined or
         by the class name. Letters case doesn't matter.
@@ -103,13 +103,14 @@ class Solvers:
 def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
     """
     Alternative way of creating solver.
-    Expect dict with two keys:
-    - type - type of solver
-    - args - arguments which will be passed to Solver instance
+    Expect dict with the following keys:
+    - problem,
+    - solver,
+    - hyper_optimizer (optional).
 
     Parameters
     ----------
-    config : dict[str. Any]
+    config : dict[str, Any]
         Configuration in form of dict
 
     Returns

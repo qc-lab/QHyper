@@ -2,6 +2,10 @@
 Solver configuration tutorial
 =============================
 
+.. contents:: Table of Contents
+   :local:
+   :depth: 2
+
 Solver types
 ------------
 
@@ -18,7 +22,7 @@ Solver types
 * :doc:`gate-based <../solvers_gate_based>`
 
     * ``QAOA`` for the `Quantum Approximate Optimization Algorithm (QAOA) <https://arxiv.org/abs/1411.4028>`_;
-    * ``WF_QAOA`` for the `Weight-free Quantum Approximate Optimization Algorithm <https://www.iccs-meeting.org/archive/iccs2023/papers/140770117.pdf>`_;
+    * ``WF_QAOA`` for the `Weight-free Quantum Approximate Optimization Algorithm <https://www.iccs-meeting.org/archive/iccs2023/papers/140770117.pdf>`_.
 
 * :doc:`classical <../solvers_classical>`
 
@@ -42,24 +46,24 @@ This tutorial assumes the following sample optimization problem definition:
     .. code-tab:: yaml
 
         problem:
-            type: KnapsackProblem
+            type: knapsack
             max_weight: 2
             item_weights: [1, 1, 1]
             item_values: [2, 2, 1]
 
-    .. code-tab:: py JSON
+    .. code-tab:: json
 
         {
             "problem": { 
-                    "type": "KnapsackProblem",
+                    "type": "knapsack",
                     "max_weight": 2,
                     "item_weights": [1, 1, 1],
-                    "item_values": [2, 2, 1],
+                    "item_values": [2, 2, 1]
                 }
         }
 
 
-This specifies the `Knapsack Problem <https://en.wikipedia.org/wiki/Knapsack_problem>`_: fill a knapsack with three items, each characterized with a weight and cost, to maximize the total value without exceeding ``max_weight``.
+This specifies the `Knapsack Problem <https://en.wikipedia.org/wiki/Knapsack_problem>`_: fill a knapsack with three items, each characterized with a weight and value, to maximize the total value without exceeding ``max_weight``.
 
 
 Configuring quantum annealing solvers: D-Wave
@@ -69,30 +73,30 @@ Configuring quantum annealing solvers: D-Wave
 The initial penalty weights for constrained problems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Some solvers, such as the `D-Wave Advantage` hybrid solver, require the problem definition in the `Quadratic Unconstrained Binary Optimization (QUBO) <https://arxiv.org/abs/1811.11538>`_ form. QHyper automatically creates the QUBO, e.g., for the Knapsack Problem:
+Some solvers, such as the `D-Wave Advantage` quantum solver, require the problem definition in the `Quadratic Unconstrained Binary Optimization (QUBO) <https://arxiv.org/abs/1811.11538>`_ form. QHyper automatically creates the QUBO, e.g., for the Knapsack Problem:
 
 .. math::
    f(\boldsymbol{x}, \boldsymbol{y}) =
    - \alpha_0 \underbrace{\sum_{i = 1}^N c_i x_i}_{\text{cost function}} + \alpha_1 \underbrace{(1 - \sum_{i=1}^W y_i)^2}_{\text{constraint encoding}} + \alpha_2 \underbrace{(\sum_{i=1}^W iy_i - \sum_{i=1}^N w_ix_i)^2}_{\text{weight constraint}},
 
 where
- * :math:`\alpha_j` are the penalty weights  (i.e. Lagrangian multipliers, hyperparameters of the optimized function);
- * :math:`N=3` is the number of available items;
+ * :math:`\alpha_j` are the penalty weights,  i.e. Lagrangian multipliers, hyperparameters of the function f;
+ * :math:`N` is the number of available items;
  * :math:`W=` ``max_weight`` is the maximum weight of the knapsack;
  * :math:`c_i` and :math:`w_i` are the values and weights specified in ``item_values`` and ``item_weights`` lists of the configuration;
  * The goal is to optimize :math:`\boldsymbol{x} = [x_i]_N` which is a Boolean vector, where :math:`x_i = 1`  if and only if the item :math:`i` was selected to be inserted into the knapsack;
  * :math:`\boldsymbol{y} = [y_i]_W` is a one-hot vector where :math:`y_i = 1` if and only if the weight of the knapsack is equal to :math:`i`.
 
 
-To define the function properly, you need to set three penalty terms :math:`\alpha_j`, which act as hyperparameters.
-These penalties are used to combine the cost function and constraints. The first constraint ensure that the problem encoding is correct, and the second  that the total weight in the knapsack does not exceed the ``max_weight`` limit.
+To define the function properly, you need to set three penalty weights :math:`\alpha_j`, which act as hyperparameters.
+These penalties are used to combine the cost function and constraints. The first constraint ensures that the problem encoding is correct, and the second  that the total weight in the knapsack does not exceed the ``max_weight`` limit.
 
 
 D-Wave Advantage solver
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-In the example below, the solver used is the D-Wave Advantage quantum annealing system and the constraint penalties (:math:`\alpha_j`) are set using the ``penalty_weights`` keyword argument. The ``num_reads`` argument is the amount of samples.
-The ``device`` specifies where the problem is solved; all D-Wave solvers run on the remote ``DWaveSampler`` QPU.
+In the example below, the solver used is the D-Wave Advantage quantum annealing system and the constraint penalty weights(:math:`\alpha_j`) are set using the ``penalty_weights`` keyword argument. The ``num_reads`` argument is the number of samples.
+The ``device`` specifies where the problem is solved; the required device name is ``DWaveSampler``.
 
 .. tabs::
 
@@ -103,7 +107,7 @@ The ``device`` specifies where the problem is solved; all D-Wave solvers run on 
 
         solver = Advantage(problem,
                            device=DWaveDevice(type="qpu", name="DWaveSampler"),
-                           penalty_weights=[1, 2.5, 2.5],
+                           penalty_weights=[1., 2.5, 2.5],
                            num_reads=10)
 
     .. code-tab:: yaml
@@ -111,11 +115,11 @@ The ``device`` specifies where the problem is solved; all D-Wave solvers run on 
         solver:
             category: quantum_annealing
             platform: dwave
-            name: Advantage
+            name: advantage
             device:
                 type: qpu
-                name: DWaveSampler
-            penalty_weights: [1, 2.5, 2.5]
+                name: dwave_sampler
+            penalty_weights: [1., 2.5, 2.5]
             num_reads: 10
 
     .. code-tab:: json
@@ -124,12 +128,12 @@ The ``device`` specifies where the problem is solved; all D-Wave solvers run on 
             "solver": {
                 "category": "quantum_annealing",
                 "platform": "dwave",
-                "name": "Advantage",
+                "name": "advantage",
                 "device": {
                     "type": "qpu",
-                    "name": "DWaveSampler"
+                    "name": "dwave_sampler"
                 },
-                "penalty_weights": [1, 2.5, 2.5],
+                "penalty_weights": [1., 2.5, 2.5],
                 "num_reads": 10
             }
         }
@@ -155,7 +159,7 @@ Adding a hyperoptimizer
             optimizer=GridSearch(),
             solver=Advantage(problem,
                              device=DWaveDevice(type="qpu", name="DWaveSampler")),
-            penalty_weights={"min": [1, 1, 1], "max": [2.1, 2.1, 2.1], "step": [1, 1, 1]}
+            penalty_weights={"min": [1., 1., 1.], "max": [2.1, 2.1, 2.1], "step": [1., 1., 1.]}
         )
 
 
@@ -164,17 +168,17 @@ Adding a hyperoptimizer
         solver:
             category: quantum_annealing
             platform: dwave
-            name: Advantage
+            name: advantage
             device:
                 type: qpu
-                name: DWaveSampler
+                name: dwave_sampler
         hyper_optimizer:
             optimizer: 
-                type: GridSearch
+                type: grid_search
             penalty_weights: 
-                min: [1, 1, 1]
+                min: [1., 1., 1.]
                 max: [2.1, 2.1, 2.1]
-                step: [1, 1, 1]
+                step: [1., 1., 1.]
 
     .. code-tab:: json
 
@@ -182,20 +186,20 @@ Adding a hyperoptimizer
             "solver": {
                 "category": "quantum_annealing",
                 "platform": "dwave",
-                "name": "Advantage",
+                "name": "advantage",
                 "device": {
                     "type": "qpu",
-                    "name": "DWaveSampler"
+                    "name": "dwave_sampler"
                 }
             },
             "hyper_optimizer": {
                 "optimizer": {
-                    "type": "GridSearch"
+                    "type": "grid_search"
                 },
                 "penalty_weights": {
-                    "min": [1, 1, 1],
+                    "min": [1., 1., 1.],
                     "max": [2.1, 2.1, 2.1],
-                    "step": [1, 1, 1]
+                    "step": [1., 1., 1.]
                 }
             }
         }
@@ -211,9 +215,8 @@ Configuring gate-based solvers: QAOA
    :doc:`IQM tutorial <demo/iqm_tutorial>`.
 
 | A typical example of the QAOA configuration is presented below.
-| The quantum circuit consists of 5 ``layers``. The variational parameters ``gamma`` and ``beta`` are specified using ``OptimizationParameters``.
+| The quantum circuit consists of 5 ``layers``. The variational parameters ``gamma`` and ``beta`` are specified using ``OptimizationParameter``.
 | A local :py:class:`QmlGradientDescent<.QmlGradientDescent>` ``optimizer`` (by default `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/pennylane.AdamOptimizer.html>`_) with the default settings is used.
-| Problem's penalty weights are defined in ``penalty_weights``.
 
 .. tabs::
 
@@ -230,7 +233,7 @@ Configuring gate-based solvers: QAOA
             gamma=OptimizationParameter(init=[0.25, 0.25, 0.25, 0.25, 0.25]),
             beta=OptimizationParameter(init=[-0.5, -0.5, -0.5, -0.5, -0.5]),
             optimizer=QmlGradientDescent(),
-            penalty_weights=[1, 2.5, 2.5],
+            penalty_weights=[1., 2.5, 2.5],
         )
 
     .. code-tab:: yaml
@@ -238,7 +241,7 @@ Configuring gate-based solvers: QAOA
         solver:
             category: gate_based
             platform: pennylane
-            name: QAOA
+            name: qaoa
             device:
                 type: simulator
                 name: default.qubit
@@ -248,8 +251,8 @@ Configuring gate-based solvers: QAOA
             beta:
                 init: [-0.5, -0.5, -0.5, -0.5, -0.5]
             optimizer: 
-                type: QmlGradientDescent
-            penalty_weights: [1, 2.5, 2.5]
+                type: qml_gradient_descent
+            penalty_weights: [1., 2.5, 2.5]
 
     .. code-tab:: json
         
@@ -257,7 +260,7 @@ Configuring gate-based solvers: QAOA
             "solver": {
                 "category": "gate_based",
                 "platform": "pennylane",
-                "name": "QAOA",
+                "name": "qaoa",
                 "device": {
                     "type": "simulator",
                     "name": "default.qubit"
@@ -270,9 +273,9 @@ Configuring gate-based solvers: QAOA
                     "init": [-0.5, -0.5, -0.5, -0.5, -0.5]
                 },
                 "optimizer": {
-                    "type": "QmlGradientDescent"
+                    "type": "qml_gradient_descent"
                 },
-                "penalty_weights": [1, 2.5, 2.5]
+                "penalty_weights": [1., 2.5, 2.5]
             }
         }
 
@@ -305,7 +308,7 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
             optimizer=QmlGradientDescent(name='adam',
                                         steps=200,
                                         stepsize=0.005),
-            penalty_weights=[1, 2.5, 2.5]
+            penalty_weights=[1., 2.5, 2.5]
         )
 
     .. code-tab:: yaml
@@ -313,7 +316,7 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
         solver:
             category: gate_based
             platform: pennylane
-            name: QAOA
+            name: qaoa
             device:
                 type: simulator
                 name: default.qubit
@@ -323,11 +326,11 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
             beta:
                 init: [-0.5, -0.5, -0.5, -0.5, -0.5]
             optimizer: 
-                type: QmlGradientDescent
+                type: qml_gradient_descent
                 name: adam
                 steps: 200
                 stepsize: 0.005
-            penalty_weights: [1, 2.5, 2.5]
+            penalty_weights: [1., 2.5, 2.5]
 
     .. code-tab:: json
 
@@ -335,7 +338,7 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
             "solver": {
                 "category": "gate_based",
                 "platform": "pennylane",
-                "name": "QAOA",
+                "name": "qaoa",
                 "device": {
                     "type": "simulator",
                     "name": "default.qubit"
@@ -348,12 +351,12 @@ from `Adam gradient  descent <https://docs.pennylane.ai/en/stable/code/api/penny
                     "init": [-0.5, -0.5, -0.5, -0.5, -0.5]
                 },
                 "optimizer": {
-                    "type": "QmlGradientDescent",
+                    "type": "qml_gradient_descent",
                     "name": "adam",
                     "steps": 200,
                     "stepsize": 0.005
                 },
-                "penalty_weights": [1, 2.5, 2.5]
+                "penalty_weights": [1., 2.5, 2.5]
             }
         }
 
@@ -373,7 +376,7 @@ Configuring a classical solver: Gurobi
         solver:
             category: classical
             platform: gurobi
-            name: Gurobi
+            name: gurobi
 
     .. code-tab:: json
 
@@ -381,7 +384,7 @@ Configuring a classical solver: Gurobi
             "solver": {
                 "category": "classical",
                 "platform": "gurobi",
-                "name": "Gurobi"
+                "name": "gurobi"
             }
         }
 
@@ -390,7 +393,7 @@ Configuring a classical solver: Gurobi
 Combining optimizers and hyperoptimizers
 ----------------------------------------
 
-It is also possible to make use of both the ``optimizer`` and the ``HyperOptimizer`` functionalities. The example below is similar to that in `Customizing optimizers`_. However, as in `Adding a hyperoptimizer`_, penalty weights  are searched by the ``HyperOptimizer`` within specified  bounds. In this example it is done using the Cross Entropy Search method (defined as :py:class:`cem<.CEM>`).  ``processes``, ``samples_per_epoch``, and ``epochs`` are parameters specific for ``CEM``.
+It is also possible to make use of both the ``optimizer`` and the ``hyperoptimizer`` functionalities. The example below is similar to that in `Customizing optimizers`_. However, as in `Adding a hyperoptimizer`_, penalty weights  are searched by the ``hyperoptimizer`` within specified  bounds. In this example it is done using the Cross Entropy Search method (defined as :py:class:`cem<.CEM>`).  ``processes``, ``samples_per_epoch``, and ``epochs`` are parameters specific for ``CEM``.
 
 .. note:: The `CEM` method is computationally expensive and may require a significant amount of time to complete (~5 min).
 
@@ -409,14 +412,14 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
         solver = WF_QAOA(problem,
             device=PennyLaneDevice(type="simulator", name="default.qubit"),
             layers=5,
-            gamma=OptimizationParameter(min=[0.0, 0.0, 0.0, 0.0, 0.0],
+            gamma=OptimizationParameter(min=[0., 0., 0., 0., 0.],
                                         init=[0.5, 0.5, 0.5, 0.5, 0.5],
                                         max=[6.28, 6.28, 6.28, 6.28, 6.28]),
-            beta=OptimizationParameter(min=[0.0, 0.0, 0.0, 0.0, 0.0],
-                                    init=[1.0, 1.0, 1.0, 1.0, 1.0],
+            beta=OptimizationParameter(min=[0., 0., 0., 0., 0.],
+                                    init=[1., 1., 1., 1., 1.],
                                     max=[6.28, 6.28, 6.28, 6.28, 6.28]),
             optimizer=ScipyOptimizer(),
-            penalty_weights=[1, 2.5, 2.5],
+            penalty_weights=[1., 2.5, 2.5],
         )
 
         hyper_optimizer = HyperOptimizer(
@@ -425,9 +428,9 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
                         epochs=5),
             solver=solver,
             penalty_weights={
-                "min": [1, 1, 1],
-                "max": [5, 5, 5],
-                "init": [1, 2.5, 2.5]
+                "min": [1., 1., 1.],
+                "max": [5., 5., 5.],
+                "init": [1., 2.5, 2.5]
             }
         )
 
@@ -436,17 +439,17 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
         solver:
             category: gate_based
             platform: pennylane
-            name: WF_QAOA
+            name: wf_qaoa
             device:
                 type: simulator
                 name: default.qubit
             layers: 5
             gamma:
-                min: [0, 0, 0, 0, 0]
+                min: [0., 0., 0., 0., 0.]
                 init: [0.5, 0.5, 0.5, 0.5, 0.5]
                 max: [6.28, 6.28, 6.28, 6.28, 6.28]
             beta:
-                min: [0, 0, 0, 0, 0]
+                min: [0., 0., 0., 0., 0.]
                 init: [1., 1., 1., 1., 1.]
                 max: [6.28, 6.28, 6.28, 6.28, 6.28]
             optimizer: 
@@ -458,9 +461,9 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
                 samples_per_epoch: 100
                 epochs: 5
             penalty_weights: 
-                min: [1, 1, 1]
-                max: [5, 5, 5]
-                init: [1, 2.5, 2.5]
+                min: [1., 1., 1.]
+                max: [5., 5., 5.]
+                init: [1., 2.5, 2.5]
 
     .. code-tab:: json
 
@@ -468,20 +471,20 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
             "solver": {
                 "category": "gate_based",
                 "platform": "pennylane",
-                "name": "WF_QAOA",
+                "name": "wf_qaoa",
                 "device": {
                     "type": "simulator",
                     "name": "default.qubit"
                 },
                 "layers": 5,
                 "gamma": {
-                    "min": [0.0, 0.0, 0.0, 0.0, 0.0],
+                    "min": [0., 0., 0., 0., 0.],
                     "init": [0.5, 0.5, 0.5, 0.5, 0.5],
                     "max": [6.28, 6.28, 6.28, 6.28, 6.28]
                 },
                 "beta": {
-                    "min": [0.0, 0.0, 0.0, 0.0, 0.0],
-                    "init": [1.0, 1.0, 1.0, 1.0, 1.0],
+                    "min": [0., 0., 0., 0., 0.],
+                    "init": [1., 1., 1., 1., 1.],
                     "max": [6.28, 6.28, 6.28, 6.28, 6.28]
                 },
                 "optimizer": {
@@ -496,9 +499,9 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
                     "epochs": 5
                 },
                 "penalty_weights": {
-                    "min": [1, 1, 1],
-                    "max": [5, 5, 5],
-                    "init": [1, 2.5, 2.5]
+                    "min": [1., 1., 1.],
+                    "max": [5., 5., 5.],
+                    "init": [1., 2.5, 2.5]
                 }
             }
         }
@@ -506,21 +509,21 @@ It is also possible to make use of both the ``optimizer`` and the ``HyperOptimiz
 
 
 Supported optimizers
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 A variety of (hyper)optimizers is supported. In QHyper the ``optimizer`` (both in a solver and in a hyperoptimizer)  can be set up using keyword arguments given below.
 
 .. note::
     Please note that additional keyword arguments for each ``optimizer`` configuration can be taken directly from the native function definition (refer to the indicated  API documentation).
 
-* :py:class:`.QmlGradientDescent`: customizable gradient descent set of optimizers from Pennylane (see below)
+* :py:class:`.QmlGradientDescent`: customizable gradient descent set of optimizers from PennyLane (see below)
 * :py:class:`.ScipyOptimizer`: `Scipy gradient descent set of optimizers <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html>`_
 * :py:class:`.Random`: Random optimizer (see QHyper API doc)
 * :py:class:`.GridSearch`:  Grid search optimizer (see QHyper API doc)
-* :py:class:`.CEM`: Cross Entropy Optimizer (see QHyper API doc)
+* :py:class:`.CEM`: Cross Entropy Search method (see QHyper API doc)
 * :py:class:`.Dummy`: Dummy optimizer (see QHyper API doc)
 
-Additionally, the ``QmlGradientDescent`` set of optimizers can be further specified  (e.g. ``adam`` configuration was shown in point 6 above) using following keyword arguments (for details see `Pennylane documentation <https://docs.pennylane.ai/en/stable/introduction/interfaces.html#numpy>`_ ):
+Additionally, the ``QmlGradientDescent`` set of optimizers can be further specified  (e.g. ``adam`` configuration was shown above in the `Customizing optimizers`_ section of QAOA) using following keyword arguments (for details see `PennyLane documentation <https://docs.pennylane.ai/en/stable/introduction/interfaces.html#numpy>`_ ):
 
 * ``adam``: qml.AdamOptimizer;
 * ``adagrad``: qml.AdagradOptimizer;

@@ -4,7 +4,7 @@ Installation & first steps
 Installation
 ------------
 
-To get started, install the `QHyper` library using pip. Open your terminal or command prompt and run the following command (make sure you are using Python 3.12):
+To get started, install the ``QHyper`` library using pip. Open your terminal or command prompt and run the following command (make sure you are using Python 3.12):
 
 .. code-block:: bash
 
@@ -77,6 +77,7 @@ Sort and display top 5 results.
     # (1, 1, 1, 0, 1, 0.15528488)
     # (1, 1, 1, 1, 1, 0.03339847)
 
+Each tuple lists a measured bitstring and its probability, where ``x0``–``x2`` indicate whether the corresponding item is placed in the knapsack and ``x3``–``x4`` are auxiliary variables encoding the total weight of the knapsack, following the knapsack with integer weights formulation in Section 5.2 of `Lucas (2014) paper <https://doi.org/10.3389/fphy.2014.00005>`_. The most probable outcome, ``(1, 1, 0, 0, 1)`` with probability around 0.25, corresponds to taking the first two items, with the auxiliary variables encoding the resulting knapsack weight equal to 2.
 
 **Summary**
 

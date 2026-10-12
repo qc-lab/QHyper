@@ -1,1 +1,4 @@
+# This project has received funding from the European High Performance Computing Joint Undertaking (EuroHPC JU) 
+# under grant agreement No 101159808 (EuroQHPC-Integration).
+
 from .qaoa import QAOA

@@ -29,10 +29,9 @@ class PennyLaneDevice(Device):
         Either 'simulator' or 'qpu' is accepted.
     name : str
         Name of the PennyLane device, e.g. 'default.qubit',
-        or another plugin for QPUs.
+        or another plugin for QPUs, e.g. 'qiskit.remote'.
     backend : str | None, default None
-        Name of the backend, e.g. 'melbourne'. Required for
-        'qiskit.remote', not used by the simulators.
+        In the case of using a Qiskit plugin --- the name of the IBM Quantum backend, as listed on the IBM Quantum Platform. Required for 'qiskit.remote', not used by simulators.
     """
 
     type: str

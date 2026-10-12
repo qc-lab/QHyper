@@ -21,7 +21,7 @@ from QHyper.devices.pennylane import PennyLaneDevice
 @dataclass
 class QML_QAOA(QAOA):
     """
-    QAOA implementation with additonal support for PennyLane optimizers.
+    QAOA implementation with additional support for PennyLane optimizers.
 
     Attributes
     ----------

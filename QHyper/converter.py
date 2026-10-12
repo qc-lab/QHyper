@@ -176,7 +176,7 @@ class Converter:
         Attributes
         ----------
         problem : Problem
-            The problem to be solved. Objective funtion variables
+            The problem to be solved. Objective function variables
             should be written in the format <str><int> (e.g. x10, yz1).
         cases: int, default 1
             Number of variable cases (values)
@@ -214,7 +214,7 @@ class Converter:
         for variable in problem.objective_function.get_variables():
             if not pattern.match(variable):
                 raise ValueError(
-                    f"Objective funtion variable '{variable}'"
+                    f"Objective function variable '{variable}'"
                     "should be written in the format <str><int> (e.g. x10, yz1)."
                 )
 

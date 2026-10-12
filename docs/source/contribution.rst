@@ -49,7 +49,7 @@ If you want to update the project's documentation, follow these steps:
 
 1. **Development Environment Setup:**
 
-Install additonal dependencies for building the documentation:
+Install additional dependencies for building the documentation:
 
 .. code-block:: bash
 
@@ -73,10 +73,10 @@ And run following command to build documentation:
 
    make html
 
-Make sure that there are no errors. You will able to view the documentation in your browser by opening the ``docs/build/html/index.html`` file.
+Make sure that there are no errors. You will be able to view the documentation in your browser by opening the ``docs/build/html/index.html`` file.
 
 .. note::
-    You may want to remove docs/build before running this commands to ensure that you're building the documentation from scratch.
+    You may want to remove docs/build before running these commands to ensure that you're building the documentation from scratch.
 
 4. **Documentation Update Complete:**
 
@@ -87,7 +87,7 @@ New release
 -----------
 
 If new changes hit main branch, it will trigger Read the Docs and will update the `main <https://qhyper.readthedocs.io/en/main>`_ release.
-If new changes will be pushed to `production` branch, then the main page of the documentation will be updated. Additionaly new version of library will be created in Pypi. Remember to update `version` in `setup.py`.
+If new changes will be pushed to ``production`` branch, then the main page of the documentation will be updated. Additionally new version of library will be created in PyPI. Remember to update ``version`` in ``setup.py``.
 
 
 Contribution Rules
@@ -153,4 +153,4 @@ Once your pull request has been reviewed and approved, it will be merged into th
 
 Congratulations on your contribution! Thank you for helping improve the project.
 
-By following these guidelines, you'll help ensure a smooth contribution process and maintain the quality of the project. Your contributions are valuable, and we appreciate your efforts to make this project better!
+By following these guidelines, you will help ensure a smooth contribution process and maintain the quality of the project. 

@@ -14,7 +14,7 @@ QHyper documentation
 | It allows users to specify combinatorial optimization problems, select solvers, manage problem hyperparameters, and standardize output for ease of use.
 
 Installation
-^^^^^^^^^^^^
+------------
 To install QHyper, use the following command (ensure that you have Python 3.12 installed before running the command).
 
 .. code-block:: bash
@@ -27,19 +27,19 @@ Key features
 
 - **Quantum algorithm emphasis:** QHyper is designed for researchers and developers exploring quantum optimization algorithms, providing an environment for implementing quantum and hybrid quantum-classical solvers.
 
-- **Classical solver support:** While the focus is on quantum algorithms, QHyper also enables seamless integration of classical solvers, ensuring a unified platform for comparative experiments.
+- **Classical solver support:** while the focus is on quantum algorithms, QHyper also enables seamless integration of classical solvers, ensuring a unified platform for comparative experiments.
 
-- **Simplified experimentation:** With QHyper, the experimentation process is made more accessible. The users can define, execute, and analyze experiments efficiently due to the unified formats of inputs and outputs, and possibility of using configuration files.
+- **Simplified experimentation:** with QHyper, the experimentation process is made more accessible. The users can define, execute, and analyze experiments efficiently due to the unified formats of inputs and outputs, and possibility of using configuration files.
 
-- **Modularity and extensibility:** One of QHyper's core strengths is easy extensibility. Adding new problems, solvers, or optimizers is straightforward, empowering users to contribute and customize the library to suit their research needs.
+- **Modularity and extensibility:** one of QHyper's core strengths is easy extensibility. Adding new problems, solvers, or optimizers is straightforward, empowering users to contribute and customize the library to suit their research needs.
 
-- **Hyperparameters optimization:** QHyper offers easily configurable hyperoptimizers for converting constrained optimization problems into unconstrained forms required by some quantum solvers.
+- **Hyperparameter optimization:** QHyper offers easily configurable hyperoptimizers for converting constrained optimization problems into unconstrained forms required by some quantum solvers.
 
 
 Architecture
 ------------
 
-The architecture of QHyper is presented on a diagram below:
+The architecture of QHyper is presented in the diagram below:
 
 .. raw:: html
 
@@ -47,15 +47,15 @@ The architecture of QHyper is presented on a diagram below:
 
 The main components are:
 
-* :doc:`Problems <generated/QHyper.problems>` - classes that describe different types of problems, such as the Knapsack Problem or the Traveling Salesman Problem.
+* :doc:`Problems <generated/QHyper.problems>`: classes that describe different types of problems, such as the Knapsack Problem or the Traveling Salesman Problem.
 
-* :doc:`Solvers <solvers>` - Classes that define different types of solvers, e.g., quantum/hybrid solvers like the Quantum Approximate Optimization Algorithm or the Constrained Quadratic Model, but also classical solvers like Gurobi.
+* :doc:`Solvers <solvers>`: classes that define different types of solvers, e.g., quantum/hybrid solvers like the Quantum Approximate Optimization Algorithm or the Constrained Quadratic Model, but also classical solvers like Gurobi.
 
-* :doc:`Optimizers <generated/QHyper.optimizers>` - Classes that implement different types of (hyper)optimizers.
+* :doc:`Optimizers <generated/QHyper.optimizers>`: classes that implement different types of (hyper)optimizers.
 
-* :doc:`Devices <generated/QHyper.devices>` - Classes that describe where a solver should be run: a local simulator or real quantum hardware with specific configuration options.
+* :doc:`Devices <generated/QHyper.devices>`: classes that describe where a solver should be run: a local simulator or real quantum hardware with specific configuration options.
 
-Each abstract class allows adding new implementatons which will be compatible with the rest of the system.
+Each abstract class allows adding new implementations which will be compatible with the rest of the system.
 
 
 .. toctree::

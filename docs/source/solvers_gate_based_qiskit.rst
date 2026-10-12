@@ -14,7 +14,7 @@ Available devices for ``platform: iqm``:
 
 * IQM Resonance (``name: iqm.resonance``) -- cloud access to IQM quantum computers:
 
-  * ``type: qpu`` -- a real QPU selected with ``backend``: ``garnet``, ``emerald`` or ``sirius``. Requires an `IQM Resonance <https://resonance.meetiqm.com/>`_ ``token`` or the ``IQM_TOKEN`` environment variable,
+  * ``type: qpu`` -- a real QPU selected with ``backend``: ``garnet``, ``emerald`` or ``sirius``. Requires an `IQM Resonance <https://iqm.tech/products/iqm-resonance/>`_ ``token`` or the ``IQM_TOKEN`` environment variable,
   * ``type: simulator`` -- a local IQM fake backend selected with ``backend``: ``adonis``, ``apollo``, ``aphrodite``, ``deneb`` or ``garnet`` (default).
 
 * VLQ (``name: vlq``) -- the IQM quantum computer hosted by IT4Innovations and accessed through the LEXIS platform:

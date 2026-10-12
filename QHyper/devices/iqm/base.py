@@ -1,3 +1,6 @@
+# This project has received funding from the European High Performance Computing Joint Undertaking (EuroHPC JU) 
+# under grant agreement No 101159808 (EuroQHPC-Integration).
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -8,13 +11,6 @@ from qiskit import QuantumCircuit
 
 from QHyper.util import remap_keys
 from QHyper.devices.base import Device
-
-
-IQM_BACKEND_URLS = {
-    "garnet": "https://cocos.resonance.meetiqm.com/garnet",
-    "emerald": "https://cocos.resonance.meetiqm.com/emerald",
-    "sirius": "https://cocos.resonance.meetiqm.com/sirius",
-}
 
 
 class IQMDevice(Device, ABC):
