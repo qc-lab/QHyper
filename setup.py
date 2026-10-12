@@ -30,11 +30,13 @@ setup(
         "qiskit~=2.1.2",
         "qiskit-aer~=0.17.2",
         "iqm-client~=34.0.4",
-        "py4lexis @ git+https://opencode.it4i.eu/lexis-platform/clients/py4lexis.git",
-        "qaas @ git+https://github.com/It4innovations/quantum-as-a-service.git",
-        "wfcommons @ git+https://github.com/wfcommons/wfcommons.git@main",
+        "wfcommons~=0.8"
     ],
     extras_require={
+        "vlq": [
+            "py4lexis~=7.1",
+            "qaas~=0.5.3",
+        ],
         "dev": [
             "types-tqdm~=4.67.3.20260205",
             "ipywidgets~=8.1",
