@@ -171,60 +171,53 @@ class QAOA(Solver):
         tqc = self.device.transpile(qc_meas, self._backend)
         return self._backend.run(tqc, shots=self.shots).result().get_counts()
 
-    def _expval_from_counts(
-        self, counts: dict[str, int], cost_op: SparsePauliOp
-    ) -> float:
-        total = max(1, sum(counts.values()))
-        n = cost_op.num_qubits
-        expval = 0.0
+    def _samples_from_counts(
+        self, counts: dict[str, int], n: int
+    ) -> tuple[np.ndarray, np.ndarray]:
+        keys = [self._clean_bitstring(key, n) for key in counts]
+        raw = np.frombuffer("".join(keys).encode("ascii"), dtype=np.uint8)
+        bits = (raw.reshape(len(keys), n) - ord("0")).astype(np.int8)
+        freqs = np.fromiter(counts.values(), dtype=float, count=len(counts))
+        return bits, freqs / freqs.sum()
 
-        for label, coeff in cost_op.to_list():
-            c = float(np.real(coeff))
-            if label == "I" * n:
-                expval += c
-                continue
-
-            acc = 0.0
-            for bitstr, freq in counts.items():
-                s = self._clean_bitstring(bitstr, n)
-                parity = 1
-                for qi in range(n):
-                    if label[qi] == "Z" and s[-1 - qi] == "1":
-                        parity *= -1
-                acc += parity * (freq / total)
-            expval += c * acc
-
-        return float(expval)
+    def _qubo_values(
+        self, qubo: Polynomial, var_names: list[str], bits: np.ndarray
+    ) -> np.ndarray:
+        name_to_idx = {name: i for i, name in enumerate(var_names)}
+        values = np.zeros(len(bits))
+        for variables, coeff in qubo.terms.items():
+            cols = sorted({name_to_idx[str(v)] for v in variables})
+            values += coeff * bits[:, cols].prod(axis=1)
+        return values
 
     def get_expval_circuit(
         self, penalty_weights: list[float]
     ) -> Callable[[list[float]], OptimizationResult]:
-        cost_op, _ = self.create_cost_operator(self.problem, penalty_weights)
+        cost_op, var_names = self.create_cost_operator(self.problem, penalty_weights)
+        qubo = Converter.create_qubo(self.problem, penalty_weights)
 
         def wrapper(angles: list[float]) -> OptimizationResult:
             qc = self._circuit(cost_op, angles)
-            counts = self._run_circuit(qc)
-            val = self._expval_from_counts(counts, cost_op)
+            bits, probs = self._samples_from_counts(
+                self._run_circuit(qc), len(var_names))
+            val = float(probs @ self._qubo_values(qubo, var_names, bits))
             return OptimizationResult(val, list(angles))
 
         return wrapper
 
     def get_probs_func(
         self, problem: Problem, penalty_weights: list[float]
-    ) -> Callable[[list[float]], list[float]]:
-        cost_op, _ = self.create_cost_operator(problem, penalty_weights)
+    ) -> Callable[[list[float]], np.ndarray]:
+        cost_op, var_names = self.create_cost_operator(problem, penalty_weights)
+        n = len(var_names)
+        weights = 1 << np.arange(n - 1, -1, -1)
 
-        def probability_fn(angles: list[float]) -> list[float]:
-            qc = self._circuit(cost_op, angles)
-            counts = self._run_circuit(qc)
-            n = cost_op.num_qubits
-            total = max(1, sum(counts.values()))
-
-            probs = [0.0] * (1 << n)
-            for key, freq in counts.items():
-                s = self._clean_bitstring(key, n)
-                probs[int(s, 2)] += freq / total
-            return probs
+        def probability_fn(angles: list[float]) -> np.ndarray:
+            counts = self._run_circuit(self._circuit(cost_op, angles))
+            bits, probs = self._samples_from_counts(counts, n)
+            dense = np.zeros(1 << n)
+            np.add.at(dense, bits @ weights, probs)
+            return dense
 
         return probability_fn
 
@@ -237,15 +230,12 @@ class QAOA(Solver):
         probs = self.get_probs_func(problem, penalty_weights)(angles)
         _, var_names = self.create_cost_operator(problem, penalty_weights)
         n = len(var_names)
-
-        recarray = np.recarray(
-            (len(probs),),
-            dtype=[(name, "i4") for name in var_names] + [("probability", "f8")],
+        indices = np.arange(len(probs))
+        return np.rec.fromarrays(
+            [*(((indices >> (n - 1 - j)) & 1).astype("i4") for j in range(n)),
+             probs],
+            names=[*var_names, "probability"],
         )
-        for i, probability in enumerate(probs):
-            solution = format(i, "b").zfill(n)
-            recarray[i] = *solution, probability
-        return recarray
 
     def _run_optimizer(
         self, penalty_weights: list[float], angles: OptimizationParameter
