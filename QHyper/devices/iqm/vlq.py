@@ -7,9 +7,16 @@ from dataclasses import dataclass
 from typing import Any
 
 from qiskit import QuantumCircuit, transpile as qiskit_transpile
-from py4lexis.session import LexisSession
-from qaas.client import QProvider
-from qaas.client.backend import transpile as lexis_transpile
+try:
+    from py4lexis.session import LexisSession
+    from qaas.client import QProvider
+    from qaas.client.backend import transpile as lexis_transpile
+except ImportError as e:
+    raise ImportError(
+        "VLQDevice requires the optional 'vlq' dependencies. Install them with:\n"
+        "  pip install 'qhyper[vlq]' --extra-index-url "
+        "https://opencode.it4i.eu/api/v4/projects/107/packages/pypi/simple"
+    ) from e
 
 from QHyper.devices.iqm.base import IQMDevice
 from QHyper.devices.iqm.fake_vlq import FakeVLQ

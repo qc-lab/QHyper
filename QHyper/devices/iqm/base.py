@@ -52,7 +52,6 @@ class IQMDevice(Device, ABC):
     @classmethod
     def from_config(cls, config: Any) -> "IQMDevice":
         from QHyper.devices.iqm.resonance import ResonanceDevice
-        from QHyper.devices.iqm.vlq import VLQDevice
 
         if isinstance(config, IQMDevice):
             return config
@@ -68,12 +67,14 @@ class IQMDevice(Device, ABC):
 
         if device_type == 'simulator':
             if device_name in ('it4i', 'lexis', 'vlq'):
+                from QHyper.devices.iqm.vlq import VLQDevice
                 return _build(VLQDevice, cfg)
             return _build(ResonanceDevice, cfg)
         if device_type == 'qpu':
             if device_name in ('iqm.resonance', 'iqm', 'resonance'):
                 return _build(ResonanceDevice, cfg)
             if device_name in ('it4i', 'lexis', 'vlq'):
+                from QHyper.devices.iqm.vlq import VLQDevice
                 return _build(VLQDevice, cfg)
             if not device_name:
                 raise ValueError(
