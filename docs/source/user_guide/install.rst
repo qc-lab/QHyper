@@ -4,7 +4,7 @@ Installation & first steps
 Installation
 ------------
 
-To get started, install the `QHyper` library using pip. Open your terminal or command prompt and run the following command (make sure you are using Python 3.12):
+To get started, install the ``QHyper`` library using pip. Open your terminal or command prompt and run the following command (make sure you are using Python 3.12):
 
 .. code-block:: bash
 
@@ -33,10 +33,12 @@ Use the library's classes to create a solver.
 .. code-block:: python
 
     from QHyper.solvers.gate_based.pennylane import QAOA
+    from QHyper.devices.pennylane import PennyLaneDevice
     from QHyper.optimizers import OptimizationParameter
     from QHyper.optimizers.qml_gradient_descent import QmlGradientDescent
 
     solver = QAOA(problem,
+        device=PennyLaneDevice(type="simulator", name="default.qubit"),
         layers=5,
         gamma=OptimizationParameter(init=[0.25, 0.25, 0.25, 0.25, 0.25]),
         beta=OptimizationParameter(init=[-0.5, -0.5, -0.5, -0.5, -0.5]),
@@ -75,9 +77,10 @@ Sort and display top 5 results.
     # (1, 1, 1, 0, 1, 0.15528488)
     # (1, 1, 1, 1, 1, 0.03339847)
 
+Each tuple lists a measured bitstring and its probability, where ``x0``–``x2`` indicate whether the corresponding item is placed in the knapsack and ``x3``–``x4`` are auxiliary variables encoding the total weight of the knapsack, following the knapsack with integer weights formulation in Section 5.2 of `Lucas (2014) paper <https://doi.org/10.3389/fphy.2014.00005>`_. The most probable outcome, ``(1, 1, 0, 0, 1)`` with probability around 0.25, corresponds to taking the first two items, with the auxiliary variables encoding the resulting knapsack weight equal to 2.
 
 **Summary**
 
 You have successfully installed the QHyper library and set up your first experiment. 
 
-Check out more advanced the tutorials: :doc:`solver_configuration`, :doc:`demo/typical_use_cases`, and :doc:`demo/defining_problems`.
+Check out more advanced tutorials: :doc:`solver_configuration`, :doc:`demo/typical_use_cases`, :doc:`demo/defining_problems` and :doc:`demo/iqm_tutorial`.

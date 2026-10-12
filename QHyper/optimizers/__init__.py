@@ -6,7 +6,7 @@
 This module contains implementations of different optimizers.
 Some of the optimizers are written from scratch based on popular algorithms,
 while others are just a wrapper for existing solutions.
-No optimizer is imported by deafult to reduce number of dependencies.
+No optimizer is imported by default to reduce number of dependencies.
 To use any optimizer you can import it directly like
 
 .. code-block:: python
@@ -39,7 +39,7 @@ also available in this function.
 
     scipy_minimizer.ScipyOptimizer -- Wrapper for the scipy.optimize.minimize function.
     qml_gradient_descent.QmlGradientDescent -- Wrapper for the PennyLane gradient descent optimizers.
-    cem.CEM -- Cross-entropy method optimizer.
+    cem.CEM -- Cross Entropy Search method optimizer.
     random.Random -- Random search optimizer.
     grid_search.GridSearch -- Grid search optimizer.
     dummy.Dummy -- Dummy optimizer.
@@ -51,9 +51,10 @@ also available in this function.
 
 """
 import copy
+import inspect
 from typing import Type, Any
 
-from QHyper.util import search_for
+from QHyper.util import search_for, normalize_key, remap_keys
 
 from QHyper.optimizers.base import (                # noqa: F401
     Optimizer, OptimizationResult, OptimizerError, OptimizationParameter)  # noqa: F401
@@ -78,10 +79,11 @@ class Optimizers:
                 search_for(Optimizer, 'QHyper/custom')
                 | search_for(Optimizer, 'custom'))
 
-        name_ = name.lower()
-
-        if name_ in Optimizers.custom_optimizers:
-            return Optimizers.custom_optimizers[name_]
+        name_ = normalize_key(name)
+        custom = {normalize_key(k): v
+                  for k, v in Optimizers.custom_optimizers.items()}
+        if name_ in custom:
+            return custom[name_]
         elif name_ in ["scipy", "scipyminimizer"]:
             from .scipy_minimizer import ScipyOptimizer
             return ScipyOptimizer
@@ -105,7 +107,6 @@ class Optimizers:
 
 def create_optimizer(config: dict[str, Any]) -> Optimizer:
     config_ = copy.deepcopy(config)
-    opt_type = config_.pop('type')
-
-    optimizer_class = Optimizers.get(opt_type)
-    return optimizer_class(**config_)
+    optimizer_class = Optimizers.get(config_.pop('type'))
+    return optimizer_class(
+        **remap_keys(config_, inspect.signature(optimizer_class).parameters))

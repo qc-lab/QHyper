@@ -108,7 +108,7 @@ class TravelingSalesmanProblem(Problem):
     constraints : list[Polynomial]
         List of constraints represented as a Polynomials
     tsp_instance: :py:class:`TSP`
-        TSP problem instace
+        TSP problem instance
     """
 
     def __init__(

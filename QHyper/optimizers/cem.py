@@ -21,7 +21,7 @@ class CEM(Optimizer):
     iteratively samples candidate solutions from a multivariate normal
     distribution. The mean and covariance of the distribution are updated
     based on the best samples from the previous iteration.
-    This alogrithm requries the following parameters to be set:
+    This algorithm requires the following parameters to be set:
     - `min` and `max` bounds for each parameter
     - `init` initial values for each parameter
 

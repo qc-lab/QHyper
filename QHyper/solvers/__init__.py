@@ -8,69 +8,16 @@ In QHyper exists three types of solvers: classical, quantum annealing and
 gate-based.
 Some of them are written from scratch based on popular algorithms, while
 others are just a wrapper for existing solutions.
-No solver is imported by deafult to reduce number of dependencies.
+No solver is imported by default to reduce number of dependencies.
 To use any solver you can import it directly like
 
 .. code-block:: python
 
-    from QHyper.solver.gate_based.pennylane.qaoa import QAOA
+    from QHyper.solvers.gate_based.pennylane.qaoa import QAOA
 
 or use function :py:func:`Solvers.get` with the name, category, and platform.
 Any solver that is in directory 'QHyper/custom' or 'custom' will be
 also available in this function.
-
-.. rubric:: Interface
-
-.. autosummary::
-    :toctree: generated/
-
-    Solver  -- Base class for solvers.
-    SolverResult -- Dataclass for storing results
-
-
-.. rubric:: Classical Solvers
-
-.. autosummary::
-    :toctree: generated/
-
-    classical.gurobi.Gurobi -- Gurobi solver.
-
-
-.. rubric:: Quantum Annealing Solvers
-
-.. autosummary::
-    :toctree: generated/
-
-    quantum_annealing.dwave.cqm.CQM -- CQM solver.
-    quantum_annealing.dwave.dqm.DQM -- DQM solver.
-    quantum_annealing.dwave.advantage.Advantage -- Advantage solver.
-
-
-.. rubric:: Gate-based solvers
-
-.. autosummary::
-    :toctree: generated/
-
-    gate_based.pennylane.qaoa.QAOA -- QAOA solver.
-    gate_based.pennylane.qml_qaoa.QML_QAOA -- QML QAOA solver.
-    gate_based.pennylane.wf_qaoa.WF_QAOA -- Weight Free QAOA solver.
-    gate_based.pennylane.h_qaoa.H_QAOA -- Hyper QAOA solver.
-
-
-.. rubric:: Hyper-optimizer
-
-Not really a solver, but a class that can be used to optimize the hyperparameters
-of another solver. It is a wrapper around the solver class.
-
-.. autosummary::
-    :toctree: generated/
-
-    hyper_optimizer.HyperOptimizer -- Hyper-optimizer.
-
-.. rubric:: Additional functions
-
-.. autoclass:: Solvers
-    :members:
 """
 
 import copy
@@ -80,7 +27,7 @@ import dataclasses
 from typing import Type, Any
 
 from QHyper.problems import problem_from_config, ProblemConfigException
-from QHyper.util import search_for
+from QHyper.util import search_for, normalize_key, remap_keys
 
 from QHyper.optimizers import Optimizer, create_optimizer, OptimizationParameter
 
@@ -97,7 +44,7 @@ class Solvers:
         """
         Get solver class by name, category, and platform.
 
-        The name is required, other paramters might be required
+        The name is required, other parameters might be required
         if there would be more than one solver with the same name.
         The solver will be available by the 'name' attribute if defined or
         by the class name. Letters case doesn't matter.
@@ -111,55 +58,59 @@ class Solvers:
 
         # In the future, the category and platform might be required for some
         # solvers
-        if category == "custom":
-            if name in Solvers.custom_solvers:
-                return Solvers.custom_solvers[name]
-            else:
-                raise FileNotFoundError(
-                    f"Solver {name} not found in custom solvers"
-                )
+        name_ = normalize_key(name)
 
-        name_ = name.lower()
-        if name_ in ["qaoa"]:
-            from .gate_based.pennylane.qaoa import QAOA
-            return QAOA
-        elif name_ in ["qml_qaoa"]:
+        if normalize_key(category) == "custom":
+            custom = {normalize_key(k): v
+                      for k, v in Solvers.custom_solvers.items()}
+            if name_ in custom:
+                return custom[name_]
+            raise FileNotFoundError(
+                f"Solver {name} not found in custom solvers")
+
+        platform_ = normalize_key(platform)
+        if name_ == "qaoa":
+            if platform_ in ("iqm", "qiskitaer"):
+                from .gate_based.qiskit.qaoa import QAOA
+                return QAOA
+            elif platform_ == "pennylane":
+                from .gate_based.pennylane.qaoa import QAOA
+                return QAOA
+        elif name_ == "qmlqaoa":
             from .gate_based.pennylane.qml_qaoa import QML_QAOA
             return QML_QAOA
-        elif name_ in ["wf_qaoa"]:
+        elif name_ == "wfqaoa":
             from .gate_based.pennylane.wf_qaoa import WF_QAOA
             return WF_QAOA
-        elif name_ in ["h_qaoa"]:
+        elif name_ == "hqaoa":
             from .gate_based.pennylane.h_qaoa import H_QAOA
             return H_QAOA
-        elif name_ in ["gurobi"]:
+        elif name_ == "gurobi":
             from .classical.gurobi.gurobi import Gurobi
             return Gurobi
-        elif name_ in ["cqm"]:
+        elif name_ == "cqm":
             from .quantum_annealing.dwave.cqm import CQM
             return CQM
-        elif name_ in ["dqm"]:
+        elif name_ == "dqm":
             from .quantum_annealing.dwave.dqm import DQM
             return DQM
-        elif name_ in ["advantage"]:
+        elif name_ == "advantage":
             from .quantum_annealing.dwave.advantage import Advantage
             return Advantage
-        else:
-            raise SolverConfigException(f"Solver {name} not found")
+        raise SolverConfigException(f"Solver {name} not found")
 
 
 def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
     """
     Alternative way of creating solver.
-    Expect dict with two keys:
-    - type - type of solver
-    - args - arguments which will be passed to Solver instance
+    Expect dict with the following keys:
+    - problem,
+    - solver,
+    - hyper_optimizer (optional).
 
     Parameters
     ----------
-    problem : Problem
-        The problem to be solved
-    config : dict[str. Any]
+    config : dict[str, Any]
         Configuration in form of dict
 
     Returns
@@ -168,7 +119,8 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
         Initialized Solver object
     """
 
-    config = copy.deepcopy(config)
+    config = remap_keys(
+        copy.deepcopy(config), ['problem', 'solver', 'hyper_optimizer'])
 
     try:
         problem_config = config.pop('problem')
@@ -181,6 +133,10 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
 
     if 'solver' not in config:
         raise SolverConfigException("Solver configuration was not provided")
+
+    config['solver'] = remap_keys(
+        config['solver'], ['name', 'category', 'platform', 'device'])
+
     if 'name' not in config['solver']:
         raise SolverConfigException("Solver name was not provided")
 
@@ -195,20 +151,39 @@ def solver_from_config(config: dict[str, Any]) -> Solver | HyperOptimizer:
             f"Solver {config['solver']['name']} not found"
         )
 
+    solver_config = remap_keys(
+        config['solver'],
+        [f.name for f in dataclasses.fields(solver_class)]
+        + ['name', 'category', 'platform'])
+    config['solver'] = solver_config
+
+    category = normalize_key(solver_config.get('category', ''))
+    platform = normalize_key(solver_config.get('platform', ''))
+    if category == 'gatebased' or platform in ('iqm', 'qiskitaer'):
+        if 'device' not in solver_config:
+            raise SolverConfigException(
+                "Gate-based solvers require 'solver.device' in configuration"
+            )
+    if platform == 'qiskitaer':
+        from QHyper.devices.qiskit_aer import AerDevice
+        solver_config['device'] = AerDevice.from_config(
+            solver_config['device'])
+
     for field in dataclasses.fields(solver_class):
         if not field.init:
             continue
 
-        if field.name not in config['solver']:
+        if field.name not in solver_config:
             continue
 
         if field.type == Optimizer:
-            config['solver'][field.name] = create_optimizer(
-                config['solver'][field.name]
+            solver_config[field.name] = create_optimizer(
+                solver_config[field.name]
             )
         elif field.type == OptimizationParameter:
-            config['solver'][field.name] = OptimizationParameter(
-                **config['solver'][field.name]
+            solver_config[field.name] = OptimizationParameter(
+                **remap_keys(solver_config[field.name],
+                             ['min', 'max', 'step', 'init'])
             )
 
     try:
