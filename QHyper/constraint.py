@@ -30,12 +30,17 @@ class MethodsForInequalities(Enum):
     """Enum class with different methods for handling inequalities.
 
     There are two available methods for handling inequalities:
+    
     .. list-table::
+        :header-rows: 1
+        :widths: 30 70
 
-        * - SLACKS_LOG_2
-          - UNBALANCED_PENALIZATION 
-        * - the method uses slack variables in number of log2(n)
-          - the method uses unbalanced penalization
+        * - Method
+          - Description
+        * - ``SLACKS_LOG_2``
+          - Uses slack variables, log2(n) in number.
+        * - ``UNBALANCED_PENALIZATION``
+          - Uses unbalanced penalization.
     """
     SLACKS_LOG_2 = 0
     UNBALANCED_PENALIZATION = 1

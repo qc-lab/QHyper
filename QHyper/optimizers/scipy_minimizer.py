@@ -90,10 +90,15 @@ class ScipyOptimizer(Optimizer):
             history.append(OptimizationResult(
                 intermediate_result.fun, np.copy(intermediate_result.x)))
 
-        if 'options' not in self.kwargs:
-            self.kwargs['options'] = {}
-        if 'maxfun' not in self.kwargs['options']:
-            self.kwargs['options']['maxfun'] = self.maxfun
+        method = str(self.kwargs.get('method') or 'L-BFGS-B').lower()
+        if method in ('l-bfgs-b', 'tnc'):
+            limit_key = 'maxfun'
+        elif method in ('nelder-mead', 'powell', 'cobyqa'):
+            limit_key = 'maxfev'
+        else:
+            limit_key = 'maxiter'
+        options = self.kwargs.setdefault('options', {})
+        options.setdefault(limit_key, self.maxfun)
         result = scipy.optimize.minimize(
             wrapper, init.init,
             bounds=init.bounds,

@@ -89,7 +89,7 @@ class Gurobi(Solver):  # todo works only for quadratic expressions
             elif constraint.operator == Operator.GE:
                 gpm.addConstr(lhs >= rhs, f"constr_{i}")
 
-            gpm.update()
+        gpm.update()
         gpm.optimize()
 
         allvars = gpm.getVars()

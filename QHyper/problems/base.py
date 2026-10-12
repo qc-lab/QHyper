@@ -16,9 +16,9 @@ class ProblemException(Exception):
 class Problem(ABC):
     """Interface for different combinatorial optimization problems
 
-    Objective function and constrians are the main components
+    Objective function and constraints are the main components
     and are represented as :py:class:`~QHyper.polynomial.Polynomial`.
-    Depending on the selcted solver, these parts can be used
+    Depending on the selected solver, these parts can be used
     separately or, e.g., as a Quadratic Unconstrained
     Binary Optimization (QUBO) formularion.
 

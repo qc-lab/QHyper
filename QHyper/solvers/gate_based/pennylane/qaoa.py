@@ -1,7 +1,7 @@
 import pennylane as qml
 from pennylane import numpy as np
 
-from typing import Callable, cast
+from typing import Any, Callable, cast
 
 from dataclasses import dataclass, field
 
@@ -12,17 +12,20 @@ from QHyper.optimizers import (
 from QHyper.converter import Converter
 from QHyper.polynomial import Polynomial
 from QHyper.solvers.base import Solver, SolverResult
+from QHyper.devices.pennylane import PennyLaneDevice
 
 
 @dataclass
 class QAOA(Solver):
     """
-    Clasic QAOA implementation.
+    Classic QAOA implemented with PennyLane.
 
     Attributes
     ----------
     problem : Problem
         The problem to be solved.
+    device : PennyLaneDevice
+        Configuration of the device the solver runs the problem on.
     layers : int
         Number of layers.
     gamma : OptimizationParameter
@@ -36,8 +39,6 @@ class QAOA(Solver):
     penalty_weights : list[float] | None
         Penalty weights used for converting Problem to QUBO. They connect cost function
         with constraints. If not specified, all penalty weights are set to 1.
-    backend : str
-        Backend for PennyLane.
     mixer : str
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
@@ -47,12 +48,12 @@ class QAOA(Solver):
     """
 
     problem: Problem
+    device: PennyLaneDevice
     layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
     penalty_weights: list[float] | None = None
-    backend: str = "default.qubit"
     mixer: str = "pl_x_mixer"
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
         default_factory=dict, init=False)
@@ -61,12 +62,12 @@ class QAOA(Solver):
     def __init__(
             self,
             problem: Problem,
+            device: PennyLaneDevice,
             layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
             penalty_weights: list[float] | None = None,
             optimizer: Optimizer = Dummy(),
-            backend: str = "default.qubit",
             mixer: str = "pl_x_mixer"
     ) -> None:
         self.problem = problem
@@ -75,14 +76,24 @@ class QAOA(Solver):
         self.beta = beta
         self.penalty_weights = penalty_weights
         self.layers = layers
-        self.backend = backend
+        self.device = device
         self.mixer = mixer
         self.qubo_cache = {}
+
+    @classmethod
+    def from_config(cls, problem: Problem, config: dict[str, Any]) -> 'QAOA':
+        config = dict(config)
+        if 'device' in config:
+            config['device'] = PennyLaneDevice.from_config(config['device'])
+        return cls(problem, **config)
 
     def _get_num_of_wires(self) -> int:
         if self.dev is None:
             raise ValueError("Device not initialized")
         return len(self.dev.wires)
+
+    def _make_device(self, wires: Any) -> qml.devices.LegacyDevice:
+        return self.device.make_device(wires)
 
     def create_cost_operator(self, problem: Problem,
                              penalty_weights: list[float]
@@ -143,8 +154,7 @@ class QAOA(Solver):
         self, penalty_weights: list[float]
     ) -> Callable[[list[float]], OptimizationResult]:
         cost_operator = self.create_cost_operator(self.problem, penalty_weights)
-
-        self.dev = qml.device(self.backend, wires=cost_operator.wires)
+        self.dev = self._make_device(cost_operator.wires)
 
         @qml.qnode(self.dev)
         def expval_circuit(angles: list[float]) -> OptimizationResult:
@@ -174,8 +184,7 @@ class QAOA(Solver):
             Returns function that takes angles and returns probabilities
         """
         cost_operator = self.create_cost_operator(problem, penalty_weights)
-
-        self.dev = qml.device(self.backend, wires=cost_operator.wires)
+        self.dev = self._make_device(cost_operator.wires)
 
         @qml.qnode(self.dev)
         def probability_circuit(angles: list[float]) -> list[float]:

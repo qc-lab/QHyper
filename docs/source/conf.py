@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 
 # sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.insert(0, os.path.abspath('../../'))
@@ -13,8 +14,8 @@ sys.path.insert(0, os.path.abspath('../../'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'QHyper'
-copyright = '2024, Cyfronet'
-author = 'Cyfronet'
+author = 'ACC Cyfronet AGH'
+copyright = f'{datetime.date.today().year}, {author}'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

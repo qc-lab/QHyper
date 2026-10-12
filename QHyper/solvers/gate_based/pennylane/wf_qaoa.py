@@ -1,7 +1,7 @@
 import pennylane as qml
 from pennylane import numpy as np
 
-from typing import Callable
+from typing import Any, Callable
 
 from dataclasses import dataclass, field
 
@@ -11,6 +11,7 @@ from QHyper.optimizers import OptimizationResult, Optimizer, Dummy, Optimization
 from QHyper.util import weighted_avg_evaluation
 
 from QHyper.solvers.gate_based.pennylane.qaoa import QAOA
+from QHyper.devices.pennylane import PennyLaneDevice
 
 
 @dataclass
@@ -25,6 +26,8 @@ class WF_QAOA(QAOA):
     ----------
     problem : Problem
         The problem to be solved.
+    device : PennyLaneDevice
+        Configuration of the device the solver runs the problem on.
     layers : int
         Number of layers.
     gamma : OptimizationParameter
@@ -44,8 +47,6 @@ class WF_QAOA(QAOA):
     penalty : float, default 0
         When calculating the score of the solution, the penalty is the score
         for the solution that doesn't satisfy the constraints.
-    backend : str, default 'default.qubit'
-        Backend for PennyLane.
     mixer : str, default 'pl_x_mixer'
         Mixer name. Currently only 'pl_x_mixer' is supported.
     qubo_cache : dict[tuple[float, ...], qml.Hamiltonian]
@@ -55,13 +56,13 @@ class WF_QAOA(QAOA):
     """
 
     problem: Problem
+    device: PennyLaneDevice
     layers: int
     gamma: OptimizationParameter
     beta: OptimizationParameter
     optimizer: Optimizer
     penalty_weights: list[float] | None
     penalty: float = 0
-    backend: str = "default.qubit"
     mixer: str = "pl_x_mixer"
     limit_results: int | None = None
     qubo_cache: dict[tuple[float, ...], qml.Hamiltonian] = field(
@@ -71,12 +72,12 @@ class WF_QAOA(QAOA):
     def __init__(
             self,
             problem: Problem,
+            device: PennyLaneDevice,
             layers: int,
             gamma: OptimizationParameter,
             beta: OptimizationParameter,
             penalty_weights: list[float] | None = None,
             penalty: float = 0,
-            backend: str = "default.qubit",
             mixer: str = "pl_x_mixer",
             limit_results: int | None = None,
             optimizer: Optimizer = Dummy(),
@@ -89,7 +90,7 @@ class WF_QAOA(QAOA):
         self.penalty_weights = penalty_weights
         self.limit_results = limit_results
         self.layers = layers
-        self.backend = backend
+        self.device = device
         self.mixer = mixer
         self.qubo_cache = {}
 
@@ -97,7 +98,7 @@ class WF_QAOA(QAOA):
                            ) -> Callable[[list[float]], float]:
         cost_operator = self.create_cost_operator(self.problem, penalty_weights)
 
-        self.dev = qml.device(self.backend, wires=cost_operator.wires)
+        self.dev = self._make_device(cost_operator.wires)
 
         probs_func = self.get_probs_func(self.problem, penalty_weights)
 

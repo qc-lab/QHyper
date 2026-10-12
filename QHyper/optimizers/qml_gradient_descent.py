@@ -29,7 +29,7 @@ class QmlGradientDescent(Optimizer):
 
     This minimizer is a wrapper for gradient descent optimizers
     provided by PennyLane.
-    This alogrithm requries the following parameters to be set:
+    This algorithm requires the following parameters to be set:
     - `init` initial values for each parameter
 
     Attributes
@@ -70,7 +70,7 @@ class QmlGradientDescent(Optimizer):
             if set to True, additional information will be printed
         **kwargs : Any
             Additional arguments that will be passed to the PennyLane
-            optimizer. More infomation can be found in the PennyLane
+            optimizer. More information can be found in the PennyLane
             documentation.
         """
         if name not in QML_GRADIENT_DESCENT_OPTIMIZERS:

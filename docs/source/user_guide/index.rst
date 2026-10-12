@@ -22,3 +22,4 @@ Practical instructions for conducting experiments using QHyper.
 
     demo/typical_use_cases
     demo/defining_problems
+    demo/iqm_tutorial

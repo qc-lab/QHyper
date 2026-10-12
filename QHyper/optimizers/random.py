@@ -20,7 +20,7 @@ class Random(Optimizer):
     The random optimizer is a simple optimization algorithm that
     generates random samples from the parameter space and evaluates
     the function at each point.
-    This alogrithm requries the following parameters to be set:
+    This algorithm requires the following parameters to be set:
     - `min` and `max` bounds for each parameter
 
     Attributes
